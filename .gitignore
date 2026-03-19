@@ -10,6 +10,7 @@
 # Laravel (backend/)
 # ============================================
 backend/vendor/
+backend/composer.phar
 backend/node_modules/
 backend/.env
 backend/.env.*
