@@ -1,0 +1,1 @@
+# team-resource-ddd-sample
