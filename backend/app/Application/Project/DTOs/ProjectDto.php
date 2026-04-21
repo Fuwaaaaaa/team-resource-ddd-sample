@@ -14,6 +14,7 @@ final class ProjectDto
     public function __construct(
         public readonly string $id,
         public readonly string $name,
+        public readonly string $status,
         public readonly array $requiredSkills,
     ) {}
 
@@ -32,6 +33,7 @@ final class ProjectDto
         return new self(
             id: $project->id()->toString(),
             name: $project->name()->toString(),
+            status: $project->status()->value,
             requiredSkills: $required,
         );
     }

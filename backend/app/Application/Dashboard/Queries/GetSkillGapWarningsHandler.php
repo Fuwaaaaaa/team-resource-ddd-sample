@@ -28,12 +28,15 @@ final class GetSkillGapWarningsHandler
     {
         $referenceDate = new DateTimeImmutable($query->referenceDate);
 
-        // プロジェクト取得（単体 or 全件）
+        // プロジェクト取得（単体 or 全件）。終了状態のプロジェクトは計算対象外。
         if ($query->projectId !== null) {
             $project = $this->projectRepository->findById(new ProjectId($query->projectId));
-            $projects = $project !== null ? [$project] : [];
+            $projects = $project !== null && ! $project->isTerminal() ? [$project] : [];
         } else {
-            $projects = $this->projectRepository->findAll();
+            $projects = array_values(array_filter(
+                $this->projectRepository->findAll(),
+                fn ($p) => ! $p->isTerminal(),
+            ));
         }
 
         $members = $this->memberRepository->findAll();

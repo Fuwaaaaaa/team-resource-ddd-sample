@@ -67,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
         Route::put('/projects/{id}/required-skills/{skillId}', [ProjectController::class, 'upsertRequiredSkill']);
+        Route::post('/projects/{id}/status', [ProjectController::class, 'changeStatus']);
 
         Route::post('/allocations', [AllocationController::class, 'store']);
         Route::post('/allocations/{id}/revoke', [AllocationController::class, 'revoke']);

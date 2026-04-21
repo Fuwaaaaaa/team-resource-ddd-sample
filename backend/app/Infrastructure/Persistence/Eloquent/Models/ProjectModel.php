@@ -21,6 +21,7 @@ class ProjectModel extends Model
     protected $fillable = [
         'id',
         'name',
+        'status',
     ];
 
     public function requiredSkills(): HasMany

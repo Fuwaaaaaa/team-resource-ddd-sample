@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/http';
 import { dashboardKeys } from '@/features/dashboard/api';
-import type { ProjectDto } from './types';
+import { allocationKeys } from '@/features/allocations/api';
+import type { ProjectDto, ProjectStatus } from './types';
 
 export const projectKeys = {
   all: ['projects'] as const,
@@ -54,6 +55,28 @@ export interface UpsertRequiredSkillInput {
   skillId: string;
   requiredProficiency: number;
   headcount: number;
+}
+
+export function useChangeProjectStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { projectId: string; status: ProjectStatus }) => {
+      const res = await apiFetch<{ data: ProjectDto }>(
+        `/api/projects/${input.projectId}/status`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ status: input.status }),
+        },
+      );
+      return res.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: projectKeys.all });
+      qc.invalidateQueries({ queryKey: dashboardKeys.all });
+      // 完了時にアロケーションが auto-revoke されるので一覧も再取得
+      qc.invalidateQueries({ queryKey: allocationKeys.all });
+    },
+  });
 }
 
 export function useUpsertRequiredSkill() {
