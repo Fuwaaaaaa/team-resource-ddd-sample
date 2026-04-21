@@ -82,8 +82,10 @@ export default function LoginPage() {
           {login.isPending ? 'Signing in…' : 'Sign in'}
         </button>
 
-        <p className="text-xs text-gray-500 text-center">
-          Dev credentials: <code>admin@example.com</code> / <code>password</code>
+        <p className="text-xs text-gray-500 text-center leading-relaxed">
+          Dev credentials (password: <code>password</code>):
+          <br />
+          <code>admin@example.com</code> · <code>manager@example.com</code> · <code>viewer@example.com</code>
         </p>
       </form>
     </main>
