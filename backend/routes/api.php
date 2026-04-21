@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\Dashboard\CapacityController;
+use App\Http\Controllers\Api\Dashboard\OverloadController;
+use App\Http\Controllers\Api\Dashboard\SkillGapController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\MeController;
 use Illuminate\Support\Facades\Route;
@@ -17,4 +20,10 @@ Route::post('/login', [LoginController::class, 'store']);
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/logout', [LoginController::class, 'destroy']);
     Route::get('/me', MeController::class);
+
+    Route::prefix('dashboard')->group(function (): void {
+        Route::get('/capacity', CapacityController::class);
+        Route::get('/overload', OverloadController::class);
+        Route::get('/skill-gaps', SkillGapController::class);
+    });
 });
