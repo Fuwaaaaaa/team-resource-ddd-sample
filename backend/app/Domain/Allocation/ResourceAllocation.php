@@ -12,12 +12,19 @@ use DateTimeImmutable;
 final class ResourceAllocation
 {
     private AllocationId $id;
+
     private MemberId $memberId;
+
     private ProjectId $projectId;
+
     private SkillId $skillId;
+
     private AllocationPercentage $percentage;
+
     private AllocationPeriod $period;
+
     private AllocationStatus $status;
+
     /** @var object[] */
     private array $domainEvents = [];
 
@@ -102,6 +109,7 @@ final class ResourceAllocation
     {
         $events = $this->domainEvents;
         $this->domainEvents = [];
+
         return $events;
     }
 }

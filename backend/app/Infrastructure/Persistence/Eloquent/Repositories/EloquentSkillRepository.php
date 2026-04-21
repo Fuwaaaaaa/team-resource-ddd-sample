@@ -16,6 +16,7 @@ final class EloquentSkillRepository implements SkillRepositoryInterface
     public function findById(SkillId $id): ?Skill
     {
         $model = SkillModel::find($id->toString());
+
         return $model ? SkillMapper::toDomain($model) : null;
     }
 

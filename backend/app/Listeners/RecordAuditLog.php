@@ -6,6 +6,8 @@ namespace App\Listeners;
 
 use App\Domain\Allocation\Events\AllocationCreated;
 use App\Domain\Allocation\Events\AllocationRevoked;
+use App\Domain\Availability\Events\AbsenceCanceled;
+use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Member\Events\MemberCreated;
 use App\Domain\Member\Events\MemberSkillUpdated;
 use App\Domain\Project\Events\ProjectRequirementChanged;
@@ -79,6 +81,25 @@ final class RecordAuditLog
                 'aggregate_id' => $event->projectId()->toString(),
                 'payload' => [
                     'skillId' => $event->skillId()->toString(),
+                ],
+            ],
+            $event instanceof AbsenceRegistered => [
+                'event_type' => 'AbsenceRegistered',
+                'aggregate_type' => 'absence',
+                'aggregate_id' => $event->absenceId()->toString(),
+                'payload' => [
+                    'memberId' => $event->memberId()->toString(),
+                    'startDate' => $event->period()->startDate()->format('Y-m-d'),
+                    'endDate' => $event->period()->endDate()->format('Y-m-d'),
+                    'type' => $event->type()->value,
+                ],
+            ],
+            $event instanceof AbsenceCanceled => [
+                'event_type' => 'AbsenceCanceled',
+                'aggregate_type' => 'absence',
+                'aggregate_id' => $event->absenceId()->toString(),
+                'payload' => [
+                    'memberId' => $event->memberId()->toString(),
                 ],
             ],
             default => null,

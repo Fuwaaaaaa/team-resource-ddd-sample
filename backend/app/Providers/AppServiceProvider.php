@@ -6,6 +6,8 @@ namespace App\Providers;
 
 use App\Domain\Allocation\Events\AllocationCreated;
 use App\Domain\Allocation\Events\AllocationRevoked;
+use App\Domain\Availability\Events\AbsenceCanceled;
+use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Member\Events\MemberCreated;
 use App\Domain\Member\Events\MemberSkillUpdated;
 use App\Domain\Project\Events\ProjectRequirementChanged;
@@ -29,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
             MemberCreated::class,
             MemberSkillUpdated::class,
             ProjectRequirementChanged::class,
+            AbsenceRegistered::class,
+            AbsenceCanceled::class,
         ] as $eventClass) {
             Event::listen($eventClass, [RecordAuditLog::class, 'handle']);
         }

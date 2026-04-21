@@ -26,7 +26,7 @@ final class OverloadAnalysis
     {
         return array_values(array_filter(
             $this->entries,
-            fn(MemberOverloadEntry $e) => $e->isOverloaded()
+            fn (MemberOverloadEntry $e) => $e->isOverloaded()
         ));
     }
 

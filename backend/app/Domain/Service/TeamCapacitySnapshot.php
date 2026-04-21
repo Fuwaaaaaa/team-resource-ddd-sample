@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Domain\Service;
 
 use App\Domain\Member\MemberId;
-use App\Domain\Skill\SkillId;
 
 final class TeamCapacitySnapshot
 {
@@ -31,6 +30,7 @@ final class TeamCapacitySnapshot
                 return $entry;
             }
         }
+
         return null;
     }
 }

@@ -28,7 +28,7 @@ trait AllocationTestFactory
 
     private function nextId(): string
     {
-        return 'auto-' . (++$this->autoIncrementId);
+        return 'auto-'.(++$this->autoIncrementId);
     }
 
     protected function makeMember(string $id = 'member-1', float $hours = 8.0): Member
@@ -99,6 +99,7 @@ trait AllocationTestFactory
     ): ResourceAllocation {
         $allocation = $this->makeAllocation($memberId, $projectId, $skillId, $percentage, $startDate, $endDate);
         $allocation->revoke();
+
         return $allocation;
     }
 

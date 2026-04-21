@@ -14,6 +14,5 @@ final class MemberOverloadDto
         public readonly float $allocatedHoursPerDay,
         public readonly float $overloadHours,
         public readonly bool $isOverloaded,
-    ) {
-    }
+    ) {}
 }

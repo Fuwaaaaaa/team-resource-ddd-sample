@@ -21,6 +21,7 @@ class SkillController extends Controller
             ),
             $repository->findAll(),
         );
+
         return response()->json(['data' => $skills]);
     }
 }

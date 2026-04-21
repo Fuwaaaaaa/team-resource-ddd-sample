@@ -18,7 +18,7 @@ use ReflectionClass;
 final class ProjectMapper
 {
     /**
-     * @param iterable<RequiredSkillModel> $requiredSkillModels
+     * @param  iterable<RequiredSkillModel>  $requiredSkillModels
      */
     public static function toDomain(ProjectModel $model, iterable $requiredSkillModels): Project
     {
@@ -73,6 +73,7 @@ final class ProjectMapper
                 'headcount' => $rs->headcount(),
             ];
         }
+
         return $rows;
     }
 }

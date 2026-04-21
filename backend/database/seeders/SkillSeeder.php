@@ -26,7 +26,7 @@ class SkillSeeder extends Seeder
 
     public static function skillId(string $name): string
     {
-        return (string) Str::uuid5(Str::uuid5Namespace('dns'), 'skill:' . $name);
+        return (string) Str::uuid5(Str::uuid5Namespace('dns'), 'skill:'.$name);
     }
 
     /** @return array<int, array{0:string,1:string}> */

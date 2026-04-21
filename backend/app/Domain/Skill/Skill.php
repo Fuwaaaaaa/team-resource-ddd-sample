@@ -7,7 +7,9 @@ namespace App\Domain\Skill;
 final class Skill
 {
     private SkillId $id;
+
     private SkillName $name;
+
     private SkillCategory $category;
 
     public function __construct(SkillId $id, SkillName $name, SkillCategory $category)

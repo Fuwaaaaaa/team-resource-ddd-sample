@@ -9,6 +9,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\MemberSkillModel;
 use App\Infrastructure\Persistence\Eloquent\Models\SkillModel;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 final class MemberCrudTest extends TestCase
@@ -57,7 +58,7 @@ final class MemberCrudTest extends TestCase
         $skill = SkillModel::factory()->create();
         $member = MemberModel::factory()->create();
         MemberSkillModel::create([
-            'id' => (string) \Illuminate\Support\Str::uuid7(),
+            'id' => (string) Str::uuid7(),
             'member_id' => $member->id,
             'skill_id' => $skill->id,
             'proficiency' => 3,

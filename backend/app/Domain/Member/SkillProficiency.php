@@ -10,6 +10,7 @@ use InvalidArgumentException;
 final class SkillProficiency
 {
     private const MIN = 1;
+
     private const MAX = 5;
 
     private int $level;
@@ -18,7 +19,7 @@ final class SkillProficiency
     {
         if ($level < self::MIN || $level > self::MAX) {
             throw new InvalidArgumentException(
-                "Skill proficiency must be between " . self::MIN . " and " . self::MAX . ", got {$level}."
+                'Skill proficiency must be between '.self::MIN.' and '.self::MAX.", got {$level}."
             );
         }
         $this->level = $level;

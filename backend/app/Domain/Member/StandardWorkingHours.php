@@ -41,6 +41,7 @@ final class StandardWorkingHours
     public function overloadHours(int $totalAllocatedPercentage): float
     {
         $excess = max(0, $totalAllocatedPercentage - 100);
+
         return $this->hoursPerDay * ($excess / 100.0);
     }
 

@@ -11,8 +11,7 @@ final class DeleteProjectHandler
 {
     public function __construct(
         private EloquentProjectRepository $projectRepository,
-    ) {
-    }
+    ) {}
 
     public function handle(string $projectId): void
     {
