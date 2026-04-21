@@ -28,7 +28,7 @@ final class UpsertRequiredSkillHandler
         }
 
         $project->addOrUpdateRequirement(
-            new RequiredSkillId((string) Str::uuid()),
+            new RequiredSkillId((string) Str::uuid7()),
             new SkillId($command->skillId),
             new RequiredProficiency($command->requiredProficiency),
             $command->headcount,
