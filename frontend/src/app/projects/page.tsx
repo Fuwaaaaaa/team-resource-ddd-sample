@@ -10,6 +10,7 @@ import {
 } from '@/features/projects/api';
 import { useSkills } from '@/features/skills/api';
 import { usePermissions } from '@/features/auth/api';
+import { ExportButton } from '@/components/atoms/ExportButton';
 import { HttpError } from '@/lib/http';
 
 export default function ProjectsPage() {
@@ -60,7 +61,10 @@ export default function ProjectsPage() {
     <>
       <AppHeader />
       <div className="max-w-[1400px] mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
+          <ExportButton path="/api/export/projects" filename="projects.csv" />
+        </div>
 
         {canWrite ? (
           <form

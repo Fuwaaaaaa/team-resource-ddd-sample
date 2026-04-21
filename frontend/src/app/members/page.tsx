@@ -10,6 +10,7 @@ import {
 } from '@/features/members/api';
 import { useSkills } from '@/features/skills/api';
 import { usePermissions } from '@/features/auth/api';
+import { ExportButton } from '@/components/atoms/ExportButton';
 import { HttpError } from '@/lib/http';
 
 export default function MembersPage() {
@@ -63,7 +64,10 @@ export default function MembersPage() {
     <>
       <AppHeader />
       <div className="max-w-[1400px] mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Members</h1>
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Members</h1>
+          <ExportButton path="/api/export/members" filename="members.csv" />
+        </div>
 
         {canWrite ? (
           <form
