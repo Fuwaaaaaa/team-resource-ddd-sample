@@ -10,6 +10,7 @@ use App\Domain\Project\ProjectRepositoryInterface;
 use App\Domain\Project\RequiredProficiency;
 use App\Domain\Project\RequiredSkillId;
 use App\Domain\Skill\SkillId;
+use App\Infrastructure\Events\DomainEventDispatcher;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -17,6 +18,7 @@ final class UpsertRequiredSkillHandler
 {
     public function __construct(
         private ProjectRepositoryInterface $projectRepository,
+        private DomainEventDispatcher $eventDispatcher,
     ) {
     }
 
@@ -35,6 +37,8 @@ final class UpsertRequiredSkillHandler
         );
 
         $this->projectRepository->save($project);
+
+        $this->eventDispatcher->dispatchAll($project->pullDomainEvents());
 
         return ProjectDto::fromDomain($project);
     }

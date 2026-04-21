@@ -10,6 +10,7 @@ use App\Domain\Member\MemberRepositoryInterface;
 use App\Domain\Member\MemberSkillId;
 use App\Domain\Member\SkillProficiency;
 use App\Domain\Skill\SkillId;
+use App\Infrastructure\Events\DomainEventDispatcher;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -17,6 +18,7 @@ final class UpsertMemberSkillHandler
 {
     public function __construct(
         private MemberRepositoryInterface $memberRepository,
+        private DomainEventDispatcher $eventDispatcher,
     ) {
     }
 
@@ -36,6 +38,8 @@ final class UpsertMemberSkillHandler
         );
 
         $this->memberRepository->save($member);
+
+        $this->eventDispatcher->dispatchAll($member->pullDomainEvents());
 
         return MemberDto::fromDomain($member);
     }
