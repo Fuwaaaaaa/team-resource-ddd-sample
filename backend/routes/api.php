@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Dashboard\OverloadController;
 use App\Http\Controllers\Api\Dashboard\SkillGapController;
 use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\SkillController;
 use App\Http\Controllers\Api\TimelineController;
@@ -49,6 +50,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     // Absence (read)
     Route::get('/absences', [AbsenceController::class, 'index']);
     Route::get('/members/{memberId}/absences', [AbsenceController::class, 'byMember']);
+
+    // Notifications (current user's inbox)
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
 
     // CSV エクスポート (読み取り系)
     Route::prefix('export')->group(function (): void {
