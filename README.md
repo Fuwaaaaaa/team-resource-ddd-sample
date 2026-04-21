@@ -366,18 +366,41 @@ team-resource-ddd-sample/
 
 ## セットアップ
 
-### フロントエンド（Next.js）
+### 一発起動（Docker Compose）
 
 ```bash
+cp .env.example .env
+docker compose up --build
+```
+
+- `http://localhost:8080` をブラウザで開く
+- ログイン: `admin@example.com` / `password`
+- ダッシュボード / Members / Projects / Allocations の CRUD が動作
+
+初回ビルドで以下が行われます:
+1. PostgreSQL 16 起動 + ヘルスチェック
+2. backend コンテナ内で `artisan key:generate` → `artisan migrate` → `artisan db:seed`
+3. frontend コンテナで `npm ci` + `npm run dev`
+4. nginx が `:8080` → `/api`, `/sanctum`, `/login` を backend へ、それ以外を frontend へプロキシ（同一オリジンのため Sanctum SPA Cookie がそのまま使える）
+
+### ローカル個別起動（上記が使えない場合）
+
+バックエンド:
+```bash
+cd backend
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve
+```
+
+フロントエンド:
+```bash
 cd frontend
+cp .env.example .env.local
 npm install
 npm run dev
 ```
 
-`http://localhost:3000` でダッシュボードが表示されます。バックエンドAPIの代わりにモックAPIルート（`src/app/api/dashboard/`）が8名のサンプルデータを返します。
-
-### バックエンド（Laravel）
-
-Domain層は純粋PHPで実装されているため、Laravelプロジェクトのセットアップ後に `app/Domain/`, `app/Application/`, `app/Infrastructure/` をそのまま配置できます。Infrastructure層の `AllocationService.php` がドメインサービスの実装を提供します。
-
-> **注意:** 本リポジトリはDDD設計のサンプル実装です。Laravelのフレームワーク設定（`composer.json`, `.env`, マイグレーション等）やEloquentモデル/リポジトリ実装は含まれていません。Domain層とApplication層のコードが設計の本体です。
+`NEXT_PUBLIC_API_BASE_URL` を `http://localhost:8000` 相当に変更する必要があります（ただし異なるオリジンになるため Sanctum のセッション cookie を正しく扱うには追加設定が必要）。推奨は Docker Compose での同一オリジン起動です。
