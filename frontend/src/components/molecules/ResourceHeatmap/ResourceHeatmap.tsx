@@ -70,9 +70,10 @@ const EMPTY_CELL: HeatmapCellData = {
 
 export interface ResourceHeatmapProps {
   className?: string;
+  onMemberClick?: (memberId: string) => void;
 }
 
-function ResourceHeatmapComponent({ className = '' }: ResourceHeatmapProps) {
+function ResourceHeatmapComponent({ className = '', onMemberClick }: ResourceHeatmapProps) {
   // --- Filter state (individual selectors for minimal re-renders) ---
   const referenceDate = useDashboardFilterStore((s) => s.referenceDate);
   const selectedProjectId = useDashboardFilterStore((s) => s.selectedProjectId);
@@ -282,8 +283,13 @@ function ResourceHeatmapComponent({ className = '' }: ResourceHeatmapProps) {
             >
               {/* Sticky member name cell */}
               <td className="sticky left-0 z-10 bg-white px-4 py-2 border-r border-gray-200">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-900 truncate max-w-[120px]">
+                <button
+                  type="button"
+                  onClick={() => onMemberClick?.(row.memberId)}
+                  className="flex items-center gap-2 text-left hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 -mx-1"
+                  aria-label={`Show details for ${row.memberName}`}
+                >
+                  <span className="text-sm font-medium text-gray-900 truncate max-w-[120px] hover:underline">
                     {row.memberName}
                   </span>
                   {row.isOverloaded && (
@@ -294,7 +300,7 @@ function ResourceHeatmapComponent({ className = '' }: ResourceHeatmapProps) {
                       OVR
                     </span>
                   )}
-                </div>
+                </button>
               </td>
 
               {/* Sticky availability cell */}
