@@ -11,10 +11,14 @@ import {
 import { useSkills } from '@/features/skills/api';
 import { usePermissions } from '@/features/auth/api';
 import { ExportButton } from '@/components/atoms/ExportButton';
+import { ImportButton } from '@/components/atoms/ImportButton/ImportButton';
+import { useQueryClient } from '@tanstack/react-query';
+import { memberKeys } from '@/features/members/api';
 import { HttpError } from '@/lib/http';
 
 export default function MembersPage() {
   const { canWrite } = usePermissions();
+  const qc = useQueryClient();
   const members = useMembers();
   const skills = useSkills();
   const createMember = useCreateMember();
@@ -66,7 +70,16 @@ export default function MembersPage() {
       <div className="max-w-[1400px] mx-auto px-4 py-8 space-y-6">
         <div className="flex items-baseline justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Members</h1>
-          <ExportButton path="/api/export/members" filename="members.csv" />
+          <div className="flex items-center gap-2">
+            {canWrite && (
+              <ImportButton
+                endpoint="/api/import/members"
+                label="Import CSV"
+                onDone={() => qc.invalidateQueries({ queryKey: memberKeys.all })}
+              />
+            )}
+            <ExportButton path="/api/export/members" filename="members.csv" />
+          </div>
         </div>
 
         {canWrite ? (
