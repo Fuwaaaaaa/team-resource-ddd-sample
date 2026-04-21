@@ -52,11 +52,11 @@ const CATEGORY_ORDER: SkillCategory[] = [
 ];
 
 const PROFICIENCY_LEGEND_CLASSES: Record<number, string> = {
-  1: 'bg-red-200',
-  2: 'bg-orange-200',
-  3: 'bg-yellow-200',
-  4: 'bg-lime-200',
-  5: 'bg-green-300',
+  1: 'bg-heatmap-1',
+  2: 'bg-heatmap-2',
+  3: 'bg-heatmap-3',
+  4: 'bg-heatmap-4',
+  5: 'bg-heatmap-5',
 };
 
 const EMPTY_CELL: HeatmapCellData = {
@@ -326,6 +326,8 @@ function ResourceHeatmapComponent({ className = '' }: ResourceHeatmapProps) {
                   <HeatmapCell
                     key={`${row.memberId}-${skill.id}`}
                     data={row.cells[skill.id] ?? EMPTY_CELL}
+                    memberName={row.memberName}
+                    skillName={skill.name}
                   />
                 ));
               })}
