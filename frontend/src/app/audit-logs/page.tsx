@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { ExportButton } from '@/components/atoms/ExportButton';
 import { useAuditLogs } from '@/features/auditLogs/api';
 import type { AuditLogFilters } from '@/features/auditLogs/types';
 
@@ -33,11 +34,14 @@ export default function AuditLogsPage() {
       <div className="max-w-[1400px] mx-auto px-4 py-8 space-y-4">
         <div className="flex items-baseline justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Audit logs</h1>
-          {logs.data && (
-            <span className="text-xs text-gray-500">
-              Showing {logs.data.data.length} of {logs.data.meta.total}
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {logs.data && (
+              <span className="text-xs text-gray-500">
+                Showing {logs.data.data.length} of {logs.data.meta.total}
+              </span>
+            )}
+            <ExportButton path="/api/export/audit-logs" filename="audit-logs.csv" />
+          </div>
         </div>
 
         <div className="flex items-end gap-3 p-4 bg-white rounded-lg border border-gray-200">

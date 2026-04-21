@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ResourceHeatmap } from '@/components/molecules/ResourceHeatmap';
 import { MemberDetailModal } from '@/components/molecules/MemberDetailModal';
+import { RecentActivityFeed } from '@/components/molecules/RecentActivityFeed';
 import { useDashboardFilterStore } from '@/stores/useDashboardFilterStore';
 import { dashboardKeys } from '@/features/dashboard/api';
 import { useProjects } from '@/features/projects/api';
@@ -41,6 +42,10 @@ export function DashboardContent() {
 
   return (
     <>
+      <div className="mb-6">
+        <RecentActivityFeed limit={5} />
+      </div>
+
       {/* Filters */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-6">
         <div className="flex flex-wrap items-center gap-4">
