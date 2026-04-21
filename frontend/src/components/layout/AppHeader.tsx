@@ -6,6 +6,7 @@ import { useLogout, useMe } from '@/features/auth/api';
 
 const nav = [
   { href: '/', label: 'Heatmap' },
+  { href: '/timeline', label: 'Timeline' },
   { href: '/members', label: 'Members' },
   { href: '/projects', label: 'Projects' },
   { href: '/allocations', label: 'Allocations' },
