@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Dashboard\CapacityController;
 use App\Http\Controllers\Api\Dashboard\OverloadController;
 use App\Http\Controllers\Api\Dashboard\SkillGapController;
 use App\Http\Controllers\Api\ExportController;
+use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProjectController;
@@ -82,6 +83,13 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
         Route::post('/absences', [AbsenceController::class, 'store']);
         Route::post('/absences/{id}/cancel', [AbsenceController::class, 'cancel']);
+
+        // CSV インポート (admin/manager)
+        Route::prefix('import')->group(function (): void {
+            Route::post('/members', [ImportController::class, 'members']);
+            Route::post('/projects', [ImportController::class, 'projects']);
+            Route::post('/allocations', [ImportController::class, 'allocations']);
+        });
     });
 
     // ===== 監査ログ (admin のみ) =====

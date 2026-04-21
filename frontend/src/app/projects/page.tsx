@@ -17,6 +17,9 @@ import {
 import { useSkills } from '@/features/skills/api';
 import { usePermissions } from '@/features/auth/api';
 import { ExportButton } from '@/components/atoms/ExportButton';
+import { ImportButton } from '@/components/atoms/ImportButton/ImportButton';
+import { useQueryClient } from '@tanstack/react-query';
+import { projectKeys } from '@/features/projects/api';
 import { HttpError } from '@/lib/http';
 
 const STATUS_BADGE: Record<ProjectStatus, string> = {
@@ -28,6 +31,7 @@ const STATUS_BADGE: Record<ProjectStatus, string> = {
 
 export default function ProjectsPage() {
   const { canWrite } = usePermissions();
+  const qc = useQueryClient();
   const projects = useProjects();
   const skills = useSkills();
   const createProject = useCreateProject();
@@ -77,7 +81,16 @@ export default function ProjectsPage() {
       <div className="max-w-[1400px] mx-auto px-4 py-8 space-y-6">
         <div className="flex items-baseline justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-          <ExportButton path="/api/export/projects" filename="projects.csv" />
+          <div className="flex items-center gap-2">
+            {canWrite && (
+              <ImportButton
+                endpoint="/api/import/projects"
+                label="Import CSV"
+                onDone={() => qc.invalidateQueries({ queryKey: projectKeys.all })}
+              />
+            )}
+            <ExportButton path="/api/export/projects" filename="projects.csv" />
+          </div>
         </div>
 
         {canWrite ? (
