@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Dashboard\SkillGapController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\SkillController;
+use App\Http\Controllers\Api\TimelineController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\MeController;
 use Illuminate\Support\Facades\Route;
@@ -59,4 +60,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     // Audit logs (参照のみ)
     Route::get('/audit-logs', [AuditLogController::class, 'index']);
+
+    // Timeline / Gantt ビュー
+    Route::get('/timeline', TimelineController::class);
 });
