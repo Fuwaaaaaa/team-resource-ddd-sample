@@ -5,8 +5,26 @@ export interface RequiredSkillDto {
   headcount: number;
 }
 
+export type ProjectStatus = 'planning' | 'active' | 'completed' | 'canceled';
+
 export interface ProjectDto {
   id: string;
   name: string;
+  status: ProjectStatus;
   requiredSkills: RequiredSkillDto[];
 }
+
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  planning: '計画中',
+  active: '稼働中',
+  completed: '完了',
+  canceled: '中止',
+};
+
+/** 現在 → 次の許可される遷移先 */
+export const PROJECT_STATUS_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
+  planning: ['active', 'canceled'],
+  active: ['completed', 'canceled'],
+  completed: [],
+  canceled: [],
+};
