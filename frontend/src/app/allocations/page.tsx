@@ -6,6 +6,7 @@ import {
   useMemberAllocations,
   useCreateAllocation,
   useRevokeAllocation,
+  useSimulateAllocation,
 } from '@/features/allocations/api';
 import { useMembers } from '@/features/members/api';
 import { useProjects } from '@/features/projects/api';
@@ -13,6 +14,7 @@ import { useSkills } from '@/features/skills/api';
 import { usePermissions } from '@/features/auth/api';
 import { ExportButton } from '@/components/atoms/ExportButton';
 import { HttpError } from '@/lib/http';
+import type { AllocationSimulationDto } from '@/features/allocations/types';
 
 export default function AllocationsPage() {
   const { canWrite } = usePermissions();
@@ -24,6 +26,7 @@ export default function AllocationsPage() {
   const allocations = useMemberAllocations(memberId || null);
   const createAlloc = useCreateAllocation();
   const revokeAlloc = useRevokeAllocation();
+  const simulate = useSimulateAllocation();
 
   const [form, setForm] = useState({
     projectId: '',
@@ -33,23 +36,44 @@ export default function AllocationsPage() {
     end: '2026-09-30',
   });
   const [error, setError] = useState<string | null>(null);
+  const [simulation, setSimulation] = useState<AllocationSimulationDto | null>(null);
 
-  const onCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const buildInput = () => ({
+    memberId,
+    projectId: form.projectId,
+    skillId: form.skillId,
+    allocationPercentage: Number(form.percentage),
+    periodStart: form.start,
+    periodEnd: form.end,
+  });
+
+  const validate = (): boolean => {
     if (!memberId) {
       setError('Select a member first.');
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const onSimulate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSimulation(null);
+    if (!validate()) return;
     try {
-      await createAlloc.mutateAsync({
-        memberId,
-        projectId: form.projectId,
-        skillId: form.skillId,
-        allocationPercentage: Number(form.percentage),
-        periodStart: form.start,
-        periodEnd: form.end,
-      });
+      const result = await simulate.mutateAsync(buildInput());
+      setSimulation(result);
+    } catch (err) {
+      setError(err instanceof HttpError ? err.message : 'Simulation failed.');
+    }
+  };
+
+  const onApply = async () => {
+    setError(null);
+    if (!validate()) return;
+    try {
+      await createAlloc.mutateAsync(buildInput());
+      setSimulation(null);
     } catch (err) {
       setError(err instanceof HttpError ? err.message : 'Failed.');
     }
@@ -74,7 +98,10 @@ export default function AllocationsPage() {
             <label className="block text-xs font-medium text-gray-700 mb-1">Member</label>
             <select
               value={memberId}
-              onChange={(e) => setMemberId(e.target.value)}
+              onChange={(e) => {
+                setMemberId(e.target.value);
+                setSimulation(null);
+              }}
               className="px-3 py-1.5 text-sm border border-gray-300 rounded-md w-64"
             >
               <option value="">— select —</option>
@@ -91,77 +118,138 @@ export default function AllocationsPage() {
           </p>
         )}
 
-        {canWrite && <form
-          onSubmit={onCreate}
-          className="grid grid-cols-6 gap-3 p-4 bg-white rounded-lg border border-gray-200"
-        >
-          <div className="col-span-2">
-            <label className="block text-xs font-medium text-gray-700 mb-1">Project</label>
-            <select
-              required
-              value={form.projectId}
-              onChange={(e) => setForm({ ...form, projectId: e.target.value })}
-              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
-            >
-              <option value="">—</option>
-              {projects.data?.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+        {canWrite && (
+          <form
+            onSubmit={onSimulate}
+            className="grid grid-cols-6 gap-3 p-4 bg-white rounded-lg border border-gray-200"
+          >
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Project</label>
+              <select
+                required
+                value={form.projectId}
+                onChange={(e) => setForm({ ...form, projectId: e.target.value })}
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+              >
+                <option value="">—</option>
+                {projects.data?.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Skill role</label>
+              <select
+                required
+                value={form.skillId}
+                onChange={(e) => setForm({ ...form, skillId: e.target.value })}
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+              >
+                <option value="">—</option>
+                {skills.data?.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">%</label>
+              <input
+                type="number" min="1" max="100" required
+                value={form.percentage}
+                onChange={(e) => setForm({ ...form, percentage: e.target.value })}
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Start</label>
+              <input
+                type="date" required
+                value={form.start}
+                onChange={(e) => setForm({ ...form, start: e.target.value })}
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+              />
+            </div>
+            <div className="col-span-5" />
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">End</label>
+              <input
+                type="date" required
+                value={form.end}
+                onChange={(e) => setForm({ ...form, end: e.target.value })}
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+              />
+            </div>
+            <div className="col-span-6 flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={simulate.isPending}
+                className="px-4 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 disabled:opacity-50"
+              >
+                {simulate.isPending ? 'Simulating…' : 'Simulate (what-if)'}
+              </button>
+              <button
+                type="button"
+                onClick={onApply}
+                disabled={createAlloc.isPending}
+                className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                Create allocation
+              </button>
+              {error && <span className="text-sm text-red-600">{error}</span>}
+            </div>
+          </form>
+        )}
+
+        {simulation && (
+          <div className="p-4 bg-white rounded-lg border-2 border-blue-200 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-blue-800">
+                Simulation result (not saved)
+              </h2>
+              <button
+                onClick={() => setSimulation(null)}
+                className="text-xs text-gray-500 hover:text-gray-700"
+                aria-label="Close simulation"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-4 text-sm">
+              <Stat label="Current allocated" value={`${simulation.currentTotalPercentage}%`} />
+              <Stat
+                label="Projected allocated"
+                value={`${simulation.projectedTotalPercentage}%`}
+                accent={simulation.projectedOverloaded ? 'danger' : 'primary'}
+              />
+              <Stat
+                label="Projected free"
+                value={`${simulation.projectedAvailablePercentage}%`}
+                accent="success"
+              />
+              <Stat
+                label="Overload"
+                value={
+                  simulation.projectedOverloaded
+                    ? `+${simulation.projectedOverloadHours.toFixed(1)}h/day`
+                    : 'None'
+                }
+                accent={simulation.projectedOverloaded ? 'danger' : 'muted'}
+              />
+            </div>
+            <div className="pt-3 border-t border-gray-200 flex items-center gap-3">
+              <button
+                onClick={onApply}
+                disabled={createAlloc.isPending}
+                className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                Apply for real
+              </button>
+              <span className="text-xs text-gray-500">
+                Adjust the form and click Simulate again to re-evaluate.
+              </span>
+            </div>
           </div>
-          <div className="col-span-2">
-            <label className="block text-xs font-medium text-gray-700 mb-1">Skill role</label>
-            <select
-              required
-              value={form.skillId}
-              onChange={(e) => setForm({ ...form, skillId: e.target.value })}
-              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
-            >
-              <option value="">—</option>
-              {skills.data?.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">%</label>
-            <input
-              type="number" min="1" max="100" required
-              value={form.percentage}
-              onChange={(e) => setForm({ ...form, percentage: e.target.value })}
-              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Start</label>
-            <input
-              type="date" required
-              value={form.start}
-              onChange={(e) => setForm({ ...form, start: e.target.value })}
-              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="col-span-5" />
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">End</label>
-            <input
-              type="date" required
-              value={form.end}
-              onChange={(e) => setForm({ ...form, end: e.target.value })}
-              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="col-span-6 flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={createAlloc.isPending}
-              className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              Create allocation
-            </button>
-            {error && <span className="text-sm text-red-600">{error}</span>}
-          </div>
-        </form>}
+        )}
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <table className="w-full text-sm">
@@ -209,5 +297,31 @@ export default function AllocationsPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  accent = 'default',
+}: {
+  label: string;
+  value: string;
+  accent?: 'default' | 'primary' | 'success' | 'danger' | 'muted';
+}) {
+  const colors: Record<string, string> = {
+    default: 'text-gray-900',
+    primary: 'text-blue-700',
+    success: 'text-green-700',
+    danger: 'text-red-700',
+    muted: 'text-gray-500',
+  };
+  return (
+    <div>
+      <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+        {label}
+      </div>
+      <div className={`text-xl font-bold tabular-nums ${colors[accent]}`}>{value}</div>
+    </div>
   );
 }

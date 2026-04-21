@@ -8,6 +8,7 @@ use App\Application\Allocation\Commands\CreateAllocationCommand;
 use App\Application\Allocation\Commands\CreateAllocationHandler;
 use App\Application\Allocation\Commands\RevokeAllocationHandler;
 use App\Application\Allocation\DTOs\AllocationDto;
+use App\Application\Allocation\DTOs\AllocationSimulationDto;
 use App\Domain\Allocation\ResourceAllocationRepositoryInterface;
 use App\Domain\Member\MemberId;
 use App\Http\Controllers\Controller;
@@ -32,15 +33,23 @@ class AllocationController extends Controller
 
     public function store(StoreAllocationRequest $request, CreateAllocationHandler $handler): JsonResponse
     {
-        $dto = $handler->handle(new CreateAllocationCommand(
+        $dryRun = (bool) $request->boolean('dryRun');
+
+        $result = $handler->handle(new CreateAllocationCommand(
             memberId: (string) $request->input('memberId'),
             projectId: (string) $request->input('projectId'),
             skillId: (string) $request->input('skillId'),
             allocationPercentage: (int) $request->input('allocationPercentage'),
             periodStart: (string) $request->input('periodStart'),
             periodEnd: (string) $request->input('periodEnd'),
+            dryRun: $dryRun,
         ));
-        return response()->json(['data' => $dto], 201);
+
+        if ($result instanceof AllocationSimulationDto) {
+            return response()->json(['simulation' => $result]);
+        }
+
+        return response()->json(['data' => $result], 201);
     }
 
     public function revoke(string $id, RevokeAllocationHandler $handler): JsonResponse
