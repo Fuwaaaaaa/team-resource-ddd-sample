@@ -45,6 +45,6 @@ final class EloquentSkillRepository implements SkillRepositoryInterface
 
     public function nextIdentity(): SkillId
     {
-        return new SkillId((string) Str::uuid());
+        return new SkillId((string) Str::uuid7());
     }
 }

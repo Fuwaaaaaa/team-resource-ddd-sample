@@ -68,6 +68,6 @@ final class EloquentMemberRepository implements MemberRepositoryInterface
 
     public function nextIdentity(): MemberId
     {
-        return new MemberId((string) Str::uuid());
+        return new MemberId((string) Str::uuid7());
     }
 }

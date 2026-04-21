@@ -28,7 +28,7 @@ final class UpsertMemberSkillHandler
         }
 
         $skillId = new SkillId($command->skillId);
-        $memberSkillId = new MemberSkillId((string) Str::uuid());
+        $memberSkillId = new MemberSkillId((string) Str::uuid7());
         $member->addOrUpdateSkill(
             $memberSkillId,
             $skillId,

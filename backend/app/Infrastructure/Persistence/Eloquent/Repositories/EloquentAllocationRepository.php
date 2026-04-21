@@ -60,6 +60,6 @@ final class EloquentAllocationRepository implements ResourceAllocationRepository
 
     public function nextIdentity(): AllocationId
     {
-        return new AllocationId((string) Str::uuid());
+        return new AllocationId((string) Str::uuid7());
     }
 }
