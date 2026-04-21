@@ -6,6 +6,7 @@ import { useProjects } from '@/features/projects/api';
 import { useSkills } from '@/features/skills/api';
 import { useMemberAllocations, useRevokeAllocation } from '@/features/allocations/api';
 import { AbsenceSection } from './AbsenceSection';
+import { SkillHistorySection } from './SkillHistorySection';
 
 export interface MemberDetailModalProps {
   memberId: string | null;
@@ -181,6 +182,9 @@ export function MemberDetailModal({ memberId, onClose }: MemberDetailModalProps)
 
           {/* Absences */}
           <AbsenceSection memberId={memberId} />
+
+          {/* Skill growth history */}
+          <SkillHistorySection memberId={memberId} />
         </div>
       </div>
     </div>
