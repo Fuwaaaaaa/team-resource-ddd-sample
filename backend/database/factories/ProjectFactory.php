@@ -19,6 +19,7 @@ class ProjectFactory extends Factory
     {
         return [
             'name' => fake()->unique()->sentence(3),
+            'status' => 'active',
         ];
     }
 }

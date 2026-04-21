@@ -14,16 +14,19 @@ use App\Domain\Allocation\ResourceAllocationRepositoryInterface;
 use App\Domain\Member\MemberId;
 use App\Domain\Member\MemberRepositoryInterface;
 use App\Domain\Project\ProjectId;
+use App\Domain\Project\ProjectRepositoryInterface;
 use App\Domain\Service\AllocationServiceInterface;
 use App\Domain\Skill\SkillId;
 use App\Infrastructure\Events\DomainEventDispatcher;
 use DateTimeImmutable;
+use DomainException;
 
 final class CreateAllocationHandler
 {
     public function __construct(
         private ResourceAllocationRepositoryInterface $allocationRepository,
         private MemberRepositoryInterface $memberRepository,
+        private ProjectRepositoryInterface $projectRepository,
         private AllocationServiceInterface $allocationService,
         private DomainEventDispatcher $eventDispatcher,
     ) {}
@@ -35,9 +38,18 @@ final class CreateAllocationHandler
     public function handle(CreateAllocationCommand $command): AllocationDto|AllocationSimulationDto
     {
         $memberId = new MemberId($command->memberId);
+        $projectId = new ProjectId($command->projectId);
         $requested = new AllocationPercentage($command->allocationPercentage);
         $periodStart = new DateTimeImmutable($command->periodStart);
         $periodEnd = new DateTimeImmutable($command->periodEnd);
+
+        // 完了 / 中止されたプロジェクトへの新規アロケーションを拒否
+        $project = $this->projectRepository->findById($projectId);
+        if ($project !== null && $project->isTerminal()) {
+            throw new DomainException(
+                "Cannot allocate to a {$project->status()->value} project: {$command->projectId}"
+            );
+        }
 
         $existing = $this->allocationRepository->findByMemberId($memberId);
 
@@ -51,7 +63,7 @@ final class CreateAllocationHandler
         $allocation = new ResourceAllocation(
             $this->allocationRepository->nextIdentity(),
             $memberId,
-            new ProjectId($command->projectId),
+            $projectId,
             new SkillId($command->skillId),
             $requested,
             new AllocationPeriod($periodStart, $periodEnd),

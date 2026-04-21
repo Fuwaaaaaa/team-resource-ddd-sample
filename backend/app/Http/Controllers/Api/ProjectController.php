@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Application\Project\Commands\ChangeProjectStatusCommand;
+use App\Application\Project\Commands\ChangeProjectStatusHandler;
 use App\Application\Project\Commands\CreateProjectCommand;
 use App\Application\Project\Commands\CreateProjectHandler;
 use App\Application\Project\Commands\DeleteProjectHandler;
@@ -15,6 +17,7 @@ use App\Application\Project\DTOs\ProjectDto;
 use App\Domain\Project\ProjectId;
 use App\Domain\Project\ProjectRepositoryInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Project\ChangeProjectStatusRequest;
 use App\Http\Requests\Project\StoreProjectRequest;
 use App\Http\Requests\Project\UpsertRequiredSkillRequest;
 use Illuminate\Http\JsonResponse;
@@ -63,6 +66,19 @@ class ProjectController extends Controller
         $handler->handle($id);
 
         return response()->json(null, 204);
+    }
+
+    public function changeStatus(
+        string $id,
+        ChangeProjectStatusRequest $request,
+        ChangeProjectStatusHandler $handler,
+    ): JsonResponse {
+        $dto = $handler->handle(new ChangeProjectStatusCommand(
+            projectId: $id,
+            status: (string) $request->input('status'),
+        ));
+
+        return response()->json(['data' => $dto]);
     }
 
     public function upsertRequiredSkill(

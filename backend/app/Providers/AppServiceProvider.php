@@ -10,6 +10,9 @@ use App\Domain\Availability\Events\AbsenceCanceled;
 use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Member\Events\MemberCreated;
 use App\Domain\Member\Events\MemberSkillUpdated;
+use App\Domain\Project\Events\ProjectActivated;
+use App\Domain\Project\Events\ProjectCanceled;
+use App\Domain\Project\Events\ProjectCompleted;
 use App\Domain\Project\Events\ProjectRequirementChanged;
 use App\Listeners\RecordAuditLog;
 use Illuminate\Support\Facades\Event;
@@ -31,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
             MemberCreated::class,
             MemberSkillUpdated::class,
             ProjectRequirementChanged::class,
+            ProjectActivated::class,
+            ProjectCompleted::class,
+            ProjectCanceled::class,
             AbsenceRegistered::class,
             AbsenceCanceled::class,
         ] as $eventClass) {
