@@ -18,6 +18,7 @@ final class EloquentProjectRepository implements ProjectRepositoryInterface
     public function findById(ProjectId $id): ?Project
     {
         $model = ProjectModel::with('requiredSkills')->find($id->toString());
+
         return $model ? ProjectMapper::toDomain($model, $model->requiredSkills) : null;
     }
 

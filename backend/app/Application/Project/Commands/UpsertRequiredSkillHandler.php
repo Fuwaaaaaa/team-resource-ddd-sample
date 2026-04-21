@@ -19,14 +19,13 @@ final class UpsertRequiredSkillHandler
     public function __construct(
         private ProjectRepositoryInterface $projectRepository,
         private DomainEventDispatcher $eventDispatcher,
-    ) {
-    }
+    ) {}
 
     public function handle(UpsertRequiredSkillCommand $command): ProjectDto
     {
         $project = $this->projectRepository->findById(new ProjectId($command->projectId));
         if ($project === null) {
-            throw new RuntimeException('Project not found: ' . $command->projectId);
+            throw new RuntimeException('Project not found: '.$command->projectId);
         }
 
         $project->addOrUpdateRequirement(

@@ -9,7 +9,9 @@ use App\Domain\Skill\SkillId;
 final class MemberSkill
 {
     private MemberSkillId $id;
+
     private SkillId $skillId;
+
     private SkillProficiency $proficiency;
 
     public function __construct(MemberSkillId $id, SkillId $skillId, SkillProficiency $proficiency)

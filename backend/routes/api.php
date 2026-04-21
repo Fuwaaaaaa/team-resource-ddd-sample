@@ -1,11 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\AbsenceController;
 use App\Http\Controllers\Api\AllocationController;
 use App\Http\Controllers\Api\AuditLogController;
-use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\Dashboard\CapacityController;
 use App\Http\Controllers\Api\Dashboard\OverloadController;
 use App\Http\Controllers\Api\Dashboard\SkillGapController;
+use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\SkillController;
@@ -43,6 +44,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/allocations', [AllocationController::class, 'index']);
     Route::get('/timeline', TimelineController::class);
 
+    // Absence (read)
+    Route::get('/absences', [AbsenceController::class, 'index']);
+    Route::get('/members/{memberId}/absences', [AbsenceController::class, 'byMember']);
+
     // CSV エクスポート (読み取り系)
     Route::prefix('export')->group(function (): void {
         Route::get('/members', [ExportController::class, 'members']);
@@ -65,6 +70,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
         Route::post('/allocations', [AllocationController::class, 'store']);
         Route::post('/allocations/{id}/revoke', [AllocationController::class, 'revoke']);
+
+        Route::post('/absences', [AbsenceController::class, 'store']);
+        Route::post('/absences/{id}/cancel', [AbsenceController::class, 'cancel']);
     });
 
     // ===== 監査ログ (admin のみ) =====

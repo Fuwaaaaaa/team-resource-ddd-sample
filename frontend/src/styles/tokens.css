@@ -2,51 +2,53 @@
  *
  * Tailwind references these via `theme.extend.colors` in tailwind.config.ts.
  * Raw CSS uses `var(--token-name)`. Dark mode overrides live under [data-theme="dark"].
+ *
+ * NOTE: CSS custom properties on :root do not need the `@layer base` wrapper.
+ * Wrapping them broke the build because this file is imported after the
+ * @tailwind directives and PostCSS could not resolve the `base` layer.
  */
 
-@layer base {
-  :root {
-    /* Surfaces */
-    --color-bg: 249 250 251;          /* gray-50  */
-    --color-surface: 255 255 255;     /* white    */
-    --color-surface-muted: 243 244 246; /* gray-100 */
-    --color-border: 229 231 235;      /* gray-200 */
+:root {
+  /* Surfaces */
+  --color-bg: 249 250 251;          /* gray-50  */
+  --color-surface: 255 255 255;     /* white    */
+  --color-surface-muted: 243 244 246; /* gray-100 */
+  --color-border: 229 231 235;      /* gray-200 */
 
-    /* Text */
-    --color-fg: 17 24 39;             /* gray-900 */
-    --color-fg-muted: 107 114 128;    /* gray-500 */
+  /* Text */
+  --color-fg: 17 24 39;             /* gray-900 */
+  --color-fg-muted: 107 114 128;    /* gray-500 */
 
-    /* Brand */
-    --color-primary: 37 99 235;       /* blue-600 */
-    --color-primary-hover: 29 78 216; /* blue-700 */
+  /* Brand */
+  --color-primary: 37 99 235;       /* blue-600 */
+  --color-primary-hover: 29 78 216; /* blue-700 */
 
-    /* Semantic */
-    --color-warning: 234 88 12;       /* orange-600 */
-    --color-danger: 220 38 38;        /* red-600   */
-    --color-danger-bg: 254 226 226;   /* red-100   */
-    --color-success: 22 163 74;       /* green-600 */
+  /* Semantic */
+  --color-warning: 234 88 12;       /* orange-600 */
+  --color-danger: 220 38 38;        /* red-600   */
+  --color-danger-bg: 254 226 226;   /* red-100   */
+  --color-success: 22 163 74;       /* green-600 */
 
-    /* Heatmap proficiency 1..5 (red → green) — WCAG AA foreground is ensured by text color */
-    --heatmap-1: 254 202 202;  /* red-200   */
-    --heatmap-2: 254 215 170;  /* orange-200 */
-    --heatmap-3: 254 240 138;  /* yellow-200 */
-    --heatmap-4: 217 249 157;  /* lime-200  */
-    --heatmap-5: 134 239 172;  /* green-300 */
-    --heatmap-null: 243 244 246; /* gray-100 */
+  /* Heatmap proficiency 1..5 (red → green) — WCAG AA foreground is ensured by text color */
+  --heatmap-1: 254 202 202;  /* red-200   */
+  --heatmap-2: 254 215 170;  /* orange-200 */
+  --heatmap-3: 254 240 138;  /* yellow-200 */
+  --heatmap-4: 217 249 157;  /* lime-200  */
+  --heatmap-5: 134 239 172;  /* green-300 */
+  --heatmap-null: 243 244 246; /* gray-100 */
 
-    /* Skill gap */
-    --color-skillgap-ring: 220 38 38; /* red-600 */
-    --color-skillgap-bg: 254 242 242; /* red-50  */
-  }
+  /* Skill gap */
+  --color-skillgap-ring: 220 38 38; /* red-600 */
+  --color-skillgap-bg: 254 242 242; /* red-50  */
+}
 
-  [data-theme="dark"] {
-    --color-bg: 17 24 39;
-    --color-surface: 31 41 55;
-    --color-surface-muted: 55 65 81;
-    --color-border: 75 85 99;
-    --color-fg: 243 244 246;
-    --color-fg-muted: 156 163 175;
-    --color-primary: 96 165 250;
-    --color-primary-hover: 59 130 246;
-  }
+[data-theme="dark"] {
+  --color-bg: 17 24 39;
+  --color-surface: 31 41 55;
+  --color-surface-muted: 55 65 81;
+  --color-border: 75 85 99;
+  --color-fg: 243 244 246;
+  --color-fg-muted: 156 163 175;
+  --color-primary: 96 165 250;
+  --color-primary-hover: 59 130 246;
 }

@@ -11,8 +11,7 @@ final class DeleteMemberHandler
 {
     public function __construct(
         private EloquentMemberRepository $memberRepository,
-    ) {
-    }
+    ) {}
 
     public function handle(string $memberId): void
     {

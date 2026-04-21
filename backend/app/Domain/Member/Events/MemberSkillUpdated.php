@@ -11,7 +11,9 @@ use App\Domain\Skill\SkillId;
 final class MemberSkillUpdated
 {
     private MemberId $memberId;
+
     private SkillId $skillId;
+
     private SkillProficiency $proficiency;
 
     public function __construct(MemberId $memberId, SkillId $skillId, SkillProficiency $proficiency)

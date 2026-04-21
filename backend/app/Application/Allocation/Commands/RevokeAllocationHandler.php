@@ -15,14 +15,13 @@ final class RevokeAllocationHandler
     public function __construct(
         private ResourceAllocationRepositoryInterface $allocationRepository,
         private DomainEventDispatcher $eventDispatcher,
-    ) {
-    }
+    ) {}
 
     public function handle(string $allocationId): AllocationDto
     {
         $allocation = $this->allocationRepository->findById(new AllocationId($allocationId));
         if ($allocation === null) {
-            throw new RuntimeException('Allocation not found: ' . $allocationId);
+            throw new RuntimeException('Allocation not found: '.$allocationId);
         }
 
         $allocation->revoke();

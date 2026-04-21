@@ -18,6 +18,7 @@ final class EloquentMemberRepository implements MemberRepositoryInterface
     public function findById(MemberId $id): ?Member
     {
         $model = MemberModel::with('skills')->find($id->toString());
+
         return $model ? MemberMapper::toDomain($model, $model->skills) : null;
     }
 
@@ -33,6 +34,7 @@ final class EloquentMemberRepository implements MemberRepositoryInterface
     public function findByIds(array $ids): array
     {
         $keys = array_map(fn (MemberId $id) => $id->toString(), $ids);
+
         return MemberModel::with('skills')->whereIn('id', $keys)->get()
             ->map(fn (MemberModel $m) => MemberMapper::toDomain($m, $m->skills))
             ->all();

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domain\Allocation\ResourceAllocationRepositoryInterface;
+use App\Domain\Availability\AbsenceRepositoryInterface;
 use App\Domain\Member\MemberRepositoryInterface;
 use App\Domain\Project\ProjectRepositoryInterface;
 use App\Domain\Service\AllocationServiceInterface;
 use App\Domain\Skill\SkillRepositoryInterface;
+use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentAbsenceRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentAllocationRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentMemberRepository;
 use App\Infrastructure\Persistence\Eloquent\Repositories\EloquentProjectRepository;
@@ -27,6 +29,7 @@ class RepositoryServiceProvider extends ServiceProvider
         ProjectRepositoryInterface::class => EloquentProjectRepository::class,
         ResourceAllocationRepositoryInterface::class => EloquentAllocationRepository::class,
         SkillRepositoryInterface::class => EloquentSkillRepository::class,
+        AbsenceRepositoryInterface::class => EloquentAbsenceRepository::class,
         AllocationServiceInterface::class => AllocationService::class,
     ];
 

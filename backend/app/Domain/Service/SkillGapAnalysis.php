@@ -13,7 +13,7 @@ final class SkillGapAnalysis
     public function __construct(array $entries)
     {
         // 不足度が大きい順（gap昇順 = 最もdeficitが大きいものが先）
-        usort($entries, fn(SkillGapEntry $a, SkillGapEntry $b) => $a->gap() <=> $b->gap());
+        usort($entries, fn (SkillGapEntry $a, SkillGapEntry $b) => $a->gap() <=> $b->gap());
         $this->entries = $entries;
     }
 
@@ -28,7 +28,7 @@ final class SkillGapAnalysis
     {
         return array_values(array_filter(
             $this->entries,
-            fn(SkillGapEntry $entry) => $entry->gap() < 0
+            fn (SkillGapEntry $entry) => $entry->gap() < 0
         ));
     }
 

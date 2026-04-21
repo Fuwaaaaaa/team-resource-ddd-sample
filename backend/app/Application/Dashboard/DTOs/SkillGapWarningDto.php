@@ -16,6 +16,5 @@ final class SkillGapWarningDto
         public readonly int $requiredLevel,
         public readonly ?int $actualLevel,
         public readonly int $deficitLevel,
-    ) {
-    }
+    ) {}
 }

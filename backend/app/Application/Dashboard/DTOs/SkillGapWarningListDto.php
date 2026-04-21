@@ -7,12 +7,11 @@ namespace App\Application\Dashboard\DTOs;
 final class SkillGapWarningListDto
 {
     /**
-     * @param SkillGapWarningDto[] $warnings
+     * @param  SkillGapWarningDto[]  $warnings
      */
     public function __construct(
         public readonly array $warnings,
         public readonly int $totalWarnings,
         public readonly string $referenceDate,
-    ) {
-    }
+    ) {}
 }

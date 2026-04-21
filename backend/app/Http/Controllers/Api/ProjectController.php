@@ -27,6 +27,7 @@ class ProjectController extends Controller
             fn ($p) => ProjectDto::fromDomain($p),
             $repository->findAll(),
         );
+
         return response()->json(['data' => $projects]);
     }
 
@@ -34,6 +35,7 @@ class ProjectController extends Controller
     {
         $project = $repository->findById(new ProjectId($id));
         abort_if($project === null, 404, 'Project not found.');
+
         return response()->json(['data' => ProjectDto::fromDomain($project)]);
     }
 
@@ -42,6 +44,7 @@ class ProjectController extends Controller
         $dto = $handler->handle(new CreateProjectCommand(
             name: (string) $request->input('name'),
         ));
+
         return response()->json(['data' => $dto], 201);
     }
 
@@ -51,12 +54,14 @@ class ProjectController extends Controller
             projectId: $id,
             name: (string) $request->input('name'),
         ));
+
         return response()->json(['data' => $dto]);
     }
 
     public function destroy(string $id, DeleteProjectHandler $handler): JsonResponse
     {
         $handler->handle($id);
+
         return response()->json(null, 204);
     }
 
@@ -72,6 +77,7 @@ class ProjectController extends Controller
             requiredProficiency: (int) $request->input('requiredProficiency'),
             headcount: (int) $request->input('headcount'),
         ));
+
         return response()->json(['data' => $dto]);
     }
 }

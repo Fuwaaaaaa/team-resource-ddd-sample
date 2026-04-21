@@ -55,6 +55,7 @@ class TimelineController extends Controller
                 'allocations' => $memberAllocations->map(function (AllocationModel $a) use ($projects, $skills): array {
                     $project = $projects->get($a->project_id);
                     $skill = $skills->get($a->skill_id);
+
                     return [
                         'id' => (string) $a->id,
                         'projectId' => (string) $a->project_id,

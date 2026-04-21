@@ -9,14 +9,13 @@ use App\Domain\Project\Project;
 final class ProjectDto
 {
     /**
-     * @param array<int, array{id:string, skillId:string, requiredProficiency:int, headcount:int}> $requiredSkills
+     * @param  array<int, array{id:string, skillId:string, requiredProficiency:int, headcount:int}>  $requiredSkills
      */
     public function __construct(
         public readonly string $id,
         public readonly string $name,
         public readonly array $requiredSkills,
-    ) {
-    }
+    ) {}
 
     public static function fromDomain(Project $project): self
     {

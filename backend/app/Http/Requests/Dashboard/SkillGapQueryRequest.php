@@ -31,6 +31,7 @@ class SkillGapQueryRequest extends FormRequest
     public function projectId(): ?string
     {
         $value = $this->query('projectId');
+
         return is_string($value) && $value !== '' ? $value : null;
     }
 }

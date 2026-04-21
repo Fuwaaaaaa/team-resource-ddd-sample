@@ -10,6 +10,7 @@ use InvalidArgumentException;
 final class AllocationPeriod
 {
     private DateTimeImmutable $startDate;
+
     private DateTimeImmutable $endDate;
 
     public function __construct(DateTimeImmutable $startDate, DateTimeImmutable $endDate)
