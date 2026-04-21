@@ -10,9 +10,11 @@ import {
 import { useMembers } from '@/features/members/api';
 import { useProjects } from '@/features/projects/api';
 import { useSkills } from '@/features/skills/api';
+import { usePermissions } from '@/features/auth/api';
 import { HttpError } from '@/lib/http';
 
 export default function AllocationsPage() {
+  const { canWrite } = usePermissions();
   const members = useMembers();
   const projects = useProjects();
   const skills = useSkills();
@@ -79,7 +81,13 @@ export default function AllocationsPage() {
           </div>
         </div>
 
-        <form
+        {!canWrite && (
+          <p className="text-xs text-gray-500 italic">
+            Read-only: sign in as admin or manager to create or revoke allocations.
+          </p>
+        )}
+
+        {canWrite && <form
           onSubmit={onCreate}
           className="grid grid-cols-6 gap-3 p-4 bg-white rounded-lg border border-gray-200"
         >
@@ -149,7 +157,7 @@ export default function AllocationsPage() {
             </button>
             {error && <span className="text-sm text-red-600">{error}</span>}
           </div>
-        </form>
+        </form>}
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <table className="w-full text-sm">
@@ -181,7 +189,7 @@ export default function AllocationsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-2 text-right">
-                    {a.status === 'active' && (
+                    {a.status === 'active' && canWrite && (
                       <button
                         onClick={() => revokeAlloc.mutate(a.id)}
                         className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded"

@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch, HttpError } from '@/lib/http';
 
+export type UserRole = 'admin' | 'manager' | 'viewer';
+
 export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  role: UserRole;
 }
 
 const authKeys = {
@@ -27,6 +30,17 @@ export function useMe() {
     staleTime: 60 * 1000,
     retry: false,
   });
+}
+
+/** Convenience hook that returns the current user's role permissions. */
+export function usePermissions() {
+  const { data: me } = useMe();
+  const role: UserRole | undefined = me?.role;
+  return {
+    role,
+    canWrite: role === 'admin' || role === 'manager',
+    canViewAuditLog: role === 'admin',
+  };
 }
 
 export interface LoginInput {
