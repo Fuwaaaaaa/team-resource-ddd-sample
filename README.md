@@ -2,7 +2,7 @@
 
 チームメンバーのスキル熟練度（1-5）とプロジェクトへの工数割り当てを関連付け、リソースの過不足を視覚化するダッシュボードのサンプル実装です。
 
-バックエンドは **Laravel（PHP）** によるクリーンアーキテクチャ / DDD、フロントエンドは **Next.js（TypeScript）** による App Router + Atomic Design で構成しています。
+バックエンドは **Laravel 13（PHP 8.3+）** によるクリーンアーキテクチャ / DDD、フロントエンドは **Next.js 14（TypeScript）** による App Router + Atomic Design で構成しています。
 
 ---
 
