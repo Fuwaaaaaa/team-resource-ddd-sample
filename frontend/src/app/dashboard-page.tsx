@@ -1,9 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ResourceHeatmap } from '@/components/molecules/ResourceHeatmap';
+import { MemberDetailModal } from '@/components/molecules/MemberDetailModal';
 import { useDashboardFilterStore } from '@/stores/useDashboardFilterStore';
 import { dashboardKeys } from '@/features/dashboard/api';
+import { useProjects } from '@/features/projects/api';
 import type { SkillCategory } from '@/features/dashboard/types';
 
 const ALL_CATEGORIES: { value: SkillCategory; label: string }[] = [
@@ -19,6 +22,8 @@ export function DashboardContent() {
   const queryClient = useQueryClient();
   const referenceDate = useDashboardFilterStore((s) => s.referenceDate);
   const setReferenceDate = useDashboardFilterStore((s) => s.setReferenceDate);
+  const selectedProjectId = useDashboardFilterStore((s) => s.selectedProjectId);
+  const setSelectedProjectId = useDashboardFilterStore((s) => s.setSelectedProjectId);
   const selectedCategories = useDashboardFilterStore((s) => s.selectedCategories);
   const toggleCategory = useDashboardFilterStore((s) => s.toggleCategory);
   const showOverloadedOnly = useDashboardFilterStore((s) => s.showOverloadedOnly);
@@ -26,6 +31,9 @@ export function DashboardContent() {
   const searchMemberName = useDashboardFilterStore((s) => s.searchMemberName);
   const setSearchMemberName = useDashboardFilterStore((s) => s.setSearchMemberName);
   const resetFilters = useDashboardFilterStore((s) => s.resetFilters);
+
+  const projects = useProjects();
+  const [detailMemberId, setDetailMemberId] = useState<string | null>(null);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
@@ -36,7 +44,6 @@ export function DashboardContent() {
       {/* Filters */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-6">
         <div className="flex flex-wrap items-center gap-4">
-          {/* Date picker */}
           <div className="flex items-center gap-2">
             <label htmlFor="ref-date" className="text-xs font-medium text-gray-600">
               Date
@@ -50,7 +57,25 @@ export function DashboardContent() {
             />
           </div>
 
-          {/* Member search */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="project-filter" className="text-xs font-medium text-gray-600">
+              Project
+            </label>
+            <select
+              id="project-filter"
+              value={selectedProjectId ?? ''}
+              onChange={(e) => setSelectedProjectId(e.target.value || undefined)}
+              className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[180px]"
+            >
+              <option value="">All projects (skill-gap mode)</option>
+              {projects.data?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="flex items-center gap-2">
             <label htmlFor="search" className="text-xs font-medium text-gray-600">
               Search
@@ -65,7 +90,6 @@ export function DashboardContent() {
             />
           </div>
 
-          {/* Overloaded only toggle */}
           <label className="flex items-center gap-1.5 cursor-pointer">
             <input
               type="checkbox"
@@ -73,15 +97,11 @@ export function DashboardContent() {
               onChange={(e) => setShowOverloadedOnly(e.target.checked)}
               className="rounded border-gray-300 text-red-600 focus:ring-red-500"
             />
-            <span className="text-xs font-medium text-gray-600">
-              Overloaded only
-            </span>
+            <span className="text-xs font-medium text-gray-600">Overloaded only</span>
           </label>
 
-          {/* Divider */}
           <div className="h-6 w-px bg-gray-300" />
 
-          {/* Category filters */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-xs font-medium text-gray-600 mr-1">Skills:</span>
             {ALL_CATEGORIES.map((cat) => {
@@ -102,7 +122,6 @@ export function DashboardContent() {
             })}
           </div>
 
-          {/* Refresh */}
           <button
             onClick={handleRefresh}
             className="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md border border-blue-200 transition-colors"
@@ -110,7 +129,6 @@ export function DashboardContent() {
             Refresh
           </button>
 
-          {/* Reset */}
           <button
             onClick={resetFilters}
             className="ml-auto px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
@@ -118,10 +136,20 @@ export function DashboardContent() {
             Reset
           </button>
         </div>
+
+        {selectedProjectId && (
+          <p className="mt-3 text-xs text-gray-500">
+            Skill-gap warnings are filtered to the selected project. Heatmap still shows all members.
+          </p>
+        )}
       </div>
 
-      {/* Heatmap */}
-      <ResourceHeatmap />
+      <ResourceHeatmap onMemberClick={setDetailMemberId} />
+
+      <MemberDetailModal
+        memberId={detailMemberId}
+        onClose={() => setDetailMemberId(null)}
+      />
     </>
   );
 }
