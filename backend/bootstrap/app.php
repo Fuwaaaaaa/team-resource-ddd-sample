@@ -2,6 +2,7 @@
 
 use App\Application\Allocation\Exceptions\AllocationCapacityExceededException;
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\EnsureRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->web(prepend: [
             AssignRequestId::class,
+        ]);
+        $middleware->alias([
+            'role' => EnsureRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

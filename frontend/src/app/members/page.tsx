@@ -9,9 +9,11 @@ import {
   useUpsertMemberSkill,
 } from '@/features/members/api';
 import { useSkills } from '@/features/skills/api';
+import { usePermissions } from '@/features/auth/api';
 import { HttpError } from '@/lib/http';
 
 export default function MembersPage() {
+  const { canWrite } = usePermissions();
   const members = useMembers();
   const skills = useSkills();
   const createMember = useCreateMember();
@@ -63,43 +65,47 @@ export default function MembersPage() {
       <div className="max-w-[1400px] mx-auto px-4 py-8 space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Members</h1>
 
-        <form
-          onSubmit={onCreate}
-          className="flex items-end gap-3 p-4 bg-white rounded-lg border border-gray-200"
-        >
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
-            <input
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md w-64"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Standard hours/day
-            </label>
-            <input
-              type="number"
-              step="0.5"
-              min="0.5"
-              max="24"
-              required
-              value={hours}
-              onChange={(e) => setHours(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md w-32"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={createMember.isPending}
-            className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+        {canWrite ? (
+          <form
+            onSubmit={onCreate}
+            className="flex items-end gap-3 p-4 bg-white rounded-lg border border-gray-200"
           >
-            Create
-          </button>
-          {error && <span className="text-sm text-red-600">{error}</span>}
-        </form>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
+              <input
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md w-64"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Standard hours/day
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                min="0.5"
+                max="24"
+                required
+                value={hours}
+                onChange={(e) => setHours(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md w-32"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={createMember.isPending}
+              className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              Create
+            </button>
+            {error && <span className="text-sm text-red-600">{error}</span>}
+          </form>
+        ) : (
+          <p className="text-xs text-gray-500 italic">Read-only: sign in as admin or manager to create members.</p>
+        )}
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <table className="w-full text-sm">
@@ -133,20 +139,26 @@ export default function MembersPage() {
                     </div>
                   </td>
                   <td className="px-4 py-2 text-right space-x-2">
-                    <button
-                      onClick={() => onAddSkill(m.id)}
-                      className="px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 rounded"
-                    >
-                      Add / update skill
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete member ${m.name}?`)) deleteMember.mutate(m.id);
-                      }}
-                      className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded"
-                    >
-                      Delete
-                    </button>
+                    {canWrite ? (
+                      <>
+                        <button
+                          onClick={() => onAddSkill(m.id)}
+                          className="px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 rounded"
+                        >
+                          Add / update skill
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete member ${m.name}?`)) deleteMember.mutate(m.id);
+                          }}
+                          className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
                   </td>
                 </tr>
               ))}

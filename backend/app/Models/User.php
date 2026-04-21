@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,6 +20,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     protected $hidden = [
@@ -32,6 +33,27 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class,
         ];
+    }
+
+    public function hasRole(UserRole ...$roles): bool
+    {
+        foreach ($roles as $role) {
+            if ($this->role === $role) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function canWrite(): bool
+    {
+        return $this->role instanceof UserRole && $this->role->canWrite();
+    }
+
+    public function canViewAuditLog(): bool
+    {
+        return $this->role instanceof UserRole && $this->role->canViewAuditLog();
     }
 }
