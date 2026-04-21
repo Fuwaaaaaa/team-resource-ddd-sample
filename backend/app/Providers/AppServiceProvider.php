@@ -14,6 +14,7 @@ use App\Domain\Project\Events\ProjectActivated;
 use App\Domain\Project\Events\ProjectCanceled;
 use App\Domain\Project\Events\ProjectCompleted;
 use App\Domain\Project\Events\ProjectRequirementChanged;
+use App\Listeners\CreateNotification;
 use App\Listeners\RecordAuditLog;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -41,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
             AbsenceCanceled::class,
         ] as $eventClass) {
             Event::listen($eventClass, [RecordAuditLog::class, 'handle']);
+            Event::listen($eventClass, [CreateNotification::class, 'handle']);
         }
     }
 }
