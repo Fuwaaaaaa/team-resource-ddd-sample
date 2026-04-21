@@ -9,6 +9,8 @@ use App\Application\Allocation\Commands\CreateAllocationHandler;
 use App\Application\Allocation\Commands\RevokeAllocationHandler;
 use App\Application\Allocation\DTOs\AllocationDto;
 use App\Application\Allocation\DTOs\AllocationSimulationDto;
+use App\Application\Allocation\Queries\SuggestAllocationCandidatesHandler;
+use App\Application\Allocation\Queries\SuggestAllocationCandidatesQuery;
 use App\Domain\Allocation\ResourceAllocationRepositoryInterface;
 use App\Domain\Member\MemberId;
 use App\Http\Controllers\Controller;
@@ -51,6 +53,29 @@ class AllocationController extends Controller
         }
 
         return response()->json(['data' => $result], 201);
+    }
+
+    public function suggestions(Request $request, SuggestAllocationCandidatesHandler $handler): JsonResponse
+    {
+        $request->validate([
+            'projectId' => 'required|uuid',
+            'skillId' => 'required|uuid',
+            'minimumProficiency' => 'required|integer|min:1|max:5',
+            'periodStart' => 'required|date_format:Y-m-d',
+            'limit' => 'nullable|integer|min:1|max:20',
+        ]);
+
+        $candidates = $handler->handle(new SuggestAllocationCandidatesQuery(
+            projectId: (string) $request->query('projectId'),
+            skillId: (string) $request->query('skillId'),
+            minimumProficiency: (int) $request->query('minimumProficiency'),
+            periodStart: (string) $request->query('periodStart'),
+            limit: (int) ($request->query('limit') ?? 5),
+        ));
+
+        return response()->json([
+            'data' => array_map(fn ($c) => $c->toArray(), $candidates),
+        ]);
     }
 
     public function revoke(string $id, RevokeAllocationHandler $handler): JsonResponse

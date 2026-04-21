@@ -10,6 +10,8 @@ use App\Domain\Availability\Absence;
 use App\Domain\Member\Member;
 use App\Domain\Member\MemberId;
 use App\Domain\Project\Project;
+use App\Domain\Project\ProjectId;
+use App\Domain\Skill\SkillId;
 use DateTimeImmutable;
 
 /**
@@ -126,5 +128,27 @@ interface AllocationServiceInterface
         array $allocations,
         array $members,
         DateTimeImmutable $referenceDate
+    ): array;
+
+    /**
+     * 必要スキルに対するアサインメント候補を提案する。
+     *
+     * スコアリング指標:
+     *   - 余剰キャパ (period 開始日時点で 100 - 使用率)
+     *   - 熟練度余裕 (member.proficiency - minimumProficiency)
+     *   - 同プロジェクト経験歴 (該当プロジェクトの過去 allocation 数)
+     *
+     * @param  Member[]  $members  全メンバー
+     * @param  ResourceAllocation[]  $allocations  全アロケーション (revoked 含む)
+     * @return AllocationCandidate[] スコア降順、最大 $limit 件
+     */
+    public function suggestCandidates(
+        SkillId $skillId,
+        int $minimumProficiency,
+        ProjectId $projectId,
+        DateTimeImmutable $periodStart,
+        array $members,
+        array $allocations,
+        int $limit = 5
     ): array;
 }
