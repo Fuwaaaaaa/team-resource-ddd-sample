@@ -8,6 +8,7 @@ import {
   useRevokeAllocation,
   useSimulateAllocation,
 } from '@/features/allocations/api';
+import { useAllocationSuggestions } from '@/features/allocations/suggestions';
 import { useMembers } from '@/features/members/api';
 import { useProjects } from '@/features/projects/api';
 import { useSkills } from '@/features/skills/api';
@@ -37,6 +38,20 @@ export default function AllocationsPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [simulation, setSimulation] = useState<AllocationSimulationDto | null>(null);
+  const [minProficiency, setMinProficiency] = useState(3);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const suggestions = useAllocationSuggestions(
+    showSuggestions && form.projectId && form.skillId && form.start
+      ? {
+          projectId: form.projectId,
+          skillId: form.skillId,
+          minimumProficiency: minProficiency,
+          periodStart: form.start,
+          limit: 5,
+        }
+      : null,
+  );
 
   const buildInput = () => ({
     memberId,
@@ -181,6 +196,13 @@ export default function AllocationsPage() {
             </div>
             <div className="col-span-6 flex items-center gap-3">
               <button
+                type="button"
+                onClick={() => setShowSuggestions((v) => !v)}
+                className="px-4 py-1.5 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-md hover:bg-purple-100"
+              >
+                {showSuggestions ? 'Hide suggestions' : 'Suggest candidates'}
+              </button>
+              <button
                 type="submit"
                 disabled={simulate.isPending}
                 className="px-4 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 disabled:opacity-50"
@@ -198,6 +220,72 @@ export default function AllocationsPage() {
               {error && <span className="text-sm text-red-600">{error}</span>}
             </div>
           </form>
+        )}
+
+        {showSuggestions && canWrite && (
+          <div className="p-4 bg-white rounded-lg border-2 border-purple-200 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-purple-800">
+                Assignment candidates (top {suggestions.data?.length ?? 0})
+              </h2>
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <label>Min proficiency:</label>
+                <select
+                  value={minProficiency}
+                  onChange={(e) => setMinProficiency(Number(e.target.value))}
+                  className="px-2 py-1 text-xs border border-gray-300 rounded"
+                >
+                  {[1, 2, 3, 4, 5].map((l) => (
+                    <option key={l} value={l}>
+                      ≥ {l}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {(!form.projectId || !form.skillId) && (
+              <p className="text-xs text-gray-500">
+                Select project, skill, and start date above to see candidates.
+              </p>
+            )}
+            {suggestions.isLoading && (
+              <p className="text-xs text-gray-500">Loading candidates…</p>
+            )}
+            {suggestions.data && suggestions.data.length === 0 && (
+              <p className="text-xs text-gray-500">
+                該当する候補がいません。条件を緩めてみてください。
+              </p>
+            )}
+            <ul className="space-y-2">
+              {suggestions.data?.map((c) => (
+                <li
+                  key={c.memberId}
+                  className="flex items-center justify-between gap-3 p-3 border border-gray-200 rounded-md hover:bg-purple-50"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-gray-900">
+                      {c.memberName}
+                      <span className="ml-2 text-xs text-gray-500 font-normal">
+                        score {c.score.toFixed(0)}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-600 mt-0.5">
+                      {c.reasons.join(' · ')}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setMemberId(c.memberId);
+                      setShowSuggestions(false);
+                    }}
+                    className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded hover:bg-purple-200"
+                  >
+                    Pick
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         {simulation && (
