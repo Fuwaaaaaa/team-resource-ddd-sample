@@ -9,6 +9,7 @@ use App\Infrastructure\Persistence\Eloquent\Models\ProjectModel;
 use App\Infrastructure\Persistence\Eloquent\Models\SkillModel;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 final class AllocationCapacityTest extends TestCase
@@ -16,7 +17,9 @@ final class AllocationCapacityTest extends TestCase
     use RefreshDatabase;
 
     private MemberModel $member;
+
     private ProjectModel $project;
+
     private SkillModel $skill;
 
     protected function setUp(): void
@@ -70,7 +73,7 @@ final class AllocationCapacityTest extends TestCase
         $response->assertStatus(422)->assertJsonValidationErrors(['periodEnd']);
     }
 
-    private function createAllocation(int $percentage): \Illuminate\Testing\TestResponse
+    private function createAllocation(int $percentage): TestResponse
     {
         return $this->postJson('/api/allocations', [
             'memberId' => $this->member->id,

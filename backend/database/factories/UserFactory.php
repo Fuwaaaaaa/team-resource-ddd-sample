@@ -24,6 +24,11 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => 'password',
             'remember_token' => Str::random(10),
+            // Default to admin so that feature tests exercising write endpoints pass
+            // without every caller needing to override it. Migration sets 'admin' as
+            // column default on Postgres, but SQLite (used in CI feature tests) needs
+            // explicit initialization to avoid role-based 403s.
+            'role' => 'admin',
         ];
     }
 }

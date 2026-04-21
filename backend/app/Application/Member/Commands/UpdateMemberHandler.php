@@ -16,14 +16,13 @@ final class UpdateMemberHandler
 {
     public function __construct(
         private MemberRepositoryInterface $memberRepository,
-    ) {
-    }
+    ) {}
 
     public function handle(UpdateMemberCommand $command): MemberDto
     {
         $member = $this->memberRepository->findById(new MemberId($command->memberId));
         if ($member === null) {
-            throw new RuntimeException('Member not found: ' . $command->memberId);
+            throw new RuntimeException('Member not found: '.$command->memberId);
         }
 
         if ($command->name !== null) {

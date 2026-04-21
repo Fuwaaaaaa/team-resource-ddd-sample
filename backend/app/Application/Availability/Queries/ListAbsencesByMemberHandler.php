@@ -12,13 +12,13 @@ final class ListAbsencesByMemberHandler
 {
     public function __construct(
         private AbsenceRepositoryInterface $absenceRepository,
-    ) {
-    }
+    ) {}
 
     /** @return AbsenceDto[] */
     public function handle(string $memberId): array
     {
         $absences = $this->absenceRepository->findByMemberId(new MemberId($memberId));
+
         return array_map(fn ($a) => AbsenceDto::fromDomain($a), $absences);
     }
 }

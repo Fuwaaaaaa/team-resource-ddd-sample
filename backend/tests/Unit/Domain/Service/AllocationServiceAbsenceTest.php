@@ -22,7 +22,7 @@ final class AllocationServiceAbsenceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->service = new AllocationService();
+        $this->service = new AllocationService;
     }
 
     public function test_absence_on_reference_date_treats_all_allocation_as_overload(): void
@@ -129,7 +129,7 @@ final class AllocationServiceAbsenceTest extends TestCase
         $this->assertEqualsWithDelta(4.0, $entries[1]->overloadHours(), 0.001, 'm2 は不在なので 50% 全部が過負荷');
     }
 
-    public function test_detectOverload_without_absences_matches_original_behavior(): void
+    public function test_detect_overload_without_absences_matches_original_behavior(): void
     {
         $member = $this->makeMember('m1', 8.0);
         $allocations = [

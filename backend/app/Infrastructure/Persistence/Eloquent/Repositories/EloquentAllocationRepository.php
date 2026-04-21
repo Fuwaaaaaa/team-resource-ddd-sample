@@ -19,6 +19,7 @@ final class EloquentAllocationRepository implements ResourceAllocationRepository
     public function findById(AllocationId $id): ?ResourceAllocation
     {
         $model = AllocationModel::find($id->toString());
+
         return $model ? AllocationMapper::toDomain($model) : null;
     }
 
@@ -42,6 +43,7 @@ final class EloquentAllocationRepository implements ResourceAllocationRepository
     public function findActiveOnDate(DateTimeImmutable $date): array
     {
         $iso = $date->format('Y-m-d');
+
         return AllocationModel::where('status', 'active')
             ->whereDate('period_start', '<=', $iso)
             ->whereDate('period_end', '>=', $iso)

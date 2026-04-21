@@ -25,7 +25,7 @@ use ReflectionClass;
 final class MemberMapper
 {
     /**
-     * @param iterable<MemberSkillModel> $memberSkillModels
+     * @param  iterable<MemberSkillModel>  $memberSkillModels
      */
     public static function toDomain(MemberModel $model, iterable $memberSkillModels): Member
     {
@@ -82,6 +82,7 @@ final class MemberMapper
                 'proficiency' => $skill->proficiency()->level(),
             ];
         }
+
         return $rows;
     }
 }

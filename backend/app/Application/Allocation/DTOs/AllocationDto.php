@@ -17,8 +17,7 @@ final class AllocationDto
         public readonly string $periodStart,
         public readonly string $periodEnd,
         public readonly string $status,
-    ) {
-    }
+    ) {}
 
     public static function fromDomain(ResourceAllocation $a): self
     {

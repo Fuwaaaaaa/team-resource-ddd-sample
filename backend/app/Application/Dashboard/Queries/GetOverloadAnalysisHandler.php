@@ -19,8 +19,7 @@ final class GetOverloadAnalysisHandler
         private ResourceAllocationRepositoryInterface $allocationRepository,
         private AbsenceRepositoryInterface $absenceRepository,
         private AllocationServiceInterface $allocationService,
-    ) {
-    }
+    ) {}
 
     public function handle(GetOverloadAnalysisQuery $query): OverloadAnalysisDto
     {

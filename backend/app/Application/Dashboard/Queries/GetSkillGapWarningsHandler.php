@@ -22,8 +22,7 @@ final class GetSkillGapWarningsHandler
         private ResourceAllocationRepositoryInterface $allocationRepository,
         private AllocationServiceInterface $allocationService,
         private SkillRepositoryInterface $skillRepository,
-    ) {
-    }
+    ) {}
 
     public function handle(GetSkillGapWarningsQuery $query): SkillGapWarningListDto
     {

@@ -9,8 +9,11 @@ use App\Domain\Member\MemberId;
 final class MemberOverloadEntry
 {
     private MemberId $memberId;
+
     private float $standardHoursPerDay;
+
     private int $totalAllocatedPercentage;
+
     private float $overloadHours;
 
     public function __construct(

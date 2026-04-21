@@ -13,8 +13,7 @@ final class CreateProjectHandler
 {
     public function __construct(
         private ProjectRepositoryInterface $projectRepository,
-    ) {
-    }
+    ) {}
 
     public function handle(CreateProjectCommand $command): ProjectDto
     {

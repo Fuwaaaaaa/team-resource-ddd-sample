@@ -28,6 +28,7 @@ class MemberController extends Controller
             fn ($m) => MemberDto::fromDomain($m),
             $repository->findAll(),
         );
+
         return response()->json(['data' => $members]);
     }
 
@@ -35,6 +36,7 @@ class MemberController extends Controller
     {
         $member = $repository->findById(new MemberId($id));
         abort_if($member === null, 404, 'Member not found.');
+
         return response()->json(['data' => MemberDto::fromDomain($member)]);
     }
 
@@ -44,6 +46,7 @@ class MemberController extends Controller
             name: (string) $request->input('name'),
             standardWorkingHours: (float) ($request->input('standardWorkingHours') ?? 8.0),
         ));
+
         return response()->json(['data' => $dto], 201);
     }
 
@@ -56,12 +59,14 @@ class MemberController extends Controller
                 ? (float) $request->input('standardWorkingHours')
                 : null,
         ));
+
         return response()->json(['data' => $dto]);
     }
 
     public function destroy(string $id, DeleteMemberHandler $handler): JsonResponse
     {
         $handler->handle($id);
+
         return response()->json(null, 204);
     }
 
@@ -76,6 +81,7 @@ class MemberController extends Controller
             skillId: $skillId,
             proficiency: (int) $request->input('proficiency'),
         ));
+
         return response()->json(['data' => $dto]);
     }
 }

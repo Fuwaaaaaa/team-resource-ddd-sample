@@ -20,8 +20,7 @@ final class GetTeamCapacityHandler
         private ResourceAllocationRepositoryInterface $allocationRepository,
         private SkillRepositoryInterface $skillRepository,
         private AllocationServiceInterface $allocationService,
-    ) {
-    }
+    ) {}
 
     public function handle(GetTeamCapacityQuery $query): TeamCapacitySnapshotDto
     {

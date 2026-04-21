@@ -15,11 +15,17 @@ use App\Domain\Member\MemberId;
 final class Absence
 {
     private AbsenceId $id;
+
     private MemberId $memberId;
+
     private AbsencePeriod $period;
+
     private AbsenceType $type;
+
     private string $note;
+
     private bool $canceled = false;
+
     /** @var object[] */
     private array $domainEvents = [];
 
@@ -71,7 +77,7 @@ final class Absence
 
     public function isActive(): bool
     {
-        return !$this->canceled;
+        return ! $this->canceled;
     }
 
     public function cancel(): void
@@ -93,6 +99,7 @@ final class Absence
     {
         $events = $this->domainEvents;
         $this->domainEvents = [];
+
         return $events;
     }
 }

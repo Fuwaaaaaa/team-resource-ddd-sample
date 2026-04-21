@@ -12,8 +12,7 @@ final class AbsenceCanceled
     public function __construct(
         private AbsenceId $absenceId,
         private MemberId $memberId,
-    ) {
-    }
+    ) {}
 
     public function absenceId(): AbsenceId
     {

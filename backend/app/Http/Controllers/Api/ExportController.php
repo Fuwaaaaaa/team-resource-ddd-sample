@@ -7,9 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Infrastructure\Persistence\Eloquent\Models\AllocationModel;
 use App\Infrastructure\Persistence\Eloquent\Models\MemberModel;
-use App\Infrastructure\Persistence\Eloquent\Models\MemberSkillModel;
 use App\Infrastructure\Persistence\Eloquent\Models\ProjectModel;
-use App\Infrastructure\Persistence\Eloquent\Models\RequiredSkillModel;
 use App\Infrastructure\Persistence\Eloquent\Models\SkillModel;
 use App\Models\AuditLog;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -30,6 +28,7 @@ class ExportController extends Controller
                 foreach ($chunk as $m) {
                     if ($m->skills->isEmpty()) {
                         fputcsv($out, [$m->id, $m->name, $m->standard_working_hours, '', '']);
+
                         continue;
                     }
                     foreach ($m->skills as $ms) {
@@ -57,6 +56,7 @@ class ExportController extends Controller
                 foreach ($chunk as $p) {
                     if ($p->requiredSkills->isEmpty()) {
                         fputcsv($out, [$p->id, $p->name, '', '', '']);
+
                         continue;
                     }
                     foreach ($p->requiredSkills as $rs) {

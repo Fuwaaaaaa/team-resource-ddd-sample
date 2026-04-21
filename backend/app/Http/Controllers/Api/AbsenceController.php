@@ -7,9 +7,9 @@ namespace App\Http\Controllers\Api;
 use App\Application\Availability\Commands\CancelAbsenceHandler;
 use App\Application\Availability\Commands\RegisterAbsenceCommand;
 use App\Application\Availability\Commands\RegisterAbsenceHandler;
+use App\Application\Availability\DTOs\AbsenceDto;
 use App\Application\Availability\Queries\ListAbsencesByMemberHandler;
 use App\Domain\Availability\AbsenceRepositoryInterface;
-use App\Application\Availability\DTOs\AbsenceDto;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Availability\StoreAbsenceRequest;
 use Illuminate\Http\JsonResponse;
@@ -22,12 +22,14 @@ class AbsenceController extends Controller
             fn ($a) => AbsenceDto::fromDomain($a)->toArray(),
             $repository->findAll(),
         );
+
         return response()->json(['data' => $absences]);
     }
 
     public function byMember(string $memberId, ListAbsencesByMemberHandler $handler): JsonResponse
     {
         $absences = $handler->handle($memberId);
+
         return response()->json([
             'data' => array_map(fn (AbsenceDto $d) => $d->toArray(), $absences),
         ]);
@@ -42,12 +44,14 @@ class AbsenceController extends Controller
             type: (string) $request->input('type'),
             note: (string) ($request->input('note') ?? ''),
         ));
+
         return response()->json(['data' => $dto->toArray()], 201);
     }
 
     public function cancel(string $id, CancelAbsenceHandler $handler): JsonResponse
     {
         $dto = $handler->handle($id);
+
         return response()->json(['data' => $dto->toArray()]);
     }
 }

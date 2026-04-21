@@ -26,6 +26,7 @@ class AllocationController extends Controller
         }
 
         $allocations = $repository->findByMemberId(new MemberId($memberId));
+
         return response()->json([
             'data' => array_map(fn ($a) => AllocationDto::fromDomain($a), $allocations),
         ]);
@@ -55,6 +56,7 @@ class AllocationController extends Controller
     public function revoke(string $id, RevokeAllocationHandler $handler): JsonResponse
     {
         $dto = $handler->handle($id);
+
         return response()->json(['data' => $dto]);
     }
 }

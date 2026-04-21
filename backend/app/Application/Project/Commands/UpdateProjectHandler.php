@@ -15,14 +15,13 @@ final class UpdateProjectHandler
 {
     public function __construct(
         private ProjectRepositoryInterface $projectRepository,
-    ) {
-    }
+    ) {}
 
     public function handle(UpdateProjectCommand $command): ProjectDto
     {
         $project = $this->projectRepository->findById(new ProjectId($command->projectId));
         if ($project === null) {
-            throw new RuntimeException('Project not found: ' . $command->projectId);
+            throw new RuntimeException('Project not found: '.$command->projectId);
         }
 
         $ref = new ReflectionClass($project);

@@ -9,14 +9,16 @@ use InvalidArgumentException;
 final class AllocationStatus
 {
     private const ACTIVE = 'active';
+
     private const REVOKED = 'revoked';
+
     private const VALID_STATUSES = [self::ACTIVE, self::REVOKED];
 
     private string $value;
 
     private function __construct(string $value)
     {
-        if (!in_array($value, self::VALID_STATUSES, true)) {
+        if (! in_array($value, self::VALID_STATUSES, true)) {
             throw new InvalidArgumentException("Invalid allocation status: {$value}.");
         }
         $this->value = $value;

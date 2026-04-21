@@ -17,6 +17,7 @@ final class EloquentAbsenceRepository implements AbsenceRepositoryInterface
     public function findById(AbsenceId $id): ?Absence
     {
         $model = AbsenceModel::find($id->toString());
+
         return $model ? AbsenceMapper::toDomain($model) : null;
     }
 

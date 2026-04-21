@@ -41,6 +41,7 @@ frontend/.env.*
 frontend/.vercel
 frontend/coverage/
 frontend/.swc/
+frontend/tsconfig.tsbuildinfo
 
 # ============================================
 # IDE / OS

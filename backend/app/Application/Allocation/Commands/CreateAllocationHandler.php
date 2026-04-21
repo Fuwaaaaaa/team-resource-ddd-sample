@@ -26,12 +26,11 @@ final class CreateAllocationHandler
         private MemberRepositoryInterface $memberRepository,
         private AllocationServiceInterface $allocationService,
         private DomainEventDispatcher $eventDispatcher,
-    ) {
-    }
+    ) {}
 
     /**
-     * @return AllocationDto|AllocationSimulationDto  dryRun=true のときはシミュレーション結果、
-     *                                                そうでなければ実作成された Allocation の DTO
+     * @return AllocationDto|AllocationSimulationDto dryRun=true のときはシミュレーション結果、
+     *                                               そうでなければ実作成された Allocation の DTO
      */
     public function handle(CreateAllocationCommand $command): AllocationDto|AllocationSimulationDto
     {

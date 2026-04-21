@@ -21,8 +21,7 @@ final class RegisterAbsenceHandler
         private AbsenceRepositoryInterface $absenceRepository,
         private MemberRepositoryInterface $memberRepository,
         private DomainEventDispatcher $eventDispatcher,
-    ) {
-    }
+    ) {}
 
     public function handle(RegisterAbsenceCommand $command): AbsenceDto
     {

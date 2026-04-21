@@ -12,6 +12,5 @@ final class RegisterAbsenceCommand
         public string $endDate,   // Y-m-d
         public string $type,      // AbsenceType value
         public string $note = '',
-    ) {
-    }
+    ) {}
 }

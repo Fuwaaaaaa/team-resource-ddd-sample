@@ -16,8 +16,7 @@ final class AbsenceRegistered
         private MemberId $memberId,
         private AbsencePeriod $period,
         private AbsenceType $type,
-    ) {
-    }
+    ) {}
 
     public function absenceId(): AbsenceId
     {

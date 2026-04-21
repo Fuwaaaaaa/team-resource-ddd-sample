@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace App\Infrastructure\Service;
 
 use App\Domain\Allocation\AllocationPercentage;
-use App\Domain\Allocation\ResourceAllocation;
-use App\Domain\Member\Member;
 use App\Domain\Member\MemberId;
 use App\Domain\Project\Project;
 use App\Domain\Service\AllocationServiceInterface;
@@ -18,6 +16,7 @@ use App\Domain\Service\SkillGapAnalysis;
 use App\Domain\Service\SkillGapEntry;
 use App\Domain\Service\SkillGapWarning;
 use App\Domain\Service\TeamCapacitySnapshot;
+use App\Domain\Skill\SkillId;
 use DateTimeImmutable;
 
 final class AllocationService implements AllocationServiceInterface
@@ -41,10 +40,10 @@ final class AllocationService implements AllocationServiceInterface
 
             foreach ($allocations as $allocation) {
                 // このスキル・このプロジェクト・この日付に該当するアロケーションのみ
-                if (!$allocation->skillId()->equals($skillId)) {
+                if (! $allocation->skillId()->equals($skillId)) {
                     continue;
                 }
-                if (!$allocation->isActive() || !$allocation->coversDate($referenceDate)) {
+                if (! $allocation->isActive() || ! $allocation->coversDate($referenceDate)) {
                     continue;
                 }
 
@@ -99,7 +98,7 @@ final class AllocationService implements AllocationServiceInterface
             // スキル別の熟練度マップ
             $skillProficiencies = [];
             foreach (array_keys($allSkillIds) as $skillIdStr) {
-                $skillId = new \App\Domain\Skill\SkillId($skillIdStr);
+                $skillId = new SkillId($skillIdStr);
                 $proficiency = $member->proficiencyFor($skillId);
                 $skillProficiencies[$skillIdStr] = $proficiency?->level();
             }
@@ -148,7 +147,7 @@ final class AllocationService implements AllocationServiceInterface
                 $key = $requiredSkill->skillId()->toString();
                 $totalRequired[$key] = ($totalRequired[$key] ?? 0) + $requiredSkill->headcount();
 
-                if (!isset($minimumProficiencies[$key])
+                if (! isset($minimumProficiencies[$key])
                     || $requiredSkill->minimumProficiency()->level() > $minimumProficiencies[$key]->level()
                 ) {
                     $minimumProficiencies[$key] = $requiredSkill->minimumProficiency();
@@ -159,7 +158,7 @@ final class AllocationService implements AllocationServiceInterface
         // 各スキルについて、チーム内の適格者数をカウント
         $entries = [];
         foreach ($totalRequired as $skillIdStr => $requiredHeadcount) {
-            $skillId = new \App\Domain\Skill\SkillId($skillIdStr);
+            $skillId = new SkillId($skillIdStr);
             $requiredProficiency = $minimumProficiencies[$skillIdStr];
             $qualifiedCount = 0;
 
@@ -258,10 +257,10 @@ final class AllocationService implements AllocationServiceInterface
             $requiredLevel = $requiredSkill->minimumProficiency()->level();
 
             foreach ($allocations as $allocation) {
-                if (!$allocation->skillId()->equals($skillId)) {
+                if (! $allocation->skillId()->equals($skillId)) {
                     continue;
                 }
-                if (!$allocation->isActive() || !$allocation->coversDate($referenceDate)) {
+                if (! $allocation->isActive() || ! $allocation->coversDate($referenceDate)) {
                     continue;
                 }
 
@@ -274,7 +273,7 @@ final class AllocationService implements AllocationServiceInterface
                 $actualLevel = $proficiency?->level();
 
                 // スキルを持っていない、または要求水準未満の場合に警告
-                if ($proficiency === null || !$proficiency->satisfies($requiredSkill->minimumProficiency())) {
+                if ($proficiency === null || ! $proficiency->satisfies($requiredSkill->minimumProficiency())) {
                     $warnings[] = new SkillGapWarning(
                         $member->id(),
                         $project->id(),

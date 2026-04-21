@@ -15,8 +15,7 @@ final class CancelAbsenceHandler
     public function __construct(
         private AbsenceRepositoryInterface $absenceRepository,
         private DomainEventDispatcher $eventDispatcher,
-    ) {
-    }
+    ) {}
 
     public function handle(string $absenceId): AbsenceDto
     {

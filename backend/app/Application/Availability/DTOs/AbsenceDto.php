@@ -17,8 +17,7 @@ final class AbsenceDto
         public string $note,
         public bool $canceled,
         public int $daysInclusive,
-    ) {
-    }
+    ) {}
 
     public static function fromDomain(Absence $absence): self
     {

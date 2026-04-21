@@ -10,6 +10,5 @@ final class UpdateMemberCommand
         public readonly string $memberId,
         public readonly ?string $name = null,
         public readonly ?float $standardWorkingHours = null,
-    ) {
-    }
+    ) {}
 }

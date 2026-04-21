@@ -15,6 +15,7 @@ use InvalidArgumentException;
 final class AbsencePeriod
 {
     private DateTimeImmutable $startDate;
+
     private DateTimeImmutable $endDate;
 
     public function __construct(DateTimeImmutable $startDate, DateTimeImmutable $endDate)
@@ -55,6 +56,7 @@ final class AbsencePeriod
     public function daysInclusive(): int
     {
         $diff = $this->startDate->diff($this->endDate);
+
         return ((int) $diff->days) + 1;
     }
 }

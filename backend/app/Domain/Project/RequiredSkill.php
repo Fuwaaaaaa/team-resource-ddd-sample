@@ -10,8 +10,11 @@ use InvalidArgumentException;
 final class RequiredSkill
 {
     private RequiredSkillId $id;
+
     private SkillId $skillId;
+
     private RequiredProficiency $minimumProficiency;
+
     private int $headcount;
 
     public function __construct(
