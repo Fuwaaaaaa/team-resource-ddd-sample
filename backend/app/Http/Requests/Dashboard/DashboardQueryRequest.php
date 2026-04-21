@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Dashboard;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class DashboardQueryRequest extends FormRequest
 {
@@ -13,11 +14,11 @@ class DashboardQueryRequest extends FormRequest
         return true;
     }
 
-    /** @return array<string, array<int, string>> */
+    /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
         return [
-            'date' => ['required', 'date_format:Y-m-d'],
+            'date' => ['required', Rule::date()->format('Y-m-d')],
         ];
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Allocation;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAllocationRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class StoreAllocationRequest extends FormRequest
         return true;
     }
 
-    /** @return array<string, array<int, string>> */
+    /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
         return [
@@ -21,8 +22,8 @@ class StoreAllocationRequest extends FormRequest
             'projectId' => ['required', 'uuid'],
             'skillId' => ['required', 'uuid'],
             'allocationPercentage' => ['required', 'integer', 'between:1,100'],
-            'periodStart' => ['required', 'date_format:Y-m-d'],
-            'periodEnd' => ['required', 'date_format:Y-m-d', 'after:periodStart'],
+            'periodStart' => ['required', Rule::date()->format('Y-m-d')],
+            'periodEnd' => ['required', Rule::date()->format('Y-m-d')->after('periodStart')],
         ];
     }
 }
