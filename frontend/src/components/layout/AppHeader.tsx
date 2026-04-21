@@ -9,6 +9,7 @@ const nav = [
   { href: '/members', label: 'Members' },
   { href: '/projects', label: 'Projects' },
   { href: '/allocations', label: 'Allocations' },
+  { href: '/audit-logs', label: 'Audit' },
 ];
 
 export function AppHeader() {

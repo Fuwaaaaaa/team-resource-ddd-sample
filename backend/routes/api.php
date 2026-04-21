@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AllocationController;
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\Dashboard\CapacityController;
 use App\Http\Controllers\Api\Dashboard\OverloadController;
 use App\Http\Controllers\Api\Dashboard\SkillGapController;
@@ -55,4 +56,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/allocations', [AllocationController::class, 'index']);
     Route::post('/allocations', [AllocationController::class, 'store']);
     Route::post('/allocations/{id}/revoke', [AllocationController::class, 'revoke']);
+
+    // Audit logs (参照のみ)
+    Route::get('/audit-logs', [AuditLogController::class, 'index']);
 });

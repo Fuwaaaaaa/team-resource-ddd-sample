@@ -14,6 +14,7 @@ use App\Domain\Member\MemberId;
 use App\Domain\Project\ProjectId;
 use App\Domain\Service\AllocationServiceInterface;
 use App\Domain\Skill\SkillId;
+use App\Infrastructure\Events\DomainEventDispatcher;
 use DateTimeImmutable;
 
 final class CreateAllocationHandler
@@ -21,6 +22,7 @@ final class CreateAllocationHandler
     public function __construct(
         private ResourceAllocationRepositoryInterface $allocationRepository,
         private AllocationServiceInterface $allocationService,
+        private DomainEventDispatcher $eventDispatcher,
     ) {
     }
 
@@ -50,6 +52,8 @@ final class CreateAllocationHandler
         );
 
         $this->allocationRepository->save($allocation);
+
+        $this->eventDispatcher->dispatchAll($allocation->pullDomainEvents());
 
         return AllocationDto::fromDomain($allocation);
     }
