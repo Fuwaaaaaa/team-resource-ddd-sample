@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AllocationController;
 use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\Dashboard\CapacityController;
 use App\Http\Controllers\Api\Dashboard\OverloadController;
 use App\Http\Controllers\Api\Dashboard\SkillGapController;
@@ -42,6 +43,13 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/allocations', [AllocationController::class, 'index']);
     Route::get('/timeline', TimelineController::class);
 
+    // CSV エクスポート (読み取り系)
+    Route::prefix('export')->group(function (): void {
+        Route::get('/members', [ExportController::class, 'members']);
+        Route::get('/projects', [ExportController::class, 'projects']);
+        Route::get('/allocations', [ExportController::class, 'allocations']);
+    });
+
     // ===== 書込系 (admin / manager のみ) =====
 
     Route::middleware('role:admin,manager')->group(function (): void {
@@ -63,5 +71,6 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::middleware('role:admin')->group(function (): void {
         Route::get('/audit-logs', [AuditLogController::class, 'index']);
+        Route::get('/export/audit-logs', [ExportController::class, 'auditLogs']);
     });
 });
