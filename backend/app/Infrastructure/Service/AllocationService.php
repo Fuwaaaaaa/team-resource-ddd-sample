@@ -7,6 +7,8 @@ namespace App\Infrastructure\Service;
 use App\Domain\Allocation\AllocationPercentage;
 use App\Domain\Member\MemberId;
 use App\Domain\Project\Project;
+use App\Domain\Project\ProjectId;
+use App\Domain\Service\AllocationCandidate;
 use App\Domain\Service\AllocationServiceInterface;
 use App\Domain\Service\MemberCapacityEntry;
 use App\Domain\Service\MemberOverloadEntry;
@@ -286,5 +288,70 @@ final class AllocationService implements AllocationServiceInterface
         }
 
         return $warnings;
+    }
+
+    public function suggestCandidates(
+        SkillId $skillId,
+        int $minimumProficiency,
+        ProjectId $projectId,
+        DateTimeImmutable $periodStart,
+        array $members,
+        array $allocations,
+        int $limit = 5
+    ): array {
+        $candidates = [];
+
+        foreach ($members as $member) {
+            $proficiency = $member->proficiencyFor($skillId);
+            if ($proficiency === null || $proficiency->level() < $minimumProficiency) {
+                continue; // 熟練度不足は候補外
+            }
+
+            // period 開始日の余剰キャパ
+            $used = 0;
+            $pastOnProject = 0;
+            foreach ($allocations as $alloc) {
+                if (! $alloc->memberId()->equals($member->id())) {
+                    continue;
+                }
+                if ($alloc->isActive() && $alloc->coversDate($periodStart)) {
+                    $used += $alloc->percentage()->value();
+                }
+                // revoked 含め同プロジェクト経験歴を数える
+                if ($alloc->projectId()->equals($projectId)) {
+                    $pastOnProject++;
+                }
+            }
+            $available = max(0, 100 - $used);
+            if ($available === 0) {
+                continue; // キャパ 0 は候補外
+            }
+
+            // スコア: 余剰キャパ (0-100) + 熟練度余裕 × 10 + 経験歴 × 5
+            $proficiencyBonus = ($proficiency->level() - $minimumProficiency) * 10;
+            $experienceBonus = min($pastOnProject, 3) * 5; // 過剰経験には逓減
+            $score = (float) $available + $proficiencyBonus + $experienceBonus;
+
+            $reasons = [];
+            $reasons[] = sprintf('熟練度 L%d (要求 L%d)', $proficiency->level(), $minimumProficiency);
+            $reasons[] = sprintf('空きキャパ %d%%', $available);
+            if ($pastOnProject > 0) {
+                $reasons[] = sprintf('同プロジェクト経験 %d 件', $pastOnProject);
+            }
+
+            $candidates[] = new AllocationCandidate(
+                memberId: $member->id(),
+                skillId: $skillId,
+                proficiency: $proficiency->level(),
+                availablePercentage: $available,
+                pastProjectExperienceCount: $pastOnProject,
+                score: $score,
+                reasons: $reasons,
+            );
+        }
+
+        usort($candidates, fn (AllocationCandidate $a, AllocationCandidate $b) => $b->score() <=> $a->score());
+
+        return array_slice($candidates, 0, $limit);
     }
 }
