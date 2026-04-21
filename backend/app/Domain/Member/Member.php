@@ -9,10 +9,14 @@ use App\Domain\Skill\SkillId;
 final class Member
 {
     private MemberId $id;
+
     private MemberName $name;
+
     private StandardWorkingHours $standardWorkingHours;
+
     /** @var array<string, MemberSkill> SkillId文字列でキー */
     private array $skills = [];
+
     /** @var object[] */
     private array $domainEvents = [];
 
@@ -69,6 +73,7 @@ final class Member
     public function proficiencyFor(SkillId $skillId): ?SkillProficiency
     {
         $key = $skillId->toString();
+
         return isset($this->skills[$key])
             ? $this->skills[$key]->proficiency()
             : null;
@@ -79,6 +84,7 @@ final class Member
     {
         $events = $this->domainEvents;
         $this->domainEvents = [];
+
         return $events;
     }
 }

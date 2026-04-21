@@ -17,8 +17,7 @@ final class CreateMemberHandler
     public function __construct(
         private MemberRepositoryInterface $memberRepository,
         private DomainEventDispatcher $eventDispatcher,
-    ) {
-    }
+    ) {}
 
     public function handle(CreateMemberCommand $command): MemberDto
     {

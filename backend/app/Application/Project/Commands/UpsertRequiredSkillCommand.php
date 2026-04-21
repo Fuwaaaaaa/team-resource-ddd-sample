@@ -11,6 +11,5 @@ final class UpsertRequiredSkillCommand
         public readonly string $skillId,
         public readonly int $requiredProficiency,
         public readonly int $headcount,
-    ) {
-    }
+    ) {}
 }

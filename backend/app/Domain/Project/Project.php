@@ -9,9 +9,12 @@ use App\Domain\Skill\SkillId;
 final class Project
 {
     private ProjectId $id;
+
     private ProjectName $name;
+
     /** @var array<string, RequiredSkill> SkillId文字列でキー */
     private array $requiredSkills = [];
+
     /** @var object[] */
     private array $domainEvents = [];
 
@@ -56,6 +59,7 @@ final class Project
     public function requirementFor(SkillId $skillId): ?RequiredSkill
     {
         $key = $skillId->toString();
+
         return $this->requiredSkills[$key] ?? null;
     }
 
@@ -64,6 +68,7 @@ final class Project
     {
         $events = $this->domainEvents;
         $this->domainEvents = [];
+
         return $events;
     }
 }

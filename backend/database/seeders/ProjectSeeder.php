@@ -39,7 +39,7 @@ class ProjectSeeder extends Seeder
 
     public static function projectId(string $name): string
     {
-        return (string) Str::uuid5(Str::uuid5Namespace('dns'), 'project:' . $name);
+        return (string) Str::uuid5(Str::uuid5Namespace('dns'), 'project:'.$name);
     }
 
     /** @return array<string, array<string, array{proficiency:int, headcount:int}>> */

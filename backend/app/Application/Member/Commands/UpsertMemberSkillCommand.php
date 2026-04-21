@@ -10,6 +10,5 @@ final class UpsertMemberSkillCommand
         public readonly string $memberId,
         public readonly string $skillId,
         public readonly int $proficiency,
-    ) {
-    }
+    ) {}
 }

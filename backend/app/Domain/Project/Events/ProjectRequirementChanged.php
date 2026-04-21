@@ -10,6 +10,7 @@ use App\Domain\Skill\SkillId;
 final class ProjectRequirementChanged
 {
     private ProjectId $projectId;
+
     private SkillId $skillId;
 
     public function __construct(ProjectId $projectId, SkillId $skillId)

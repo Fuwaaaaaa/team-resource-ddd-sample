@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Service;
 
 use App\Domain\Allocation\AllocationPercentage;
 use App\Domain\Member\MemberId;
+use App\Domain\Skill\SkillId;
 use App\Infrastructure\Service\AllocationService;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Support\AllocationTestFactory;
@@ -18,14 +19,14 @@ final class AllocationServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->service = new AllocationService();
+        $this->service = new AllocationService;
     }
 
     // ================================================================
     // canAllocate
     // ================================================================
 
-    public function test_canAllocate_no_existing_allocations(): void
+    public function test_can_allocate_no_existing_allocations(): void
     {
         $result = $this->service->canAllocate(
             new MemberId('member-1'),
@@ -37,7 +38,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_canAllocate_exactly_100_percent(): void
+    public function test_can_allocate_exactly_100_percent(): void
     {
         $allocations = [
             $this->makeAllocation('member-1', 'p1', 'php', 60),
@@ -53,7 +54,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_canAllocate_over_100_percent(): void
+    public function test_can_allocate_over_100_percent(): void
     {
         $allocations = [
             $this->makeAllocation('member-1', 'p1', 'php', 60),
@@ -69,7 +70,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_canAllocate_revoked_allocations_excluded(): void
+    public function test_can_allocate_revoked_allocations_excluded(): void
     {
         $allocations = [
             $this->makeAllocation('member-1', 'p1', 'php', 60),
@@ -86,7 +87,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_canAllocate_out_of_date_range_excluded(): void
+    public function test_can_allocate_out_of_date_range_excluded(): void
     {
         $allocations = [
             $this->makeAllocation('member-1', 'p1', 'php', 80, '2024-01-01', '2024-12-31'),
@@ -102,7 +103,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function test_canAllocate_other_member_excluded(): void
+    public function test_can_allocate_other_member_excluded(): void
     {
         $allocations = [
             $this->makeAllocation('member-2', 'p1', 'php', 100),
@@ -122,7 +123,7 @@ final class AllocationServiceTest extends TestCase
     // analyzeSkillGaps
     // ================================================================
 
-    public function test_analyzeSkillGaps_single_project_no_gap(): void
+    public function test_analyze_skill_gaps_single_project_no_gap(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -142,7 +143,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertFalse($result->hasCriticalGaps());
     }
 
-    public function test_analyzeSkillGaps_single_project_deficit(): void
+    public function test_analyze_skill_gaps_single_project_deficit(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 2);
@@ -161,7 +162,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertTrue($result->hasCriticalGaps());
     }
 
-    public function test_analyzeSkillGaps_cross_project_aggregation(): void
+    public function test_analyze_skill_gaps_cross_project_aggregation(): void
     {
         $projectA = $this->makeProject('pA');
         $this->addRequirementToProject($projectA, 'php', 2, 1);
@@ -185,7 +186,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(-2, $entry->gap());
     }
 
-    public function test_analyzeSkillGaps_fully_allocated_member_excluded(): void
+    public function test_analyze_skill_gaps_fully_allocated_member_excluded(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -207,7 +208,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(0, $result->entries()[0]->qualifiedHeadcount());
     }
 
-    public function test_analyzeSkillGaps_99_percent_member_still_counted(): void
+    public function test_analyze_skill_gaps_99_percent_member_still_counted(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -229,7 +230,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(1, $result->entries()[0]->qualifiedHeadcount());
     }
 
-    public function test_analyzeSkillGaps_unqualified_member_not_counted(): void
+    public function test_analyze_skill_gaps_unqualified_member_not_counted(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -247,7 +248,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(0, $result->entries()[0]->qualifiedHeadcount());
     }
 
-    public function test_analyzeSkillGaps_sorted_by_gap_ascending(): void
+    public function test_analyze_skill_gaps_sorted_by_gap_ascending(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'java', 3, 2);
@@ -270,7 +271,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(-1, $entries[1]->gap());
     }
 
-    public function test_analyzeSkillGaps_revoked_allocation_not_counted_toward_capacity(): void
+    public function test_analyze_skill_gaps_revoked_allocation_not_counted_toward_capacity(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -294,7 +295,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(1, $result->entries()[0]->qualifiedHeadcount());
     }
 
-    public function test_analyzeSkillGaps_out_of_range_allocation_excluded(): void
+    public function test_analyze_skill_gaps_out_of_range_allocation_excluded(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -320,7 +321,7 @@ final class AllocationServiceTest extends TestCase
     // calculateSurplusDeficit
     // ================================================================
 
-    public function test_calculateSurplusDeficit_surplus(): void
+    public function test_calculate_surplus_deficit_surplus(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 2, 1);
@@ -341,7 +342,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertFalse($result->hasDeficit());
     }
 
-    public function test_calculateSurplusDeficit_deficit(): void
+    public function test_calculate_surplus_deficit_deficit(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 3);
@@ -359,7 +360,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertTrue($result->hasDeficit());
     }
 
-    public function test_calculateSurplusDeficit_wrong_skill_ignored(): void
+    public function test_calculate_surplus_deficit_wrong_skill_ignored(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -376,7 +377,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(0, $result->entries()[0]->qualifiedHeadcount());
     }
 
-    public function test_calculateSurplusDeficit_inactive_allocation_ignored(): void
+    public function test_calculate_surplus_deficit_inactive_allocation_ignored(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -393,7 +394,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(0, $result->entries()[0]->qualifiedHeadcount());
     }
 
-    public function test_calculateSurplusDeficit_below_proficiency_not_qualified(): void
+    public function test_calculate_surplus_deficit_below_proficiency_not_qualified(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -410,7 +411,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(0, $result->entries()[0]->qualifiedHeadcount());
     }
 
-    public function test_calculateSurplusDeficit_member_not_in_list_ignored(): void
+    public function test_calculate_surplus_deficit_member_not_in_list_ignored(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -425,7 +426,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(0, $result->entries()[0]->qualifiedHeadcount());
     }
 
-    public function test_calculateSurplusDeficit_no_allocations(): void
+    public function test_calculate_surplus_deficit_no_allocations(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 2);
@@ -439,7 +440,7 @@ final class AllocationServiceTest extends TestCase
     // detectOverload
     // ================================================================
 
-    public function test_detectOverload_no_overload_at_100_percent(): void
+    public function test_detect_overload_no_overload_at_100_percent(): void
     {
         $member = $this->makeMember('m1', 8.0);
         $allocations = [
@@ -455,7 +456,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(0.0, $entry->overloadHours());
     }
 
-    public function test_detectOverload_at_120_percent(): void
+    public function test_detect_overload_at_120_percent(): void
     {
         $member = $this->makeMember('m1', 8.0);
         $allocations = [
@@ -471,7 +472,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertEqualsWithDelta(1.6, $entry->overloadHours(), 0.001);
     }
 
-    public function test_detectOverload_no_allocations(): void
+    public function test_detect_overload_no_allocations(): void
     {
         $member = $this->makeMember('m1');
 
@@ -482,7 +483,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(0.0, $entry->overloadHours());
     }
 
-    public function test_detectOverload_custom_working_hours(): void
+    public function test_detect_overload_custom_working_hours(): void
     {
         $member = $this->makeMember('m1', 6.0);
         $allocations = [
@@ -497,7 +498,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertEqualsWithDelta(3.0, $entry->overloadHours(), 0.001);
     }
 
-    public function test_detectOverload_revoked_and_out_of_range_excluded(): void
+    public function test_detect_overload_revoked_and_out_of_range_excluded(): void
     {
         $member = $this->makeMember('m1', 8.0);
         $allocations = [
@@ -517,7 +518,7 @@ final class AllocationServiceTest extends TestCase
     // detectSkillGapWarnings
     // ================================================================
 
-    public function test_detectSkillGapWarnings_no_warning_when_meets_requirement(): void
+    public function test_detect_skill_gap_warnings_no_warning_when_meets_requirement(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -534,7 +535,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertEmpty($warnings);
     }
 
-    public function test_detectSkillGapWarnings_insufficient_proficiency(): void
+    public function test_detect_skill_gap_warnings_insufficient_proficiency(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -553,7 +554,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(2, $warnings[0]->actualLevel());
     }
 
-    public function test_detectSkillGapWarnings_member_lacks_skill(): void
+    public function test_detect_skill_gap_warnings_member_lacks_skill(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -571,7 +572,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertNull($warnings[0]->actualLevel());
     }
 
-    public function test_detectSkillGapWarnings_inactive_allocation_no_warning(): void
+    public function test_detect_skill_gap_warnings_inactive_allocation_no_warning(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -588,7 +589,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertEmpty($warnings);
     }
 
-    public function test_detectSkillGapWarnings_multiple_warnings(): void
+    public function test_detect_skill_gap_warnings_multiple_warnings(): void
     {
         $project = $this->makeProject();
         $this->addRequirementToProject($project, 'php', 3, 1);
@@ -612,7 +613,7 @@ final class AllocationServiceTest extends TestCase
     // buildTeamCapacitySnapshot
     // ================================================================
 
-    public function test_buildTeamCapacitySnapshot_available_percentage(): void
+    public function test_build_team_capacity_snapshot_available_percentage(): void
     {
         $member = $this->makeMember('m1');
         $this->addSkillToMember($member, 'php', 3);
@@ -627,7 +628,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(40, $entry->availablePercentage());
     }
 
-    public function test_buildTeamCapacitySnapshot_clamped_at_zero(): void
+    public function test_build_team_capacity_snapshot_clamped_at_zero(): void
     {
         $member = $this->makeMember('m1');
         $this->addSkillToMember($member, 'php', 3);
@@ -642,7 +643,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(0, $result->entries()[0]->availablePercentage());
     }
 
-    public function test_buildTeamCapacitySnapshot_skill_proficiency_map(): void
+    public function test_build_team_capacity_snapshot_skill_proficiency_map(): void
     {
         $member = $this->makeMember('m1');
         $this->addSkillToMember($member, 'php', 3);
@@ -656,7 +657,7 @@ final class AllocationServiceTest extends TestCase
         $this->assertSame(5, $profs['java']);
     }
 
-    public function test_buildTeamCapacitySnapshot_null_for_unowned_skill(): void
+    public function test_build_team_capacity_snapshot_null_for_unowned_skill(): void
     {
         $m1 = $this->makeMember('m1');
         $this->addSkillToMember($m1, 'php', 3);
@@ -669,9 +670,9 @@ final class AllocationServiceTest extends TestCase
         $entry1 = $result->findByMemberId(new MemberId('m1'));
         $entry2 = $result->findByMemberId(new MemberId('m2'));
 
-        $this->assertNull($entry1->proficiencyFor(new \App\Domain\Skill\SkillId('java')));
-        $this->assertNull($entry2->proficiencyFor(new \App\Domain\Skill\SkillId('php')));
-        $this->assertSame(3, $entry1->proficiencyFor(new \App\Domain\Skill\SkillId('php')));
-        $this->assertSame(4, $entry2->proficiencyFor(new \App\Domain\Skill\SkillId('java')));
+        $this->assertNull($entry1->proficiencyFor(new SkillId('java')));
+        $this->assertNull($entry2->proficiencyFor(new SkillId('php')));
+        $this->assertSame(3, $entry1->proficiencyFor(new SkillId('php')));
+        $this->assertSame(4, $entry2->proficiencyFor(new SkillId('java')));
     }
 }

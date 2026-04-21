@@ -10,6 +10,5 @@ final class SkillDto
         public readonly string $id,
         public readonly string $name,
         public readonly string $category,
-    ) {
-    }
+    ) {}
 }

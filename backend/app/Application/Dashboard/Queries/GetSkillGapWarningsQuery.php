@@ -9,6 +9,5 @@ final class GetSkillGapWarningsQuery
     public function __construct(
         public readonly ?string $projectId,
         public readonly string $referenceDate,
-    ) {
-    }
+    ) {}
 }

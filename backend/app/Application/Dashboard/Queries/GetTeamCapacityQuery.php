@@ -8,6 +8,5 @@ final class GetTeamCapacityQuery
 {
     public function __construct(
         public readonly string $referenceDate,
-    ) {
-    }
+    ) {}
 }

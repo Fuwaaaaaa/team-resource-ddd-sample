@@ -9,7 +9,9 @@ use App\Domain\Skill\SkillId;
 final class SkillGapEntry
 {
     private SkillId $skillId;
+
     private int $requiredHeadcount;
+
     private int $qualifiedHeadcount;
 
     public function __construct(SkillId $skillId, int $requiredHeadcount, int $qualifiedHeadcount)

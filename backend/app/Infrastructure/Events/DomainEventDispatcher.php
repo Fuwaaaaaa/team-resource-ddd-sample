@@ -14,12 +14,10 @@ use Illuminate\Contracts\Events\Dispatcher;
  */
 final class DomainEventDispatcher
 {
-    public function __construct(private Dispatcher $events)
-    {
-    }
+    public function __construct(private Dispatcher $events) {}
 
     /**
-     * @param iterable<object> $events
+     * @param  iterable<object>  $events
      */
     public function dispatchAll(iterable $events): void
     {

@@ -19,14 +19,13 @@ final class UpsertMemberSkillHandler
     public function __construct(
         private MemberRepositoryInterface $memberRepository,
         private DomainEventDispatcher $eventDispatcher,
-    ) {
-    }
+    ) {}
 
     public function handle(UpsertMemberSkillCommand $command): MemberDto
     {
         $member = $this->memberRepository->findById(new MemberId($command->memberId));
         if ($member === null) {
-            throw new RuntimeException('Member not found: ' . $command->memberId);
+            throw new RuntimeException('Member not found: '.$command->memberId);
         }
 
         $skillId = new SkillId($command->skillId);

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Service;
 
-use App\Domain\Skill\SkillId;
-
 final class ResourceSurplusDeficit
 {
     /** @var SkillGapEntry[] */
@@ -28,7 +26,7 @@ final class ResourceSurplusDeficit
     {
         return array_values(array_filter(
             $this->entries,
-            fn(SkillGapEntry $entry) => $entry->gap() < 0
+            fn (SkillGapEntry $entry) => $entry->gap() < 0
         ));
     }
 
@@ -37,7 +35,7 @@ final class ResourceSurplusDeficit
     {
         return array_values(array_filter(
             $this->entries,
-            fn(SkillGapEntry $entry) => $entry->gap() > 0
+            fn (SkillGapEntry $entry) => $entry->gap() > 0
         ));
     }
 

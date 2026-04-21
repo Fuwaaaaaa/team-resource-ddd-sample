@@ -11,9 +11,13 @@ use App\Domain\Skill\SkillId;
 final class SkillGapWarning
 {
     private MemberId $memberId;
+
     private ProjectId $projectId;
+
     private SkillId $skillId;
+
     private int $requiredLevel;
+
     private ?int $actualLevel;
 
     public function __construct(

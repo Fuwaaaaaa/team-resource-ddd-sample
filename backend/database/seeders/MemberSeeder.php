@@ -41,7 +41,7 @@ class MemberSeeder extends Seeder
 
     public static function memberId(string $name): string
     {
-        return (string) Str::uuid5(Str::uuid5Namespace('dns'), 'member:' . $name);
+        return (string) Str::uuid5(Str::uuid5Namespace('dns'), 'member:'.$name);
     }
 
     /** @return array<string, array{hours: float, skills: array<string, int>}> */

@@ -15,6 +15,5 @@ final class AllocationSimulationDto
         public readonly int $projectedAvailablePercentage,
         public readonly bool $projectedOverloaded,
         public readonly float $projectedOverloadHours,
-    ) {
-    }
+    ) {}
 }

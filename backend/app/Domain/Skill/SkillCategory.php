@@ -22,9 +22,9 @@ final class SkillCategory
 
     public function __construct(string $value)
     {
-        if (!in_array($value, self::VALID_CATEGORIES, true)) {
+        if (! in_array($value, self::VALID_CATEGORIES, true)) {
             throw new InvalidArgumentException(
-                "Invalid skill category: {$value}. Valid categories: " . implode(', ', self::VALID_CATEGORIES)
+                "Invalid skill category: {$value}. Valid categories: ".implode(', ', self::VALID_CATEGORIES)
             );
         }
         $this->value = $value;

@@ -10,7 +10,9 @@ use App\Domain\Skill\SkillId;
 final class MemberCapacityEntry
 {
     private MemberId $memberId;
+
     private int $availablePercentage;
+
     /** @var array<string, int|null> SkillId文字列 => 熟練度（null=スキルなし） */
     private array $skillProficiencies;
 

@@ -6,6 +6,7 @@ namespace App\Domain\Service;
 
 use App\Domain\Allocation\AllocationPercentage;
 use App\Domain\Allocation\ResourceAllocation;
+use App\Domain\Availability\Absence;
 use App\Domain\Member\Member;
 use App\Domain\Member\MemberId;
 use App\Domain\Project\Project;
@@ -26,11 +27,11 @@ interface AllocationServiceInterface
      *  2. 各メンバーのSkillProficiencyがRequiredProficiencyを満たすか判定
      *  3. 「適格人数」vs「必要人数」のギャップを算出
      *
-     * @param Project               $project       RequiredSkillを持つプロジェクト
-     * @param ResourceAllocation[]  $allocations   このプロジェクトのアロケーション
-     * @param Member[]              $members       アロケーション対象メンバー
-     * @param DateTimeImmutable     $referenceDate 基準日
-     * @return ResourceSurplusDeficit  スキル別の過不足分析結果
+     * @param  Project  $project  RequiredSkillを持つプロジェクト
+     * @param  ResourceAllocation[]  $allocations  このプロジェクトのアロケーション
+     * @param  Member[]  $members  アロケーション対象メンバー
+     * @param  DateTimeImmutable  $referenceDate  基準日
+     * @return ResourceSurplusDeficit スキル別の過不足分析結果
      */
     public function calculateSurplusDeficit(
         Project $project,
@@ -45,10 +46,10 @@ interface AllocationServiceInterface
      * 各メンバーについて、スキル別の熟練度と未割り当て工数を算出。
      * ダッシュボードの「スキルマップヒートマップ」描画に使用。
      *
-     * @param Member[]              $members       全チームメンバー
-     * @param ResourceAllocation[]  $allocations   全アクティブアロケーション
-     * @param DateTimeImmutable     $referenceDate 基準日
-     * @return TeamCapacitySnapshot  メンバー×スキルの可用性マトリクス
+     * @param  Member[]  $members  全チームメンバー
+     * @param  ResourceAllocation[]  $allocations  全アクティブアロケーション
+     * @param  DateTimeImmutable  $referenceDate  基準日
+     * @return TeamCapacitySnapshot メンバー×スキルの可用性マトリクス
      */
     public function buildTeamCapacitySnapshot(
         array $members,
@@ -59,11 +60,8 @@ interface AllocationServiceInterface
     /**
      * メンバーへのアロケーションが100%上限を超えないか検証する。
      *
-     * @param MemberId              $memberId
-     * @param AllocationPercentage  $requestedPercentage
-     * @param ResourceAllocation[]  $existingAllocations  該当メンバーの既存アロケーション
-     * @param DateTimeImmutable     $referenceDate
-     * @return bool  割り当て可能な場合true
+     * @param  ResourceAllocation[]  $existingAllocations  該当メンバーの既存アロケーション
+     * @return bool 割り当て可能な場合true
      */
     public function canAllocate(
         MemberId $memberId,
@@ -79,11 +77,10 @@ interface AllocationServiceInterface
      * 現在のアロケーション状況と比較。需要が供給を上回るスキルを
      * 優先度順にリスト化する。
      *
-     * @param Project[]             $projects
-     * @param Member[]              $members
-     * @param ResourceAllocation[]  $allocations
-     * @param DateTimeImmutable     $referenceDate
-     * @return SkillGapAnalysis  優先度付きスキル不足リスト
+     * @param  Project[]  $projects
+     * @param  Member[]  $members
+     * @param  ResourceAllocation[]  $allocations
+     * @return SkillGapAnalysis 優先度付きスキル不足リスト
      */
     public function analyzeSkillGaps(
         array $projects,
@@ -97,16 +94,20 @@ interface AllocationServiceInterface
      *
      * 各メンバーの標準労働時間とアクティブなアロケーション合計を比較し、
      * 100%を超える割り当てがあるメンバーを検出する。
+     * $absences が渡されたとき、基準日に該当メンバーの有効な不在があれば
+     * 実稼働可能時間は 0 とみなし、全ての割当が過負荷としてカウントされる。
      *
-     * @param Member[]              $members
-     * @param ResourceAllocation[]  $allocations
-     * @param DateTimeImmutable     $referenceDate 基準日
-     * @return OverloadAnalysis  メンバー別の過負荷分析結果
+     * @param  Member[]  $members
+     * @param  ResourceAllocation[]  $allocations
+     * @param  DateTimeImmutable  $referenceDate  基準日
+     * @param  Absence[]  $absences  当該日に考慮する不在リスト
+     * @return OverloadAnalysis メンバー別の過負荷分析結果
      */
     public function detectOverload(
         array $members,
         array $allocations,
-        DateTimeImmutable $referenceDate
+        DateTimeImmutable $referenceDate,
+        array $absences = []
     ): OverloadAnalysis;
 
     /**
@@ -115,11 +116,10 @@ interface AllocationServiceInterface
      * 各アロケーションについて、メンバーの実スキル熟練度が
      * プロジェクトの要求水準を満たさない場合に警告を生成する。
      *
-     * @param Project               $project
-     * @param ResourceAllocation[]  $allocations   このプロジェクトのアロケーション
-     * @param Member[]              $members
-     * @param DateTimeImmutable     $referenceDate 基準日
-     * @return SkillGapWarning[]  スキル不足警告リスト
+     * @param  ResourceAllocation[]  $allocations  このプロジェクトのアロケーション
+     * @param  Member[]  $members
+     * @param  DateTimeImmutable  $referenceDate  基準日
+     * @return SkillGapWarning[] スキル不足警告リスト
      */
     public function detectSkillGapWarnings(
         Project $project,

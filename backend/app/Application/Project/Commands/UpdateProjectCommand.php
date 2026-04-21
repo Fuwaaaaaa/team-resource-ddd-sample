@@ -9,6 +9,5 @@ final class UpdateProjectCommand
     public function __construct(
         public readonly string $projectId,
         public readonly string $name,
-    ) {
-    }
+    ) {}
 }
