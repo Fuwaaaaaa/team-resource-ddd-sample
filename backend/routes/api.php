@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Dashboard\SkillGapController;
 use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\SkillController;
@@ -51,6 +52,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     // Absence (read)
     Route::get('/absences', [AbsenceController::class, 'index']);
     Route::get('/members/{memberId}/absences', [AbsenceController::class, 'byMember']);
+
+    // 運用メモ (entity に紐付く comments)
+    Route::get('/notes', [NoteController::class, 'index']);
+    Route::post('/notes', [NoteController::class, 'store']);
+    Route::delete('/notes/{id}', [NoteController::class, 'destroy']);
 
     // Notifications (current user's inbox)
     Route::get('/notifications', [NotificationController::class, 'index']);
