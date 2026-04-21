@@ -12,6 +12,8 @@ use App\Application\Member\Commands\UpdateMemberHandler;
 use App\Application\Member\Commands\UpsertMemberSkillCommand;
 use App\Application\Member\Commands\UpsertMemberSkillHandler;
 use App\Application\Member\DTOs\MemberDto;
+use App\Application\Member\Queries\GetSkillHistoryHandler;
+use App\Application\Member\Queries\GetSkillHistoryQuery;
 use App\Domain\Member\MemberId;
 use App\Domain\Member\MemberRepositoryInterface;
 use App\Http\Controllers\Controller;
@@ -19,6 +21,7 @@ use App\Http\Requests\Member\StoreMemberRequest;
 use App\Http\Requests\Member\UpdateMemberRequest;
 use App\Http\Requests\Member\UpsertMemberSkillRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class MemberController extends Controller
 {
@@ -68,6 +71,29 @@ class MemberController extends Controller
         $handler->handle($id);
 
         return response()->json(null, 204);
+    }
+
+    public function skillHistory(
+        string $id,
+        Request $request,
+        GetSkillHistoryHandler $handler,
+    ): JsonResponse {
+        $request->validate([
+            'skillId' => 'nullable|uuid',
+            'periodStart' => 'nullable|date',
+            'periodEnd' => 'nullable|date|after_or_equal:periodStart',
+        ]);
+
+        $entries = $handler->handle(new GetSkillHistoryQuery(
+            memberId: $id,
+            skillId: $request->query('skillId'),
+            periodStart: $request->query('periodStart'),
+            periodEnd: $request->query('periodEnd'),
+        ));
+
+        return response()->json([
+            'data' => array_map(fn ($e) => $e->toArray(), $entries),
+        ]);
     }
 
     public function upsertSkill(

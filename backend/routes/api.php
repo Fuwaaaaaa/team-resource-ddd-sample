@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/skills', [SkillController::class, 'index']);
     Route::get('/members', [MemberController::class, 'index']);
     Route::get('/members/{id}', [MemberController::class, 'show']);
+    Route::get('/members/{id}/skill-history', [MemberController::class, 'skillHistory']);
     Route::get('/projects', [ProjectController::class, 'index']);
     Route::get('/projects/{id}', [ProjectController::class, 'show']);
     Route::get('/allocations', [AllocationController::class, 'index']);
