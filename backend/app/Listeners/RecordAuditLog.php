@@ -10,6 +10,9 @@ use App\Domain\Availability\Events\AbsenceCanceled;
 use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Member\Events\MemberCreated;
 use App\Domain\Member\Events\MemberSkillUpdated;
+use App\Domain\Project\Events\ProjectActivated;
+use App\Domain\Project\Events\ProjectCanceled;
+use App\Domain\Project\Events\ProjectCompleted;
 use App\Domain\Project\Events\ProjectRequirementChanged;
 use App\Models\AuditLog;
 use Illuminate\Support\Facades\Auth;
@@ -82,6 +85,24 @@ final class RecordAuditLog
                 'payload' => [
                     'skillId' => $event->skillId()->toString(),
                 ],
+            ],
+            $event instanceof ProjectActivated => [
+                'event_type' => 'ProjectActivated',
+                'aggregate_type' => 'project',
+                'aggregate_id' => $event->projectId()->toString(),
+                'payload' => [],
+            ],
+            $event instanceof ProjectCompleted => [
+                'event_type' => 'ProjectCompleted',
+                'aggregate_type' => 'project',
+                'aggregate_id' => $event->projectId()->toString(),
+                'payload' => [],
+            ],
+            $event instanceof ProjectCanceled => [
+                'event_type' => 'ProjectCanceled',
+                'aggregate_type' => 'project',
+                'aggregate_id' => $event->projectId()->toString(),
+                'payload' => [],
             ],
             $event instanceof AbsenceRegistered => [
                 'event_type' => 'AbsenceRegistered',

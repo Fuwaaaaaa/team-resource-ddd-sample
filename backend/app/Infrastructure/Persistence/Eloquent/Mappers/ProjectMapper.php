@@ -7,6 +7,7 @@ namespace App\Infrastructure\Persistence\Eloquent\Mappers;
 use App\Domain\Project\Project;
 use App\Domain\Project\ProjectId;
 use App\Domain\Project\ProjectName;
+use App\Domain\Project\ProjectStatus;
 use App\Domain\Project\RequiredProficiency;
 use App\Domain\Project\RequiredSkill;
 use App\Domain\Project\RequiredSkillId;
@@ -39,6 +40,7 @@ final class ProjectMapper
         $props = [
             'id' => new ProjectId((string) $model->id),
             'name' => new ProjectName((string) $model->name),
+            'status' => ProjectStatus::from((string) ($model->status ?? 'active')),
             'requiredSkills' => $required,
             'domainEvents' => [],
         ];
@@ -57,6 +59,7 @@ final class ProjectMapper
         return [
             'id' => $project->id()->toString(),
             'name' => $project->name()->toString(),
+            'status' => $project->status()->value,
         ];
     }
 
