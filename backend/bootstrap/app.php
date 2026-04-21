@@ -1,8 +1,10 @@
 <?php
 
+use App\Application\Allocation\Exceptions\AllocationCapacityExceededException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -19,5 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Domain / Application 例外を HTTP ステータスにマップ
+        $exceptions->render(function (AllocationCapacityExceededException $e, Request $request) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'allocation_capacity_exceeded',
+            ], 422);
+        });
     })->create();
