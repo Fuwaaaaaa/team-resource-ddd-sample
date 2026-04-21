@@ -7,6 +7,7 @@ namespace App\Application\Dashboard\Queries;
 use App\Application\Dashboard\DTOs\MemberOverloadDto;
 use App\Application\Dashboard\DTOs\OverloadAnalysisDto;
 use App\Domain\Allocation\ResourceAllocationRepositoryInterface;
+use App\Domain\Availability\AbsenceRepositoryInterface;
 use App\Domain\Member\MemberRepositoryInterface;
 use App\Domain\Service\AllocationServiceInterface;
 use DateTimeImmutable;
@@ -16,6 +17,7 @@ final class GetOverloadAnalysisHandler
     public function __construct(
         private MemberRepositoryInterface $memberRepository,
         private ResourceAllocationRepositoryInterface $allocationRepository,
+        private AbsenceRepositoryInterface $absenceRepository,
         private AllocationServiceInterface $allocationService,
     ) {
     }
@@ -26,10 +28,14 @@ final class GetOverloadAnalysisHandler
         $members = $this->memberRepository->findAll();
         $allocations = $this->allocationRepository->findActiveOnDate($referenceDate);
 
+        // 基準日に該当する有効な不在のみ取得（findActive() は全件、絞り込みは Service 側の coversDate で行う）
+        $absences = $this->absenceRepository->findActive();
+
         $analysis = $this->allocationService->detectOverload(
             $members,
             $allocations,
-            $referenceDate
+            $referenceDate,
+            $absences,
         );
 
         // ドメイン結果 → DTO変換（メンバー名解決含む）

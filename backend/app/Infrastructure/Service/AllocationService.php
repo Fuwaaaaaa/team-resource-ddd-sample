@@ -191,7 +191,8 @@ final class AllocationService implements AllocationServiceInterface
     public function detectOverload(
         array $members,
         array $allocations,
-        DateTimeImmutable $referenceDate
+        DateTimeImmutable $referenceDate,
+        array $absences = []
     ): OverloadAnalysis {
         $entries = [];
 
@@ -206,12 +207,33 @@ final class AllocationService implements AllocationServiceInterface
                 }
             }
 
+            // 基準日にこのメンバーが不在なら実効稼働時間は 0
+            $onAbsence = false;
+            foreach ($absences as $absence) {
+                if ($absence->memberId()->equals($member->id())
+                    && $absence->coversDate($referenceDate)
+                ) {
+                    $onAbsence = true;
+                    break;
+                }
+            }
+
             $standardHours = $member->standardWorkingHours();
+
+            if ($onAbsence) {
+                // 不在日: 稼働可能時間 0、割当があれば全部過負荷扱い
+                $effectiveHoursPerDay = 0.0;
+                $overloadHours = $standardHours->hoursPerDay() * ($totalPercentage / 100.0);
+            } else {
+                $effectiveHoursPerDay = $standardHours->hoursPerDay();
+                $overloadHours = $standardHours->overloadHours($totalPercentage);
+            }
+
             $entries[] = new MemberOverloadEntry(
                 $member->id(),
-                $standardHours->hoursPerDay(),
+                $effectiveHoursPerDay,
                 $totalPercentage,
-                $standardHours->overloadHours($totalPercentage)
+                $overloadHours
             );
         }
 

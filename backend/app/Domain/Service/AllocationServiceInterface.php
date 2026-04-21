@@ -6,6 +6,7 @@ namespace App\Domain\Service;
 
 use App\Domain\Allocation\AllocationPercentage;
 use App\Domain\Allocation\ResourceAllocation;
+use App\Domain\Availability\Absence;
 use App\Domain\Member\Member;
 use App\Domain\Member\MemberId;
 use App\Domain\Project\Project;
@@ -97,16 +98,20 @@ interface AllocationServiceInterface
      *
      * 各メンバーの標準労働時間とアクティブなアロケーション合計を比較し、
      * 100%を超える割り当てがあるメンバーを検出する。
+     * $absences が渡されたとき、基準日に該当メンバーの有効な不在があれば
+     * 実稼働可能時間は 0 とみなし、全ての割当が過負荷としてカウントされる。
      *
      * @param Member[]              $members
      * @param ResourceAllocation[]  $allocations
      * @param DateTimeImmutable     $referenceDate 基準日
+     * @param Absence[]             $absences      当該日に考慮する不在リスト
      * @return OverloadAnalysis  メンバー別の過負荷分析結果
      */
     public function detectOverload(
         array $members,
         array $allocations,
-        DateTimeImmutable $referenceDate
+        DateTimeImmutable $referenceDate,
+        array $absences = []
     ): OverloadAnalysis;
 
     /**

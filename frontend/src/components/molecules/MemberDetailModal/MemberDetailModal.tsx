@@ -5,6 +5,7 @@ import { useMembers } from '@/features/members/api';
 import { useProjects } from '@/features/projects/api';
 import { useSkills } from '@/features/skills/api';
 import { useMemberAllocations, useRevokeAllocation } from '@/features/allocations/api';
+import { AbsenceSection } from './AbsenceSection';
 
 export interface MemberDetailModalProps {
   memberId: string | null;
@@ -177,6 +178,9 @@ export function MemberDetailModal({ memberId, onClose }: MemberDetailModalProps)
               })}
             </ul>
           </section>
+
+          {/* Absences */}
+          <AbsenceSection memberId={memberId} />
         </div>
       </div>
     </div>
