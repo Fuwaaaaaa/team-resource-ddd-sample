@@ -24,6 +24,7 @@ class StoreAllocationRequest extends FormRequest
             'allocationPercentage' => ['required', 'integer', 'between:1,100'],
             'periodStart' => ['required', Rule::date()->format('Y-m-d')],
             'periodEnd' => ['required', Rule::date()->format('Y-m-d')->after('periodStart')],
+            'dryRun' => ['sometimes', 'boolean'],
         ];
     }
 }
