@@ -8,3 +8,12 @@ export interface AllocationDto {
   periodEnd: string;
   status: 'active' | 'revoked';
 }
+
+export interface AllocationSimulationDto {
+  wouldCreate: AllocationDto;
+  currentTotalPercentage: number;
+  projectedTotalPercentage: number;
+  projectedAvailablePercentage: number;
+  projectedOverloaded: boolean;
+  projectedOverloadHours: number;
+}

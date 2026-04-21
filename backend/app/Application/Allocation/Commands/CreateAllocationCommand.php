@@ -13,6 +13,7 @@ final class CreateAllocationCommand
         public readonly int $allocationPercentage,
         public readonly string $periodStart,
         public readonly string $periodEnd,
+        public readonly bool $dryRun = false,
     ) {
     }
 }

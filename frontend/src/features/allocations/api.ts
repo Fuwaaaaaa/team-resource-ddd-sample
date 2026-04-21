@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/http';
 import { dashboardKeys } from '@/features/dashboard/api';
-import type { AllocationDto } from './types';
+import type { AllocationDto, AllocationSimulationDto } from './types';
 
 export const allocationKeys = {
   all: ['allocations'] as const,
@@ -44,6 +44,22 @@ export function useCreateAllocation() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: allocationKeys.all });
       qc.invalidateQueries({ queryKey: dashboardKeys.all });
+    },
+  });
+}
+
+/**
+ * dryRun=true で同じ POST を叩き、書き込みせずに結果を得る what-if シミュレーション。
+ * エラー (容量超過 422 等) は HttpError として伝播する。
+ */
+export function useSimulateAllocation() {
+  return useMutation({
+    mutationFn: async (input: CreateAllocationInput) => {
+      const res = await apiFetch<{ simulation: AllocationSimulationDto }>('/api/allocations', {
+        method: 'POST',
+        body: JSON.stringify({ ...input, dryRun: true }),
+      });
+      return res.simulation;
     },
   });
 }
