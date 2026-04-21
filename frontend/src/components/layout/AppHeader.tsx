@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLogout, useMe, usePermissions } from '@/features/auth/api';
+import { NotificationsBell } from '@/components/molecules/NotificationsBell/NotificationsBell';
 
 interface NavItem {
   href: string;
@@ -67,6 +68,7 @@ export function AppHeader() {
           })}
         </nav>
         <div className="ml-auto flex items-center gap-3">
+          {me && (permissions.canWrite || permissions.canViewAuditLog) && <NotificationsBell />}
           {me && (
             <>
               <span
