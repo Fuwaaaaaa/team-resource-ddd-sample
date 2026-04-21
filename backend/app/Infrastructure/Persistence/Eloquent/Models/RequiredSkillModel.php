@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Eloquent\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class RequiredSkillModel extends Model
 {
+    use HasUuids;
+
     protected $table = 'required_skills';
-    protected $keyType = 'string';
-    public $incrementing = false;
 
     protected $fillable = [
         'id',

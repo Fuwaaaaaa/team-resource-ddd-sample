@@ -59,6 +59,6 @@ final class EloquentProjectRepository implements ProjectRepositoryInterface
 
     public function nextIdentity(): ProjectId
     {
-        return new ProjectId((string) Str::uuid());
+        return new ProjectId((string) Str::uuid7());
     }
 }
