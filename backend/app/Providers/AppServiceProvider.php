@@ -18,12 +18,26 @@ use App\Listeners\CreateNotification;
 use App\Listeners\RecordAuditLog;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
+use Ramsey\Uuid\Uuid;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Seeder で利用する UUID v5 / namespace ヘルパ
+        if (! Str::hasMacro('uuid5')) {
+            Str::macro('uuid5', fn (string $namespace, string $name) => Uuid::uuid5($namespace, $name));
+        }
+        if (! Str::hasMacro('uuid5Namespace')) {
+            Str::macro('uuid5Namespace', fn (string $name) => match (strtolower($name)) {
+                'dns' => Uuid::NAMESPACE_DNS,
+                'url' => Uuid::NAMESPACE_URL,
+                'oid' => Uuid::NAMESPACE_OID,
+                'x500' => Uuid::NAMESPACE_X500,
+                default => throw new \InvalidArgumentException("Unknown UUID namespace: {$name}"),
+            });
+        }
     }
 
     public function boot(): void
