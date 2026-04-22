@@ -19,9 +19,14 @@ final class LoginTest extends TestCase
             'password' => 'password',
         ]);
 
-        $this->get('/sanctum/csrf-cookie')->assertNoContent();
+        // Sanctum の EnsureFrontendRequestsAreStateful は Referer/Origin を
+        // sanctum.stateful (localhost 等) と突合して判定するため、
+        // テストでは stateful 一覧にマッチする固定値を明示する
+        $headers = ['Origin' => 'http://localhost'];
 
-        $response = $this->postJson('/api/login', [
+        $this->withHeaders($headers)->get('/sanctum/csrf-cookie')->assertNoContent();
+
+        $response = $this->withHeaders($headers)->postJson('/api/login', [
             'email' => 'admin@example.com',
             'password' => 'password',
         ]);
