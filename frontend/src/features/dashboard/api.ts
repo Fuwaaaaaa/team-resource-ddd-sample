@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/http';
 import type {
+  KpiSummaryDto,
   TeamCapacitySnapshotDto,
   OverloadAnalysisDto,
   SkillGapWarningListDto,
@@ -16,6 +17,8 @@ export const dashboardKeys = {
     [...dashboardKeys.all, 'overload', date] as const,
   skillGaps: (date: string, projectId?: string) =>
     [...dashboardKeys.all, 'skillGaps', date, projectId ?? 'all'] as const,
+  kpiSummary: (date: string) =>
+    [...dashboardKeys.all, 'kpiSummary', date] as const,
 } as const;
 
 // --- Hooks ---
@@ -40,6 +43,20 @@ export function useOverloadAnalysis(referenceDate: string) {
         `/api/dashboard/overload?date=${encodeURIComponent(referenceDate)}`
       ),
     staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+}
+
+export function useKpiSummary(referenceDate: string) {
+  return useQuery({
+    queryKey: dashboardKeys.kpiSummary(referenceDate),
+    queryFn: async () => {
+      const res = await apiFetch<{ data: KpiSummaryDto }>(
+        `/api/dashboard/kpi-summary?date=${encodeURIComponent(referenceDate)}`,
+      );
+      return res.data;
+    },
+    staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 }

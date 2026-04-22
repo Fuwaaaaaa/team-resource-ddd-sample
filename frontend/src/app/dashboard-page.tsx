@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ResourceHeatmap } from '@/components/molecules/ResourceHeatmap';
 import { MemberDetailModal } from '@/components/molecules/MemberDetailModal';
 import { RecentActivityFeed } from '@/components/molecules/RecentActivityFeed';
+import { DashboardKpiBanner } from '@/components/molecules/DashboardKpiBanner';
 import { useDashboardFilterStore } from '@/stores/useDashboardFilterStore';
 import { dashboardKeys } from '@/features/dashboard/api';
 import { useProjects } from '@/features/projects/api';
@@ -42,6 +43,10 @@ export function DashboardContent() {
 
   return (
     <>
+      <div className="mb-6">
+        <DashboardKpiBanner referenceDate={referenceDate} />
+      </div>
+
       <div className="mb-6">
         <RecentActivityFeed limit={5} />
       </div>
