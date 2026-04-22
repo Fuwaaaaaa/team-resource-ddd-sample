@@ -14,6 +14,8 @@ use App\Application\Project\Commands\UpdateProjectHandler;
 use App\Application\Project\Commands\UpsertRequiredSkillCommand;
 use App\Application\Project\Commands\UpsertRequiredSkillHandler;
 use App\Application\Project\DTOs\ProjectDto;
+use App\Application\Project\Queries\GetProjectKpiHandler;
+use App\Application\Project\Queries\GetProjectKpiQuery;
 use App\Domain\Project\ProjectId;
 use App\Domain\Project\ProjectRepositoryInterface;
 use App\Http\Controllers\Controller;
@@ -21,6 +23,7 @@ use App\Http\Requests\Project\ChangeProjectStatusRequest;
 use App\Http\Requests\Project\StoreProjectRequest;
 use App\Http\Requests\Project\UpsertRequiredSkillRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
@@ -66,6 +69,23 @@ class ProjectController extends Controller
         $handler->handle($id);
 
         return response()->json(null, 204);
+    }
+
+    public function kpi(
+        string $id,
+        Request $request,
+        GetProjectKpiHandler $handler,
+    ): JsonResponse {
+        $request->validate([
+            'referenceDate' => 'nullable|date_format:Y-m-d',
+        ]);
+
+        $dto = $handler->handle(new GetProjectKpiQuery(
+            projectId: $id,
+            referenceDate: (string) ($request->query('referenceDate') ?? date('Y-m-d')),
+        ));
+
+        return response()->json(['data' => $dto->toArray()], 200, [], JSON_PRESERVE_ZERO_FRACTION);
     }
 
     public function changeStatus(
