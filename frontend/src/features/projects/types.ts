@@ -28,3 +28,33 @@ export const PROJECT_STATUS_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> 
   completed: [],
   canceled: [],
 };
+
+export interface ProjectKpiSkillBreakdown {
+  skillId: string;
+  skillName: string;
+  requiredHeadcount: number;
+  qualifiedHeadcount: number;
+  gap: number;
+}
+
+export interface ProjectKpiUpcomingEnd {
+  allocationId: string;
+  memberId: string;
+  memberName: string;
+  daysRemaining: number;
+  endDate: string;
+}
+
+export interface ProjectKpiDto {
+  projectId: string;
+  projectName: string;
+  status: ProjectStatus;
+  referenceDate: string;
+  fulfillmentRate: number;
+  totalRequiredHeadcount: number;
+  totalQualifiedHeadcount: number;
+  activeAllocationCount: number;
+  personMonthsAllocated: number;
+  requiredSkillsBreakdown: ProjectKpiSkillBreakdown[];
+  upcomingEnds: ProjectKpiUpcomingEnd[];
+}

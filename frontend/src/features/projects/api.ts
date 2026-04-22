@@ -2,12 +2,27 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/http';
 import { dashboardKeys } from '@/features/dashboard/api';
 import { allocationKeys } from '@/features/allocations/api';
-import type { ProjectDto, ProjectStatus } from './types';
+import type { ProjectDto, ProjectKpiDto, ProjectStatus } from './types';
 
 export const projectKeys = {
   all: ['projects'] as const,
   list: () => [...projectKeys.all, 'list'] as const,
+  kpi: (id: string, referenceDate?: string) =>
+    [...projectKeys.all, 'kpi', id, referenceDate ?? 'today'] as const,
 };
+
+export function useProjectKpi(projectId: string, referenceDate?: string) {
+  return useQuery({
+    queryKey: projectKeys.kpi(projectId, referenceDate),
+    queryFn: async () => {
+      const qs = referenceDate ? `?referenceDate=${encodeURIComponent(referenceDate)}` : '';
+      const res = await apiFetch<{ data: ProjectKpiDto }>(`/api/projects/${projectId}/kpi${qs}`);
+      return res.data;
+    },
+    enabled: projectId.length > 0,
+    staleTime: 30 * 1000,
+  });
+}
 
 export function useProjects() {
   return useQuery({
