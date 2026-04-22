@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { AppHeader } from '@/components/layout/AppHeader';
 import {
   useMembers,
@@ -156,6 +157,12 @@ export default function MembersPage() {
                     </div>
                   </td>
                   <td className="px-4 py-2 text-right space-x-2">
+                    <Link
+                      href={`/members/${m.id}/kpi`}
+                      className="px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-50 rounded inline-block"
+                    >
+                      KPI
+                    </Link>
                     {canWrite ? (
                       <>
                         <button
