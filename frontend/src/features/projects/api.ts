@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/http';
 import { dashboardKeys } from '@/features/dashboard/api';
 import { allocationKeys } from '@/features/allocations/api';
@@ -21,6 +21,22 @@ export function useProjectKpi(projectId: string, referenceDate?: string) {
     },
     enabled: projectId.length > 0,
     staleTime: 30 * 1000,
+  });
+}
+
+/** 複数プロジェクトの KPI を並列 fetch する */
+export function useProjectKpis(projectIds: string[], referenceDate?: string) {
+  return useQueries({
+    queries: projectIds.map((id) => ({
+      queryKey: projectKeys.kpi(id, referenceDate),
+      queryFn: async () => {
+        const qs = referenceDate ? `?referenceDate=${encodeURIComponent(referenceDate)}` : '';
+        const res = await apiFetch<{ data: ProjectKpiDto }>(`/api/projects/${id}/kpi${qs}`);
+        return res.data;
+      },
+      enabled: id.length > 0,
+      staleTime: 30 * 1000,
+    })),
   });
 }
 

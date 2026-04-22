@@ -83,6 +83,12 @@ export default function ProjectsPage() {
         <div className="flex items-baseline justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
           <div className="flex items-center gap-2">
+            <Link
+              href="/projects/compare"
+              className="px-3 py-1.5 text-sm font-medium text-indigo-700 border border-indigo-300 rounded-md hover:bg-indigo-50"
+            >
+              比較ビュー
+            </Link>
             {canWrite && (
               <ImportButton
                 endpoint="/api/import/projects"
