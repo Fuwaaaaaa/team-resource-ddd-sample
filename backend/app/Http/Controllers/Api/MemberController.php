@@ -12,6 +12,8 @@ use App\Application\Member\Commands\UpdateMemberHandler;
 use App\Application\Member\Commands\UpsertMemberSkillCommand;
 use App\Application\Member\Commands\UpsertMemberSkillHandler;
 use App\Application\Member\DTOs\MemberDto;
+use App\Application\Member\Queries\GetMemberKpiHandler;
+use App\Application\Member\Queries\GetMemberKpiQuery;
 use App\Application\Member\Queries\GetSkillHistoryHandler;
 use App\Application\Member\Queries\GetSkillHistoryQuery;
 use App\Domain\Member\MemberId;
@@ -71,6 +73,23 @@ class MemberController extends Controller
         $handler->handle($id);
 
         return response()->json(null, 204);
+    }
+
+    public function kpi(
+        string $id,
+        Request $request,
+        GetMemberKpiHandler $handler,
+    ): JsonResponse {
+        $request->validate([
+            'referenceDate' => 'nullable|date_format:Y-m-d',
+        ]);
+
+        $dto = $handler->handle(new GetMemberKpiQuery(
+            memberId: $id,
+            referenceDate: (string) ($request->query('referenceDate') ?? date('Y-m-d')),
+        ));
+
+        return response()->json(['data' => $dto->toArray()], 200, [], JSON_PRESERVE_ZERO_FRACTION);
     }
 
     public function skillHistory(
