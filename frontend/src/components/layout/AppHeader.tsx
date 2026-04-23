@@ -8,7 +8,7 @@ import { NotificationsBell } from '@/components/molecules/NotificationsBell/Noti
 interface NavItem {
   href: string;
   label: string;
-  requires?: 'canViewAuditLog';
+  requires?: 'canViewAuditLog' | 'canWrite';
 }
 
 const nav: NavItem[] = [
@@ -17,6 +17,7 @@ const nav: NavItem[] = [
   { href: '/members', label: 'Members' },
   { href: '/projects', label: 'Projects' },
   { href: '/allocations', label: 'Allocations' },
+  { href: '/allocation-requests', label: 'Requests', requires: 'canWrite' },
   { href: '/audit-logs', label: 'Audit', requires: 'canViewAuditLog' },
 ];
 
@@ -40,6 +41,7 @@ export function AppHeader() {
 
   const visibleNav = nav.filter((n) => {
     if (n.requires === 'canViewAuditLog') return permissions.canViewAuditLog;
+    if (n.requires === 'canWrite') return permissions.canWrite;
     return true;
   });
 

@@ -6,6 +6,9 @@ namespace App\Listeners;
 
 use App\Domain\Allocation\Events\AllocationCreated;
 use App\Domain\Allocation\Events\AllocationRevoked;
+use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestApproved;
+use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestRejected;
+use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestSubmitted;
 use App\Domain\Availability\Events\AbsenceCanceled;
 use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Member\Events\MemberCreated;
@@ -121,6 +124,33 @@ final class RecordAuditLog
                 'aggregate_id' => $event->absenceId()->toString(),
                 'payload' => [
                     'memberId' => $event->memberId()->toString(),
+                ],
+            ],
+            $event instanceof AllocationChangeRequestSubmitted => [
+                'event_type' => 'AllocationChangeRequestSubmitted',
+                'aggregate_type' => 'allocation_change_request',
+                'aggregate_id' => $event->requestId()->toString(),
+                'payload' => [
+                    'type' => $event->type()->value,
+                    'requestedBy' => $event->requestedBy(),
+                ],
+            ],
+            $event instanceof AllocationChangeRequestApproved => [
+                'event_type' => 'AllocationChangeRequestApproved',
+                'aggregate_type' => 'allocation_change_request',
+                'aggregate_id' => $event->requestId()->toString(),
+                'payload' => [
+                    'decidedBy' => $event->decidedBy(),
+                    'resultingAllocationId' => $event->resultingAllocationId(),
+                ],
+            ],
+            $event instanceof AllocationChangeRequestRejected => [
+                'event_type' => 'AllocationChangeRequestRejected',
+                'aggregate_type' => 'allocation_change_request',
+                'aggregate_id' => $event->requestId()->toString(),
+                'payload' => [
+                    'decidedBy' => $event->decidedBy(),
+                    'note' => $event->decisionNote(),
                 ],
             ],
             default => null,
