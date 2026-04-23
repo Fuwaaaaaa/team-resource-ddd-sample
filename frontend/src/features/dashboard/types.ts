@@ -81,6 +81,30 @@ export interface KpiSummaryDto {
   skillGapsTotal: number;
 }
 
+// === Capacity forecast (quarterly demand/supply outlook) ===
+
+export type ForecastSeverity = 'ok' | 'watch' | 'critical';
+
+export interface SkillForecastDto {
+  skillId: string;
+  skillName: string;
+  demandHeadcount: number;
+  supplyHeadcountEquivalent: number;
+  gap: number;
+  severity: ForecastSeverity;
+}
+
+export interface ForecastBucketDto {
+  month: string; // YYYY-MM
+  skills: SkillForecastDto[];
+}
+
+export interface CapacityForecastDto {
+  referenceDate: string;
+  monthsAhead: number;
+  buckets: ForecastBucketDto[];
+}
+
 // === Derived types for component internal use ===
 
 /** Lookup key for skill gap: "memberId:skillId" */

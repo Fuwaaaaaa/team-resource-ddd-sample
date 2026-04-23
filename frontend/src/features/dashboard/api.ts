@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/http';
 import type {
+  CapacityForecastDto,
   KpiSummaryDto,
   TeamCapacitySnapshotDto,
   OverloadAnalysisDto,
@@ -19,6 +20,8 @@ export const dashboardKeys = {
     [...dashboardKeys.all, 'skillGaps', date, projectId ?? 'all'] as const,
   kpiSummary: (date: string) =>
     [...dashboardKeys.all, 'kpiSummary', date] as const,
+  capacityForecast: (date: string, months: number) =>
+    [...dashboardKeys.all, 'capacityForecast', date, months] as const,
 } as const;
 
 // --- Hooks ---
@@ -53,6 +56,20 @@ export function useKpiSummary(referenceDate: string) {
     queryFn: async () => {
       const res = await apiFetch<{ data: KpiSummaryDto }>(
         `/api/dashboard/kpi-summary?date=${encodeURIComponent(referenceDate)}`,
+      );
+      return res.data;
+    },
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+}
+
+export function useCapacityForecast(referenceDate: string, monthsAhead: number) {
+  return useQuery({
+    queryKey: dashboardKeys.capacityForecast(referenceDate, monthsAhead),
+    queryFn: async () => {
+      const res = await apiFetch<{ data: CapacityForecastDto }>(
+        `/api/dashboard/capacity-forecast?date=${encodeURIComponent(referenceDate)}&months=${monthsAhead}`,
       );
       return res.data;
     },
