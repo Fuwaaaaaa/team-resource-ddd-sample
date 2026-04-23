@@ -18,6 +18,7 @@ use App\Domain\Project\Events\ProjectCanceled;
 use App\Domain\Project\Events\ProjectCompleted;
 use App\Domain\Project\Events\ProjectRequirementChanged;
 use App\Listeners\CreateNotification;
+use App\Listeners\PersistDomainEvent;
 use App\Listeners\RecordAuditLog;
 use App\Listeners\SendEmailNotification;
 use App\Listeners\SendSlackNotification;
@@ -63,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
             AllocationChangeRequestApproved::class,
             AllocationChangeRequestRejected::class,
         ] as $eventClass) {
+            Event::listen($eventClass, [PersistDomainEvent::class, 'handle']);
             Event::listen($eventClass, [RecordAuditLog::class, 'handle']);
             Event::listen($eventClass, [CreateNotification::class, 'handle']);
             Event::listen($eventClass, [SendEmailNotification::class, 'handle']);
