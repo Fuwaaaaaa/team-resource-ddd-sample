@@ -3,6 +3,7 @@ import { apiFetch } from '@/lib/http';
 import type {
   CapacityForecastDto,
   KpiSummaryDto,
+  KpiTrendDto,
   TeamCapacitySnapshotDto,
   OverloadAnalysisDto,
   SkillGapWarningListDto,
@@ -22,6 +23,8 @@ export const dashboardKeys = {
     [...dashboardKeys.all, 'kpiSummary', date] as const,
   capacityForecast: (date: string, months: number) =>
     [...dashboardKeys.all, 'capacityForecast', date, months] as const,
+  kpiTrend: (date: string, days: number) =>
+    [...dashboardKeys.all, 'kpiTrend', date, days] as const,
 } as const;
 
 // --- Hooks ---
@@ -75,6 +78,20 @@ export function useCapacityForecast(referenceDate: string, monthsAhead: number) 
     },
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
+  });
+}
+
+export function useKpiTrend(referenceDate: string, days: number) {
+  return useQuery({
+    queryKey: dashboardKeys.kpiTrend(referenceDate, days),
+    queryFn: async () => {
+      const res = await apiFetch<{ data: KpiTrendDto }>(
+        `/api/dashboard/kpi-trend?date=${encodeURIComponent(referenceDate)}&days=${days}`,
+      );
+      return res.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 

@@ -7,6 +7,7 @@ import { MemberDetailModal } from '@/components/molecules/MemberDetailModal';
 import { RecentActivityFeed } from '@/components/molecules/RecentActivityFeed';
 import { DashboardKpiBanner } from '@/components/molecules/DashboardKpiBanner';
 import { CapacityForecastWidget } from '@/components/molecules/CapacityForecastWidget';
+import { KpiTrendChart } from '@/components/molecules/KpiTrendChart';
 import { useDashboardFilterStore } from '@/stores/useDashboardFilterStore';
 import { dashboardKeys } from '@/features/dashboard/api';
 import { useProjects } from '@/features/projects/api';
@@ -50,6 +51,10 @@ export function DashboardContent() {
 
       <div className="mb-6">
         <CapacityForecastWidget referenceDate={referenceDate} />
+      </div>
+
+      <div className="mb-6">
+        <KpiTrendChart referenceDate={referenceDate} />
       </div>
 
       <div className="mb-6">
