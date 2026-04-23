@@ -40,6 +40,7 @@ frontend/.env.*
 !frontend/.env.example
 frontend/.vercel
 frontend/coverage/
+frontend/.coverage/
 frontend/.swc/
 frontend/tsconfig.tsbuildinfo
 
