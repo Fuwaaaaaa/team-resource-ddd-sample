@@ -105,6 +105,23 @@ export interface CapacityForecastDto {
   buckets: ForecastBucketDto[];
 }
 
+// === KPI trend (time-series) ===
+
+export interface KpiTrendPointDto {
+  date: string; // YYYY-MM-DD
+  averageFulfillmentRate: number;
+  activeProjectCount: number;
+  overloadedMemberCount: number;
+  upcomingEndsThisWeek: number;
+  skillGapsTotal: number;
+}
+
+export interface KpiTrendDto {
+  referenceDate: string;
+  days: number;
+  points: KpiTrendPointDto[];
+}
+
 // === Derived types for component internal use ===
 
 /** Lookup key for skill gap: "memberId:skillId" */
