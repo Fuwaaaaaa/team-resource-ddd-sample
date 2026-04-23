@@ -8,6 +8,7 @@ use App\Application\Project\DTOs\ProjectDto;
 use App\Domain\Project\ProjectId;
 use App\Domain\Project\ProjectName;
 use App\Domain\Project\ProjectRepositoryInterface;
+use DateTimeImmutable;
 use ReflectionClass;
 use RuntimeException;
 
@@ -26,6 +27,16 @@ final class UpdateProjectHandler
 
         $ref = new ReflectionClass($project);
         $ref->getProperty('name')->setValue($project, new ProjectName($command->name));
+
+        // plannedStart / plannedEnd を更新。両方 null で「クリア」、両方設定で「再設定」、それ以外はバリデーションで弾く想定。
+        if ($command->plannedStartDate === null && $command->plannedEndDate === null) {
+            $project->setPlannedPeriod(null, null);
+        } elseif ($command->plannedStartDate !== null && $command->plannedEndDate !== null) {
+            $project->setPlannedPeriod(
+                new DateTimeImmutable($command->plannedStartDate),
+                new DateTimeImmutable($command->plannedEndDate),
+            );
+        }
 
         $this->projectRepository->save($project);
 

@@ -16,8 +16,9 @@ use DateTimeImmutable;
 /**
  * スキル別に月次の需給ギャップを予測する。
  *
- * - 需要: active/planning プロジェクトの required_skills.headcount を skill 別に合計し、
- *         予測期間の全バケットに等しく適用する (ドメインに project 期間属性がないため)。
+ * - 需要: active/planning プロジェクトの required_skills.headcount を skill 別に合計。
+ *         プロジェクトに計画期間 (planned_start_date/planned_end_date) が設定されている場合は
+ *         その月と重なるバケットのみに寄せる。期間未設定のプロジェクトは全バケットに寄せる (後方互換)。
  * - 供給: 各月 15 日時点で該当スキルを保有するメンバーの残キャパ合計 (100% = 1 名換算)。
  * - severity: gap >= 0 → ok / -1 < gap < 0 → watch / gap <= -1 → critical。
  */
@@ -46,21 +47,25 @@ final class GetCapacityForecastHandler
             $skillNameById[$skill->id()->toString()] = $skill->name()->toString();
         }
 
-        // 需要: status が countsForCapacity な全プロジェクトの required_skills を skill 別に合計
-        /** @var array<string,int> $demand */
-        $demand = [];
-        foreach ($projects as $project) {
-            foreach ($project->requiredSkills() as $req) {
-                $key = $req->skillId()->toString();
-                $demand[$key] = ($demand[$key] ?? 0) + $req->headcount();
-            }
-        }
-
         $buckets = [];
         for ($i = 0; $i < $monthsAhead; $i++) {
             $monthStart = $this->addMonths($this->firstOfMonth($reference), $i);
+            $monthEnd = $this->addMonths($monthStart, 1)->modify('-1 day');
             $probe = $monthStart->modify('+14 days'); // 月中 (15 日)
             $monthLabel = $monthStart->format('Y-m');
+
+            // 需要: 当該月と重なる計画期間を持つ (or 期間未設定の) プロジェクトの required_skills を集計
+            /** @var array<string,int> $demand */
+            $demand = [];
+            foreach ($projects as $project) {
+                if (! $project->overlapsMonth($monthStart, $monthEnd)) {
+                    continue;
+                }
+                foreach ($project->requiredSkills() as $req) {
+                    $key = $req->skillId()->toString();
+                    $demand[$key] = ($demand[$key] ?? 0) + $req->headcount();
+                }
+            }
 
             // 供給: 該当月 15 日時点 active allocation から残キャパ算出
             $activeOnProbe = $this->allocationRepository->findActiveOnDate($probe);

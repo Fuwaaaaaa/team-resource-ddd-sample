@@ -40,6 +40,8 @@ export default function ProjectsPage() {
   const upsertRequired = useUpsertRequiredSkill();
   const changeStatus = useChangeProjectStatus();
   const [name, setName] = useState('');
+  const [plannedStart, setPlannedStart] = useState('');
+  const [plannedEnd, setPlannedEnd] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const skillMap = new Map((skills.data ?? []).map((s) => [s.id, s.name] as const));
@@ -48,8 +50,15 @@ export default function ProjectsPage() {
     e.preventDefault();
     setError(null);
     try {
-      await createProject.mutateAsync({ name: name.trim() });
+      const hasPeriod = plannedStart !== '' && plannedEnd !== '';
+      await createProject.mutateAsync({
+        name: name.trim(),
+        plannedStartDate: hasPeriod ? plannedStart : null,
+        plannedEndDate: hasPeriod ? plannedEnd : null,
+      });
       setName('');
+      setPlannedStart('');
+      setPlannedEnd('');
     } catch (err) {
       setError(err instanceof HttpError ? err.message : 'Failed.');
     }
@@ -114,6 +123,24 @@ export default function ProjectsPage() {
                 className="px-3 py-1.5 text-sm border border-gray-300 rounded-md w-64"
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">開始 (任意)</label>
+              <input
+                type="date"
+                value={plannedStart}
+                onChange={(e) => setPlannedStart(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">終了 (任意)</label>
+              <input
+                type="date"
+                value={plannedEnd}
+                onChange={(e) => setPlannedEnd(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+              />
+            </div>
             <button
               type="submit"
               disabled={createProject.isPending}
@@ -133,6 +160,7 @@ export default function ProjectsPage() {
               <tr>
                 <th className="px-4 py-2 text-left font-medium">Name</th>
                 <th className="px-4 py-2 text-left font-medium">Status</th>
+                <th className="px-4 py-2 text-left font-medium">計画期間</th>
                 <th className="px-4 py-2 text-left font-medium">Required skills</th>
                 <th className="px-4 py-2 text-right font-medium">Actions</th>
               </tr>
@@ -149,6 +177,11 @@ export default function ProjectsPage() {
                       >
                         {PROJECT_STATUS_LABELS[p.status]}
                       </span>
+                    </td>
+                    <td className="px-4 py-2 text-xs text-gray-600">
+                      {p.plannedStartDate && p.plannedEndDate
+                        ? `${p.plannedStartDate} 〜 ${p.plannedEndDate}`
+                        : <span className="text-gray-400">未設定</span>}
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex flex-wrap gap-1">

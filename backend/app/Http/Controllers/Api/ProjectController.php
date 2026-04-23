@@ -49,6 +49,8 @@ class ProjectController extends Controller
     {
         $dto = $handler->handle(new CreateProjectCommand(
             name: (string) $request->input('name'),
+            plannedStartDate: $request->input('plannedStartDate'),
+            plannedEndDate: $request->input('plannedEndDate'),
         ));
 
         return response()->json(['data' => $dto], 201);
@@ -59,6 +61,8 @@ class ProjectController extends Controller
         $dto = $handler->handle(new UpdateProjectCommand(
             projectId: $id,
             name: (string) $request->input('name'),
+            plannedStartDate: $request->input('plannedStartDate'),
+            plannedEndDate: $request->input('plannedEndDate'),
         ));
 
         return response()->json(['data' => $dto]);

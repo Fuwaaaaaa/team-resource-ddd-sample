@@ -22,6 +22,13 @@ class ProjectModel extends Model
         'id',
         'name',
         'status',
+        'planned_start_date',
+        'planned_end_date',
+    ];
+
+    protected $casts = [
+        'planned_start_date' => 'date',
+        'planned_end_date' => 'date',
     ];
 
     public function requiredSkills(): HasMany
