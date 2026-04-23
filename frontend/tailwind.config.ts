@@ -7,6 +7,9 @@ import type { Config } from 'tailwindcss';
  */
 const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  // CSS 変数でパレットを切替える tokens.css が [data-theme="dark"] セレクタを使うため、
+  // Tailwind の dark: バリアントも同じセレクタで解決する。
+  darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {

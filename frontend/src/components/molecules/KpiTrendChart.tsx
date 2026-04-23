@@ -49,14 +49,14 @@ export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
   }, [query.data, metric]);
 
   return (
-    <section className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+    <section className="bg-surface border border-border rounded-lg shadow-sm p-4">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h2 className="text-sm font-semibold text-gray-800">{t('trend.title')}</h2>
+        <h2 className="text-sm font-semibold text-fg">{t('trend.title')}</h2>
         <div className="flex flex-wrap items-center gap-3">
           <select
             value={metric}
             onChange={(e) => setMetric(e.target.value as MetricKey)}
-            className="px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2 py-1 text-xs border border-border rounded-md bg-surface text-fg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {METRICS.map((m) => (
               <option key={m.key} value={m.key}>
@@ -64,15 +64,15 @@ export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
               </option>
             ))}
           </select>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
             {DAYS_PRESETS.map((d) => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
                 className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                   days === d
-                    ? 'bg-blue-100 border-blue-400 text-blue-700 font-medium'
-                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                    ? 'bg-primary/10 border-primary text-primary font-medium'
+                    : 'bg-surface border-border text-fg-muted hover:bg-surface-muted'
                 }`}
               >
                 {d}{t('trend.daysSuffix')}
@@ -82,17 +82,17 @@ export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
         </div>
       </div>
 
-      {query.isLoading && <div className="h-56 animate-pulse bg-gray-100 rounded" />}
+      {query.isLoading && <div className="h-56 animate-pulse bg-surface-muted rounded" />}
 
       {query.isError && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-700 dark:text-red-300">
           {t('trend.loadFailed')}
         </div>
       )}
 
       {query.data && chartData.length === 0 && (
-        <div className="py-10 text-center text-sm text-gray-500">
-          {t('trend.empty')}<code className="px-1.5 py-0.5 bg-gray-100 rounded text-xs mx-1">php artisan kpi:snapshot-capture</code>{t('trend.emptyHint')}
+        <div className="py-10 text-center text-sm text-fg-muted">
+          {t('trend.empty')}<code className="px-1.5 py-0.5 bg-surface-muted rounded text-xs mx-1">php artisan kpi:snapshot-capture</code>{t('trend.emptyHint')}
         </div>
       )}
 
@@ -100,13 +100,18 @@ export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--color-border))" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'rgb(var(--color-fg-muted))' }} stroke="rgb(var(--color-border))" />
+              <YAxis tick={{ fontSize: 11, fill: 'rgb(var(--color-fg-muted))' }} stroke="rgb(var(--color-border))" />
               <Tooltip
                 formatter={(value: number) => [`${value}${meta.unit}`, metaLabel]}
                 labelFormatter={(label: string) => t('trend.dateLabel', { date: label })}
-                contentStyle={{ fontSize: 12 }}
+                contentStyle={{
+                  fontSize: 12,
+                  backgroundColor: 'rgb(var(--color-surface))',
+                  border: '1px solid rgb(var(--color-border))',
+                  color: 'rgb(var(--color-fg))',
+                }}
               />
               <Line
                 type="monotone"

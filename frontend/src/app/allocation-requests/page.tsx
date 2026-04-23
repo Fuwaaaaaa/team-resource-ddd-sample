@@ -24,10 +24,10 @@ const STATUSES: Array<{ value: ChangeRequestStatus | 'all'; label: string }> = [
 function StatusBadge({ status }: { status: ChangeRequestStatus }) {
   const cls =
     status === 'pending'
-      ? 'bg-amber-100 text-amber-800 border-amber-200'
+      ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800'
       : status === 'approved'
-        ? 'bg-green-100 text-green-800 border-green-200'
-        : 'bg-red-100 text-red-800 border-red-200';
+        ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
+        : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800';
   return (
     <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded border ${cls}`}>
       {status}
@@ -39,22 +39,22 @@ function PayloadPreview({ req }: { req: AllocationChangeRequestDto }) {
   if (req.type === 'create_allocation') {
     const p = req.payload as Record<string, unknown>;
     return (
-      <div className="text-xs text-gray-600 space-y-0.5">
+      <div className="text-xs text-fg-muted space-y-0.5">
         <div>
-          <span className="text-gray-400">Member:</span> {String(p.memberId).slice(0, 8)}
+          <span className="text-fg-muted/70">Member:</span> {String(p.memberId).slice(0, 8)}
         </div>
         <div>
-          <span className="text-gray-400">Project:</span> {String(p.projectId).slice(0, 8)}
+          <span className="text-fg-muted/70">Project:</span> {String(p.projectId).slice(0, 8)}
         </div>
         <div>
-          <span className="text-gray-400">Skill:</span> {String(p.skillId).slice(0, 8)} / {String(p.allocationPercentage)}% / {String(p.periodStart)}〜{String(p.periodEnd)}
+          <span className="text-fg-muted/70">Skill:</span> {String(p.skillId).slice(0, 8)} / {String(p.allocationPercentage)}% / {String(p.periodStart)}〜{String(p.periodEnd)}
         </div>
       </div>
     );
   }
   const p = req.payload as Record<string, unknown>;
   return (
-    <div className="text-xs text-gray-600">
+    <div className="text-xs text-fg-muted">
       Allocation ID: {String(p.allocationId).slice(0, 8)}
     </div>
   );
@@ -91,24 +91,24 @@ export default function AllocationRequestsPage() {
     <>
       <AppHeader />
       <div className="max-w-[1200px] mx-auto px-4 py-8 space-y-4">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline justify-between flex-wrap gap-2">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Allocation 変更申請</h1>
-            <p className="text-xs text-gray-500 mt-1">
+            <h1 className="text-2xl font-bold text-fg">Allocation 変更申請</h1>
+            <p className="text-xs text-fg-muted mt-1">
               {canDecide
                 ? 'admin として全ての申請を閲覧・承認/却下できます。'
                 : '自分が提出した申請を閲覧できます。承認/却下は admin のみ可能です。'}
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
             {STATUSES.map((s) => (
               <button
                 key={s.value}
                 onClick={() => setStatusFilter(s.value)}
                 className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                   statusFilter === s.value
-                    ? 'bg-blue-100 border-blue-400 text-blue-700 font-medium'
-                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                    ? 'bg-primary/10 border-primary text-primary font-medium'
+                    : 'bg-surface border-border text-fg-muted hover:bg-surface-muted'
                 }`}
               >
                 {s.label}
@@ -120,56 +120,56 @@ export default function AllocationRequestsPage() {
         <AllocationRequestForm />
 
         {requests.isLoading && (
-          <div className="h-40 bg-gray-100 animate-pulse rounded-lg" />
+          <div className="h-40 bg-surface-muted animate-pulse rounded-lg" />
         )}
 
         {requests.isError && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
             申請一覧の取得に失敗しました。
           </div>
         )}
 
         {requests.data && sorted.length === 0 && (
-          <div className="py-10 text-center text-sm text-gray-500 bg-white rounded-lg border border-gray-200">
+          <div className="py-10 text-center text-sm text-fg-muted bg-surface rounded-lg border border-border">
             該当する申請はありません。
           </div>
         )}
 
         {sorted.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+          <div className="bg-surface rounded-lg border border-border divide-y divide-border">
             {sorted.map((req) => (
-              <div key={req.id} className="p-4 flex items-start gap-4">
-                <div className="flex-shrink-0 w-32">
+              <div key={req.id} className="p-4 flex flex-col sm:flex-row items-start gap-4">
+                <div className="flex-shrink-0 sm:w-32">
                   <StatusBadge status={req.status} />
-                  <div className="text-[11px] text-gray-500 mt-1">
+                  <div className="text-[11px] text-fg-muted mt-1">
                     {new Date(req.requestedAt).toLocaleString('ja-JP')}
                   </div>
-                  <div className="text-[11px] text-gray-400 mt-0.5">
+                  <div className="text-[11px] text-fg-muted/70 mt-0.5">
                     by user #{req.requestedBy}
                   </div>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-800">
+                    <span className="text-sm font-medium text-fg">
                       {req.type === 'create_allocation' ? '新規アサイン' : 'アサイン解除'}
                     </span>
-                    <code className="text-[10px] text-gray-400">{req.id.slice(0, 8)}</code>
+                    <code className="text-[10px] text-fg-muted/70">{req.id.slice(0, 8)}</code>
                   </div>
                   <div className="mt-1">
                     <PayloadPreview req={req} />
                   </div>
                   {req.reason && (
-                    <div className="mt-2 text-xs text-gray-700 bg-gray-50 p-2 rounded">
+                    <div className="mt-2 text-xs text-fg bg-surface-muted p-2 rounded">
                       理由: {req.reason}
                     </div>
                   )}
                   {req.decisionNote && (
-                    <div className="mt-2 text-xs text-gray-700 bg-blue-50 p-2 rounded">
+                    <div className="mt-2 text-xs text-fg bg-primary/10 p-2 rounded">
                       判断メモ: {req.decisionNote}
                     </div>
                   )}
                   {req.resultingAllocationId && (
-                    <div className="mt-1 text-[11px] text-gray-500">
+                    <div className="mt-1 text-[11px] text-fg-muted">
                       → Allocation: <code>{req.resultingAllocationId.slice(0, 8)}</code>
                     </div>
                   )}

@@ -11,11 +11,11 @@ type MonthsPreset = typeof MONTHS_PRESETS[number];
 function severityClasses(sev: ForecastSeverity): string {
   switch (sev) {
     case 'ok':
-      return 'bg-green-50 text-green-800 border-green-200';
+      return 'bg-green-50 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800';
     case 'watch':
-      return 'bg-amber-50 text-amber-800 border-amber-200';
+      return 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800';
     case 'critical':
-      return 'bg-red-50 text-red-800 border-red-200';
+      return 'bg-red-50 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800';
   }
 }
 
@@ -56,19 +56,19 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
   }, [query.data]);
 
   return (
-    <section className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-gray-800">{t('forecast.title')}</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">{t('forecast.periodLabel')}</span>
+    <section className="bg-surface border border-border rounded-lg shadow-sm p-4">
+      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+        <h2 className="text-sm font-semibold text-fg">{t('forecast.title')}</h2>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-fg-muted">{t('forecast.periodLabel')}</span>
           {MONTHS_PRESETS.map((m) => (
             <button
               key={m}
               onClick={() => setMonths(m)}
               className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                 months === m
-                  ? 'bg-blue-100 border-blue-400 text-blue-700 font-medium'
-                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-primary/10 border-primary text-primary font-medium'
+                  : 'bg-surface border-border text-fg-muted hover:bg-surface-muted'
               }`}
             >
               {m}{t('forecast.monthsSuffix')}
@@ -78,17 +78,17 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
       </div>
 
       {query.isLoading && (
-        <div className="h-32 animate-pulse bg-gray-100 rounded" />
+        <div className="h-32 animate-pulse bg-surface-muted rounded" />
       )}
 
       {query.isError && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-700 dark:text-red-300">
           {t('forecast.loadFailed')}
         </div>
       )}
 
       {query.data && skillRows.length === 0 && (
-        <div className="py-6 text-center text-sm text-gray-500">
+        <div className="py-6 text-center text-sm text-fg-muted">
           {t('forecast.noDemand')}
         </div>
       )}
@@ -97,12 +97,12 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
         <div className="overflow-x-auto">
           <table className="min-w-full text-xs">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-2 px-2 font-medium text-gray-600 sticky left-0 bg-white">
+              <tr className="border-b border-border">
+                <th className="text-left py-2 px-2 font-medium text-fg-muted sticky left-0 bg-surface">
                   {t('forecast.skillColumn')}
                 </th>
                 {query.data.buckets.map((b) => (
-                  <th key={b.month} className="text-center py-2 px-2 font-medium text-gray-600 whitespace-nowrap">
+                  <th key={b.month} className="text-center py-2 px-2 font-medium text-fg-muted whitespace-nowrap">
                     {b.month}
                   </th>
                 ))}
@@ -110,15 +110,15 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
             </thead>
             <tbody>
               {skillRows.map((row) => (
-                <tr key={row.skillId} className="border-b border-gray-100 last:border-b-0">
-                  <td className="py-2 px-2 font-medium text-gray-800 sticky left-0 bg-white whitespace-nowrap">
+                <tr key={row.skillId} className="border-b border-border last:border-b-0">
+                  <td className="py-2 px-2 font-medium text-fg sticky left-0 bg-surface whitespace-nowrap">
                     {row.skillName}
                   </td>
                   {query.data!.buckets.map((b) => {
                     const cell = cellLookup.get(`${row.skillId}:${b.month}`);
                     if (!cell) {
                       return (
-                        <td key={b.month} className="py-2 px-2 text-center text-gray-300">
+                        <td key={b.month} className="py-2 px-2 text-center text-fg-muted/40">
                           —
                         </td>
                       );
@@ -141,7 +141,7 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
               ))}
             </tbody>
           </table>
-          <p className="mt-2 text-[11px] text-gray-500">{t('forecast.cellHint')}</p>
+          <p className="mt-2 text-[11px] text-fg-muted">{t('forecast.cellHint')}</p>
         </div>
       )}
     </section>

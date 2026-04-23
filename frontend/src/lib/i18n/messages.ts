@@ -24,6 +24,11 @@ export const ja = {
   'header.signOut': 'サインアウト',
   'header.signingOut': 'サインアウト中…',
   'header.language': '言語',
+  'header.theme': 'テーマ',
+  'header.themeLight': 'ライト',
+  'header.themeDark': 'ダーク',
+  'header.themeSystem': 'システム',
+  'header.menu': 'メニュー',
 
   // Dashboard KPI banner
   'kpi.fulfillmentRate': '全 active/planning の平均充足率',
@@ -93,6 +98,11 @@ export const en: Record<TranslationKey, string> = {
   'header.signOut': 'Sign out',
   'header.signingOut': 'Signing out…',
   'header.language': 'Language',
+  'header.theme': 'Theme',
+  'header.themeLight': 'Light',
+  'header.themeDark': 'Dark',
+  'header.themeSystem': 'System',
+  'header.menu': 'Menu',
 
   'kpi.fulfillmentRate': 'Avg fulfillment (active/planning)',
   'kpi.projectsCount': '{count} projects',
