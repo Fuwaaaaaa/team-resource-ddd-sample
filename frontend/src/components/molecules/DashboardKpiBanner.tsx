@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useKpiSummary } from '@/features/dashboard/api';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 function fulfillmentTone(rate: number): 'good' | 'warn' | 'bad' {
   if (rate >= 90) return 'good';
@@ -53,6 +54,7 @@ function KpiCard({
 
 export function DashboardKpiBanner({ referenceDate }: { referenceDate: string }) {
   const kpi = useKpiSummary(referenceDate);
+  const t = useTranslation();
 
   if (kpi.isLoading) {
     return (
@@ -74,7 +76,7 @@ export function DashboardKpiBanner({ referenceDate }: { referenceDate: string })
   if (kpi.isError || !kpi.data) {
     return (
       <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-        KPI サマリの取得に失敗しました。
+        {t('kpi.loadFailed')}
       </div>
     );
   }
@@ -85,29 +87,29 @@ export function DashboardKpiBanner({ referenceDate }: { referenceDate: string })
   return (
     <div className="flex flex-wrap gap-3">
       <KpiCard
-        label="全 active/planning の平均充足率"
+        label={t('kpi.fulfillmentRate')}
         value={`${d.averageFulfillmentRate.toFixed(1)}%`}
-        sub={`${d.activeProjectCount} プロジェクト`}
+        sub={t('kpi.projectsCount', { count: d.activeProjectCount })}
         tone={d.activeProjectCount === 0 ? 'default' : fulfillmentTon}
         href="/projects/compare"
       />
       <KpiCard
-        label="過負荷メンバー数"
+        label={t('kpi.overloadedMembers')}
         value={String(d.overloadedMemberCount)}
-        sub={d.overloadedMemberCount > 0 ? '要対処' : '余裕あり'}
+        sub={d.overloadedMemberCount > 0 ? t('kpi.needsAttention') : t('kpi.capacityFine')}
         tone={d.overloadedMemberCount > 0 ? 'bad' : 'default'}
         href="/members"
       />
       <KpiCard
-        label="今週終了するアサイン"
+        label={t('kpi.upcomingEnds')}
         value={String(d.upcomingEndsThisWeek)}
-        sub="7 日以内"
+        sub={t('kpi.within7Days')}
         tone={d.upcomingEndsThisWeek > 0 ? 'warn' : 'default'}
       />
       <KpiCard
-        label="スキル不足人数(総計)"
+        label={t('kpi.skillGaps')}
         value={String(d.skillGapsTotal)}
-        sub="全 active/planning の gap 合計"
+        sub={t('kpi.skillGapsSub')}
         tone={d.skillGapsTotal > 0 ? 'warn' : 'default'}
       />
     </div>

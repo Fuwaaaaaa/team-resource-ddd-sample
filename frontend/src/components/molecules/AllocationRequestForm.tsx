@@ -5,12 +5,14 @@ import { useMembers } from '@/features/members/api';
 import { useProjects } from '@/features/projects/api';
 import { useSkills } from '@/features/skills/api';
 import { useSubmitAllocationRequest } from '@/features/allocationRequests/api';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 export function AllocationRequestForm() {
   const members = useMembers();
   const projects = useProjects();
   const skills = useSkills();
   const submit = useSubmitAllocationRequest();
+  const t = useTranslation();
 
   const [memberId, setMemberId] = useState('');
   const [projectId, setProjectId] = useState('');
@@ -41,7 +43,7 @@ export function AllocationRequestForm() {
         },
         reason: reason || null,
       });
-      setSuccess(`申請を提出しました (ID: ${dto.id.slice(0, 8)})`);
+      setSuccess(t('request.submitted', { id: dto.id.slice(0, 8) }));
       setReason('');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -50,16 +52,16 @@ export function AllocationRequestForm() {
 
   return (
     <section className="bg-white rounded-lg border border-gray-200 p-4">
-      <h2 className="text-sm font-semibold text-gray-800 mb-3">新規アサイン申請</h2>
+      <h2 className="text-sm font-semibold text-gray-800 mb-3">{t('request.formTitle')}</h2>
       <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
         <label className="flex flex-col gap-1">
-          <span className="text-gray-600">Member</span>
+          <span className="text-gray-600">{t('request.member')}</span>
           <select
             value={memberId}
             onChange={(e) => setMemberId(e.target.value)}
             className="px-2 py-1.5 border border-gray-300 rounded"
           >
-            <option value="">-- 選択 --</option>
+            <option value="">{t('request.selectPlaceholder')}</option>
             {members.data?.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
@@ -68,13 +70,13 @@ export function AllocationRequestForm() {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-gray-600">Project</span>
+          <span className="text-gray-600">{t('request.project')}</span>
           <select
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
             className="px-2 py-1.5 border border-gray-300 rounded"
           >
-            <option value="">-- 選択 --</option>
+            <option value="">{t('request.selectPlaceholder')}</option>
             {projects.data?.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -83,13 +85,13 @@ export function AllocationRequestForm() {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-gray-600">Skill</span>
+          <span className="text-gray-600">{t('request.skill')}</span>
           <select
             value={skillId}
             onChange={(e) => setSkillId(e.target.value)}
             className="px-2 py-1.5 border border-gray-300 rounded"
           >
-            <option value="">-- 選択 --</option>
+            <option value="">{t('request.selectPlaceholder')}</option>
             {skills.data?.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -98,7 +100,7 @@ export function AllocationRequestForm() {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-gray-600">割合 (%)</span>
+          <span className="text-gray-600">{t('request.percentage')}</span>
           <input
             type="number"
             min={1}
@@ -109,7 +111,7 @@ export function AllocationRequestForm() {
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-gray-600">開始日</span>
+          <span className="text-gray-600">{t('request.startDate')}</span>
           <input
             type="date"
             value={periodStart}
@@ -118,7 +120,7 @@ export function AllocationRequestForm() {
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-gray-600">終了日</span>
+          <span className="text-gray-600">{t('request.endDate')}</span>
           <input
             type="date"
             value={periodEnd}
@@ -127,7 +129,7 @@ export function AllocationRequestForm() {
           />
         </label>
         <label className="flex flex-col gap-1 md:col-span-2">
-          <span className="text-gray-600">理由 (任意)</span>
+          <span className="text-gray-600">{t('request.reason')}</span>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -146,7 +148,7 @@ export function AllocationRequestForm() {
             disabled={!canSubmit || submit.isPending}
             className="px-4 py-1.5 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
           >
-            {submit.isPending ? '送信中…' : '申請を提出'}
+            {submit.isPending ? t('request.submitting') : t('request.submit')}
           </button>
         </div>
       </form>
