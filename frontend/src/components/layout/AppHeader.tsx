@@ -4,21 +4,25 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLogout, useMe, usePermissions } from '@/features/auth/api';
 import { NotificationsBell } from '@/components/molecules/NotificationsBell/NotificationsBell';
+import { useLocaleStore } from '@/lib/i18n/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n/messages';
+import type { TranslationKey } from '@/lib/i18n/messages';
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: TranslationKey;
   requires?: 'canViewAuditLog' | 'canWrite';
 }
 
 const nav: NavItem[] = [
-  { href: '/', label: 'Heatmap' },
-  { href: '/timeline', label: 'Timeline' },
-  { href: '/members', label: 'Members' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/allocations', label: 'Allocations' },
-  { href: '/allocation-requests', label: 'Requests', requires: 'canWrite' },
-  { href: '/audit-logs', label: 'Audit', requires: 'canViewAuditLog' },
+  { href: '/', labelKey: 'nav.heatmap' },
+  { href: '/timeline', labelKey: 'nav.timeline' },
+  { href: '/members', labelKey: 'nav.members' },
+  { href: '/projects', labelKey: 'nav.projects' },
+  { href: '/allocations', labelKey: 'nav.allocations' },
+  { href: '/allocation-requests', labelKey: 'nav.requests', requires: 'canWrite' },
+  { href: '/audit-logs', labelKey: 'nav.audit', requires: 'canViewAuditLog' },
 ];
 
 const ROLE_BADGE_CLASSES: Record<string, string> = {
@@ -27,12 +31,20 @@ const ROLE_BADGE_CLASSES: Record<string, string> = {
   viewer: 'bg-gray-100 text-gray-600 border-gray-300',
 };
 
+const LOCALE_LABELS: Record<Locale, string> = {
+  ja: '日本語',
+  en: 'English',
+};
+
 export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: me } = useMe();
   const permissions = usePermissions();
   const logout = useLogout();
+  const t = useTranslation();
+  const locale = useLocaleStore((s) => s.locale);
+  const setLocale = useLocaleStore((s) => s.setLocale);
 
   const handleLogout = async () => {
     await logout.mutateAsync();
@@ -64,12 +76,24 @@ export function AppHeader() {
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
-                {n.label}
+                {t(n.labelKey)}
               </Link>
             );
           })}
         </nav>
         <div className="ml-auto flex items-center gap-3">
+          <select
+            aria-label={t('header.language')}
+            value={locale}
+            onChange={(e) => setLocale(e.target.value as Locale)}
+            className="px-2 py-1 text-xs border border-gray-300 rounded-md bg-white text-gray-600"
+          >
+            {SUPPORTED_LOCALES.map((l) => (
+              <option key={l} value={l}>
+                {LOCALE_LABELS[l]}
+              </option>
+            ))}
+          </select>
           {me && (permissions.canWrite || permissions.canViewAuditLog) && <NotificationsBell />}
           {me && (
             <>
@@ -90,7 +114,7 @@ export function AppHeader() {
             disabled={logout.isPending}
             className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md border border-gray-300 transition-colors disabled:opacity-50"
           >
-            {logout.isPending ? 'Signing out…' : 'Sign out'}
+            {logout.isPending ? t('header.signingOut') : t('header.signOut')}
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useCapacityForecast } from '@/features/dashboard/api';
 import type { ForecastSeverity, SkillForecastDto } from '@/features/dashboard/types';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const MONTHS_PRESETS = [3, 6, 12] as const;
 type MonthsPreset = typeof MONTHS_PRESETS[number];
@@ -26,6 +27,7 @@ function formatGap(gap: number): string {
 export function CapacityForecastWidget({ referenceDate }: { referenceDate: string }) {
   const [months, setMonths] = useState<MonthsPreset>(6);
   const query = useCapacityForecast(referenceDate, months);
+  const t = useTranslation();
 
   // バケット全体でユニークなスキル一覧 (表の行) を導出 — 表示順は name 昇順で固定
   const skillRows = useMemo(() => {
@@ -56,9 +58,9 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
   return (
     <section className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-gray-800">キャパシティ予測</h2>
+        <h2 className="text-sm font-semibold text-gray-800">{t('forecast.title')}</h2>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">期間</span>
+          <span className="text-xs text-gray-500">{t('forecast.periodLabel')}</span>
           {MONTHS_PRESETS.map((m) => (
             <button
               key={m}
@@ -69,7 +71,7 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
                   : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
               }`}
             >
-              {m}ヶ月
+              {m}{t('forecast.monthsSuffix')}
             </button>
           ))}
         </div>
@@ -81,13 +83,13 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
 
       {query.isError && (
         <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-          キャパシティ予測の取得に失敗しました。
+          {t('forecast.loadFailed')}
         </div>
       )}
 
       {query.data && skillRows.length === 0 && (
         <div className="py-6 text-center text-sm text-gray-500">
-          予測対象の需要データがありません。
+          {t('forecast.noDemand')}
         </div>
       )}
 
@@ -97,7 +99,7 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-2 px-2 font-medium text-gray-600 sticky left-0 bg-white">
-                  スキル
+                  {t('forecast.skillColumn')}
                 </th>
                 {query.data.buckets.map((b) => (
                   <th key={b.month} className="text-center py-2 px-2 font-medium text-gray-600 whitespace-nowrap">
@@ -139,9 +141,7 @@ export function CapacityForecastWidget({ referenceDate }: { referenceDate: strin
               ))}
             </tbody>
           </table>
-          <p className="mt-2 text-[11px] text-gray-500">
-            セル表記: <span className="font-medium">ギャップ (供給 / 需要)</span> &mdash; 供給 1.0 = 1 名フルタイム相当。
-          </p>
+          <p className="mt-2 text-[11px] text-gray-500">{t('forecast.cellHint')}</p>
         </div>
       )}
     </section>

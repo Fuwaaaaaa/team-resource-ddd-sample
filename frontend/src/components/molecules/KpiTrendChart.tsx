@@ -12,6 +12,8 @@ import {
 } from 'recharts';
 import { useKpiTrend } from '@/features/dashboard/api';
 import type { KpiTrendPointDto } from '@/features/dashboard/types';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import type { TranslationKey } from '@/lib/i18n/messages';
 
 const DAYS_PRESETS = [7, 30, 90] as const;
 type DaysPreset = typeof DAYS_PRESETS[number];
@@ -22,19 +24,21 @@ type MetricKey =
   | 'skillGapsTotal'
   | 'upcomingEndsThisWeek';
 
-const METRICS: { key: MetricKey; label: string; unit: string; stroke: string }[] = [
-  { key: 'averageFulfillmentRate', label: '平均充足率', unit: '%', stroke: '#4f46e5' },
-  { key: 'overloadedMemberCount', label: '過負荷メンバー数', unit: '人', stroke: '#dc2626' },
-  { key: 'skillGapsTotal', label: 'スキル不足(総計)', unit: '人', stroke: '#ca8a04' },
-  { key: 'upcomingEndsThisWeek', label: '今週終了アサイン', unit: '件', stroke: '#0891b2' },
+const METRICS: { key: MetricKey; labelKey: TranslationKey; unit: string; stroke: string }[] = [
+  { key: 'averageFulfillmentRate', labelKey: 'trend.metricFulfillment', unit: '%', stroke: '#4f46e5' },
+  { key: 'overloadedMemberCount', labelKey: 'trend.metricOverloaded', unit: '', stroke: '#dc2626' },
+  { key: 'skillGapsTotal', labelKey: 'trend.metricSkillGaps', unit: '', stroke: '#ca8a04' },
+  { key: 'upcomingEndsThisWeek', labelKey: 'trend.metricUpcomingEnds', unit: '', stroke: '#0891b2' },
 ];
 
 export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
   const [days, setDays] = useState<DaysPreset>(30);
   const [metric, setMetric] = useState<MetricKey>('averageFulfillmentRate');
   const query = useKpiTrend(referenceDate, days);
+  const t = useTranslation();
 
   const meta = useMemo(() => METRICS.find((m) => m.key === metric)!, [metric]);
+  const metaLabel = t(meta.labelKey);
 
   const chartData = useMemo(() => {
     if (!query.data) return [] as Array<{ date: string; value: number }>;
@@ -47,7 +51,7 @@ export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
   return (
     <section className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h2 className="text-sm font-semibold text-gray-800">KPI トレンド</h2>
+        <h2 className="text-sm font-semibold text-gray-800">{t('trend.title')}</h2>
         <div className="flex flex-wrap items-center gap-3">
           <select
             value={metric}
@@ -56,7 +60,7 @@ export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
           >
             {METRICS.map((m) => (
               <option key={m.key} value={m.key}>
-                {m.label}
+                {t(m.labelKey)}
               </option>
             ))}
           </select>
@@ -71,7 +75,7 @@ export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
                     : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                {d}日
+                {d}{t('trend.daysSuffix')}
               </button>
             ))}
           </div>
@@ -82,13 +86,13 @@ export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
 
       {query.isError && (
         <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-          トレンドデータの取得に失敗しました。
+          {t('trend.loadFailed')}
         </div>
       )}
 
       {query.data && chartData.length === 0 && (
         <div className="py-10 text-center text-sm text-gray-500">
-          スナップショット未蓄積です。<code className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">php artisan kpi:snapshot-capture</code> を毎日実行するとデータが貯まります。
+          {t('trend.empty')}<code className="px-1.5 py-0.5 bg-gray-100 rounded text-xs mx-1">php artisan kpi:snapshot-capture</code>{t('trend.emptyHint')}
         </div>
       )}
 
@@ -100,14 +104,14 @@ export function KpiTrendChart({ referenceDate }: { referenceDate: string }) {
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip
-                formatter={(value: number) => [`${value}${meta.unit}`, meta.label]}
-                labelFormatter={(label: string) => `日付: ${label}`}
+                formatter={(value: number) => [`${value}${meta.unit}`, metaLabel]}
+                labelFormatter={(label: string) => t('trend.dateLabel', { date: label })}
                 contentStyle={{ fontSize: 12 }}
               />
               <Line
                 type="monotone"
                 dataKey="value"
-                name={meta.label}
+                name={metaLabel}
                 stroke={meta.stroke}
                 strokeWidth={2}
                 dot={{ r: 3 }}
