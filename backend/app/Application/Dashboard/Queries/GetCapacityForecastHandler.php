@@ -127,6 +127,7 @@ final class GetCapacityForecastHandler
         if ($gap > -1.0) {
             return 'watch';
         }
+
         return 'critical';
     }
 }
