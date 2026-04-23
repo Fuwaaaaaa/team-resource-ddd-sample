@@ -15,6 +15,8 @@ final class ProjectDto
         public readonly string $id,
         public readonly string $name,
         public readonly string $status,
+        public readonly ?string $plannedStartDate,
+        public readonly ?string $plannedEndDate,
         public readonly array $requiredSkills,
     ) {}
 
@@ -34,6 +36,8 @@ final class ProjectDto
             id: $project->id()->toString(),
             name: $project->name()->toString(),
             status: $project->status()->value,
+            plannedStartDate: $project->plannedStartDate()?->format('Y-m-d'),
+            plannedEndDate: $project->plannedEndDate()?->format('Y-m-d'),
             requiredSkills: $required,
         );
     }

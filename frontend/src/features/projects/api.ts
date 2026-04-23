@@ -54,7 +54,7 @@ export function useProjects() {
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { name: string }) => {
+    mutationFn: async (input: CreateProjectInput) => {
       const res = await apiFetch<{ data: ProjectDto }>('/api/projects', {
         method: 'POST',
         body: JSON.stringify(input),
@@ -66,6 +66,12 @@ export function useCreateProject() {
       qc.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
+}
+
+export interface CreateProjectInput {
+  name: string;
+  plannedStartDate?: string | null;
+  plannedEndDate?: string | null;
 }
 
 export function useDeleteProject() {

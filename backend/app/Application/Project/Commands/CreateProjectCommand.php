@@ -8,5 +8,7 @@ final class CreateProjectCommand
 {
     public function __construct(
         public readonly string $name,
+        public readonly ?string $plannedStartDate = null,
+        public readonly ?string $plannedEndDate = null,
     ) {}
 }

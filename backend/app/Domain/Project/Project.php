@@ -6,6 +6,8 @@ namespace App\Domain\Project;
 
 use App\Domain\Project\Exceptions\InvalidProjectStatusTransition;
 use App\Domain\Skill\SkillId;
+use DateTimeImmutable;
+use InvalidArgumentException;
 
 final class Project
 {
@@ -14,6 +16,10 @@ final class Project
     private ProjectName $name;
 
     private ProjectStatus $status;
+
+    private ?DateTimeImmutable $plannedStartDate = null;
+
+    private ?DateTimeImmutable $plannedEndDate = null;
 
     /** @var array<string, RequiredSkill> SkillId文字列でキー */
     private array $requiredSkills = [];
@@ -48,6 +54,45 @@ final class Project
     public function rename(ProjectName $name): void
     {
         $this->name = $name;
+    }
+
+    public function plannedStartDate(): ?DateTimeImmutable
+    {
+        return $this->plannedStartDate;
+    }
+
+    public function plannedEndDate(): ?DateTimeImmutable
+    {
+        return $this->plannedEndDate;
+    }
+
+    /**
+     * プロジェクトの計画期間を設定する。
+     * 両方 null ならクリア、片方のみ設定は不可。end <= start も不可。
+     */
+    public function setPlannedPeriod(?DateTimeImmutable $start, ?DateTimeImmutable $end): void
+    {
+        if ($start === null xor $end === null) {
+            throw new InvalidArgumentException('planned period must be either both null or both set.');
+        }
+        if ($start !== null && $end !== null && $end <= $start) {
+            throw new InvalidArgumentException('planned_end_date must be after planned_start_date.');
+        }
+        $this->plannedStartDate = $start;
+        $this->plannedEndDate = $end;
+    }
+
+    /**
+     * 指定月 (monthStart から翌月 monthStart までの半開区間) が計画期間と重なるか。
+     * 期間未設定のプロジェクトは常に true (需要を全バケットに寄せる既存動作を保持)。
+     */
+    public function overlapsMonth(DateTimeImmutable $monthStart, DateTimeImmutable $monthEnd): bool
+    {
+        if ($this->plannedStartDate === null || $this->plannedEndDate === null) {
+            return true;
+        }
+
+        return $this->plannedStartDate <= $monthEnd && $this->plannedEndDate >= $monthStart;
     }
 
     /**

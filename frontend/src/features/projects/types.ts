@@ -11,6 +11,8 @@ export interface ProjectDto {
   id: string;
   name: string;
   status: ProjectStatus;
+  plannedStartDate: string | null;
+  plannedEndDate: string | null;
   requiredSkills: RequiredSkillDto[];
 }
 

@@ -14,6 +14,7 @@ use App\Domain\Project\RequiredSkillId;
 use App\Domain\Skill\SkillId;
 use App\Infrastructure\Persistence\Eloquent\Models\ProjectModel;
 use App\Infrastructure\Persistence\Eloquent\Models\RequiredSkillModel;
+use DateTimeImmutable;
 use ReflectionClass;
 
 final class ProjectMapper
@@ -37,10 +38,15 @@ final class ProjectMapper
             );
         }
 
+        $plannedStart = self::toDateImmutable($model->planned_start_date);
+        $plannedEnd = self::toDateImmutable($model->planned_end_date);
+
         $props = [
             'id' => new ProjectId((string) $model->id),
             'name' => new ProjectName((string) $model->name),
             'status' => ProjectStatus::from((string) ($model->status ?? 'active')),
+            'plannedStartDate' => $plannedStart,
+            'plannedEndDate' => $plannedEnd,
             'requiredSkills' => $required,
             'domainEvents' => [],
         ];
@@ -60,7 +66,21 @@ final class ProjectMapper
             'id' => $project->id()->toString(),
             'name' => $project->name()->toString(),
             'status' => $project->status()->value,
+            'planned_start_date' => $project->plannedStartDate()?->format('Y-m-d'),
+            'planned_end_date' => $project->plannedEndDate()?->format('Y-m-d'),
         ];
+    }
+
+    private static function toDateImmutable(mixed $raw): ?DateTimeImmutable
+    {
+        if ($raw === null) {
+            return null;
+        }
+        if ($raw instanceof \DateTimeInterface) {
+            return DateTimeImmutable::createFromInterface($raw);
+        }
+
+        return new DateTimeImmutable((string) $raw);
     }
 
     /** @return array<int, array<string, mixed>> */
