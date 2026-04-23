@@ -6,6 +6,9 @@ namespace App\Providers;
 
 use App\Domain\Allocation\Events\AllocationCreated;
 use App\Domain\Allocation\Events\AllocationRevoked;
+use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestApproved;
+use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestRejected;
+use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestSubmitted;
 use App\Domain\Availability\Events\AbsenceCanceled;
 use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Member\Events\MemberCreated;
@@ -54,6 +57,9 @@ class AppServiceProvider extends ServiceProvider
             ProjectCanceled::class,
             AbsenceRegistered::class,
             AbsenceCanceled::class,
+            AllocationChangeRequestSubmitted::class,
+            AllocationChangeRequestApproved::class,
+            AllocationChangeRequestRejected::class,
         ] as $eventClass) {
             Event::listen($eventClass, [RecordAuditLog::class, 'handle']);
             Event::listen($eventClass, [CreateNotification::class, 'handle']);

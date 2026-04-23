@@ -6,6 +6,9 @@ namespace App\Listeners;
 
 use App\Domain\Allocation\Events\AllocationCreated;
 use App\Domain\Allocation\Events\AllocationRevoked;
+use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestApproved;
+use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestRejected;
+use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestSubmitted;
 use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Project\Events\ProjectCanceled;
 use App\Domain\Project\Events\ProjectCompleted;
@@ -103,6 +106,40 @@ final class CreateNotification
                 'title' => 'プロジェクト中止',
                 'body' => sprintf('Project %s が中止されました', $this->shortId($event->projectId()->toString())),
                 'payload' => ['projectId' => $event->projectId()->toString()],
+            ],
+            $event instanceof AllocationChangeRequestSubmitted => [
+                'type' => 'AllocationChangeRequestSubmitted',
+                'title' => 'アロケーション変更申請',
+                'body' => sprintf(
+                    '%s 種別の変更申請が提出されました (ID: %s)',
+                    $event->type()->value,
+                    $this->shortId($event->requestId()->toString()),
+                ),
+                'payload' => [
+                    'requestId' => $event->requestId()->toString(),
+                    'type' => $event->type()->value,
+                    'requestedBy' => $event->requestedBy(),
+                ],
+            ],
+            $event instanceof AllocationChangeRequestApproved => [
+                'type' => 'AllocationChangeRequestApproved',
+                'title' => '変更申請が承認されました',
+                'body' => sprintf('Request %s が承認されました', $this->shortId($event->requestId()->toString())),
+                'payload' => [
+                    'requestId' => $event->requestId()->toString(),
+                    'decidedBy' => $event->decidedBy(),
+                    'resultingAllocationId' => $event->resultingAllocationId(),
+                ],
+            ],
+            $event instanceof AllocationChangeRequestRejected => [
+                'type' => 'AllocationChangeRequestRejected',
+                'title' => '変更申請が却下されました',
+                'body' => sprintf('Request %s が却下されました', $this->shortId($event->requestId()->toString())),
+                'payload' => [
+                    'requestId' => $event->requestId()->toString(),
+                    'decidedBy' => $event->decidedBy(),
+                    'note' => $event->decisionNote(),
+                ],
             ],
             default => null,
         };

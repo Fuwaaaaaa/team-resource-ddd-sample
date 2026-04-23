@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AbsenceController;
+use App\Http\Controllers\Api\AllocationChangeRequestController;
 use App\Http\Controllers\Api\AllocationController;
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\Dashboard\CapacityController;
@@ -57,6 +58,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/allocations/suggestions', [AllocationController::class, 'suggestions']);
     Route::get('/timeline', TimelineController::class);
 
+    // Allocation change requests (read: 自分の申請を参照可 / admin は全件)
+    Route::get('/allocation-requests', [AllocationChangeRequestController::class, 'index']);
+
     // Absence (read)
     Route::get('/absences', [AbsenceController::class, 'index']);
     Route::get('/members/{memberId}/absences', [AbsenceController::class, 'byMember']);
@@ -95,6 +99,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/allocations', [AllocationController::class, 'store']);
         Route::post('/allocations/{id}/revoke', [AllocationController::class, 'revoke']);
 
+        // Allocation change request: manager/admin が申請
+        Route::post('/allocation-requests', [AllocationChangeRequestController::class, 'store']);
+
         Route::post('/absences', [AbsenceController::class, 'store']);
         Route::post('/absences/{id}/cancel', [AbsenceController::class, 'cancel']);
 
@@ -111,5 +118,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::middleware('role:admin')->group(function (): void {
         Route::get('/audit-logs', [AuditLogController::class, 'index']);
         Route::get('/export/audit-logs', [ExportController::class, 'auditLogs']);
+
+        // Allocation change request: 承認 / 却下 は admin のみ
+        Route::post('/allocation-requests/{id}/approve', [AllocationChangeRequestController::class, 'approve']);
+        Route::post('/allocation-requests/{id}/reject', [AllocationChangeRequestController::class, 'reject']);
     });
 });
