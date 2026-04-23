@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Providers } from './providers';
+import { ThemeBootstrap } from '@/lib/theme/ThemeBootstrap';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -14,7 +15,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body className="bg-gray-50 min-h-screen">
+      <body className="bg-bg text-fg min-h-screen">
+        <ThemeBootstrap />
         <Providers>{children}</Providers>
       </body>
     </html>

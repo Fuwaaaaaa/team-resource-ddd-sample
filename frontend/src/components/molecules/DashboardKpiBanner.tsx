@@ -25,19 +25,19 @@ function KpiCard({
 }) {
   const toneClasses =
     tone === 'good'
-      ? 'text-green-700'
+      ? 'text-green-700 dark:text-green-400'
       : tone === 'warn'
-        ? 'text-amber-700'
+        ? 'text-amber-700 dark:text-amber-400'
         : tone === 'bad'
-          ? 'text-red-700'
-          : 'text-gray-900';
+          ? 'text-red-700 dark:text-red-400'
+          : 'text-fg';
   const body = (
-    <div className="flex-1 min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 relative hover:border-indigo-300 transition">
-      <div className="text-xs text-gray-500">{label}</div>
+    <div className="flex-1 min-w-[180px] bg-surface border border-border rounded-lg shadow-sm px-4 py-3 relative hover:border-primary transition">
+      <div className="text-xs text-fg-muted">{label}</div>
       <div className={`text-2xl font-bold mt-1 ${toneClasses}`}>{value}</div>
-      {sub && <div className="text-xs text-gray-500 mt-0.5">{sub}</div>}
+      {sub && <div className="text-xs text-fg-muted mt-0.5">{sub}</div>}
       {href && (
-        <span className="absolute top-2 right-2 text-[11px] text-indigo-600 opacity-70">
+        <span className="absolute top-2 right-2 text-[11px] text-primary opacity-70">
           詳細 →
         </span>
       )}
@@ -62,11 +62,11 @@ export function DashboardKpiBanner({ referenceDate }: { referenceDate: string })
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className="flex-1 min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 animate-pulse"
+            className="flex-1 min-w-[180px] bg-surface border border-border rounded-lg shadow-sm px-4 py-3 animate-pulse"
           >
-            <div className="h-3 w-20 bg-gray-200 rounded" />
-            <div className="h-6 w-16 bg-gray-200 rounded mt-2" />
-            <div className="h-3 w-24 bg-gray-200 rounded mt-2" />
+            <div className="h-3 w-20 bg-surface-muted rounded" />
+            <div className="h-6 w-16 bg-surface-muted rounded mt-2" />
+            <div className="h-3 w-24 bg-surface-muted rounded mt-2" />
           </div>
         ))}
       </div>
@@ -75,7 +75,7 @@ export function DashboardKpiBanner({ referenceDate }: { referenceDate: string })
 
   if (kpi.isError || !kpi.data) {
     return (
-      <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+      <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
         {t('kpi.loadFailed')}
       </div>
     );
