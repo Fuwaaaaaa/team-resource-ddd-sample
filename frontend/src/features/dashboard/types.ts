@@ -70,6 +70,17 @@ export interface SkillGapWarningListDto {
   referenceDate: string;
 }
 
+// === KPI summary (dashboard top banner) ===
+
+export interface KpiSummaryDto {
+  referenceDate: string;
+  averageFulfillmentRate: number;
+  activeProjectCount: number;
+  overloadedMemberCount: number;
+  upcomingEndsThisWeek: number;
+  skillGapsTotal: number;
+}
+
 // === Derived types for component internal use ===
 
 /** Lookup key for skill gap: "memberId:skillId" */

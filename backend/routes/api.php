@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AbsenceController;
 use App\Http\Controllers\Api\AllocationController;
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\Dashboard\CapacityController;
+use App\Http\Controllers\Api\Dashboard\KpiSummaryController;
 use App\Http\Controllers\Api\Dashboard\OverloadController;
 use App\Http\Controllers\Api\Dashboard\SkillGapController;
 use App\Http\Controllers\Api\ExportController;
@@ -37,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/capacity', CapacityController::class);
         Route::get('/overload', OverloadController::class);
         Route::get('/skill-gaps', SkillGapController::class);
+        Route::get('/kpi-summary', KpiSummaryController::class);
     });
 
     Route::get('/skills', [SkillController::class, 'index']);
