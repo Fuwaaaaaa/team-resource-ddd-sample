@@ -128,7 +128,7 @@ export default function ProjectKpiPage() {
                   {PROJECT_STATUS_LABELS[kpi.data.status]}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <label htmlFor="ref-date" className="text-xs font-medium text-gray-600">
                   基準日
                 </label>
@@ -139,6 +139,14 @@ export default function ProjectKpiPage() {
                   onChange={(e) => setReferenceDate(e.target.value)}
                   className="px-2 py-1 text-sm border border-gray-300 rounded-md"
                 />
+                <a
+                  href={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080'}/api/reports/projects/${projectId}/pdf?referenceDate=${encodeURIComponent(referenceDate)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1 text-xs font-medium text-red-700 border border-red-300 rounded-md hover:bg-red-50"
+                >
+                  PDF 出力
+                </a>
               </div>
             </div>
 
