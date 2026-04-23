@@ -1,0 +1,149 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import { useCapacityForecast } from '@/features/dashboard/api';
+import type { ForecastSeverity, SkillForecastDto } from '@/features/dashboard/types';
+
+const MONTHS_PRESETS = [3, 6, 12] as const;
+type MonthsPreset = typeof MONTHS_PRESETS[number];
+
+function severityClasses(sev: ForecastSeverity): string {
+  switch (sev) {
+    case 'ok':
+      return 'bg-green-50 text-green-800 border-green-200';
+    case 'watch':
+      return 'bg-amber-50 text-amber-800 border-amber-200';
+    case 'critical':
+      return 'bg-red-50 text-red-800 border-red-200';
+  }
+}
+
+function formatGap(gap: number): string {
+  const sign = gap > 0 ? '+' : '';
+  return `${sign}${gap.toFixed(1)}`;
+}
+
+export function CapacityForecastWidget({ referenceDate }: { referenceDate: string }) {
+  const [months, setMonths] = useState<MonthsPreset>(6);
+  const query = useCapacityForecast(referenceDate, months);
+
+  // バケット全体でユニークなスキル一覧 (表の行) を導出 — 表示順は name 昇順で固定
+  const skillRows = useMemo(() => {
+    if (!query.data) return [] as Array<{ skillId: string; skillName: string }>;
+    const seen = new Map<string, string>();
+    for (const b of query.data.buckets) {
+      for (const s of b.skills) {
+        if (!seen.has(s.skillId)) seen.set(s.skillId, s.skillName);
+      }
+    }
+    return Array.from(seen, ([skillId, skillName]) => ({ skillId, skillName })).sort((a, b) =>
+      a.skillName.localeCompare(b.skillName),
+    );
+  }, [query.data]);
+
+  // (skillId, month) → SkillForecastDto ルックアップ
+  const cellLookup = useMemo(() => {
+    const map = new Map<string, SkillForecastDto>();
+    if (!query.data) return map;
+    for (const b of query.data.buckets) {
+      for (const s of b.skills) {
+        map.set(`${s.skillId}:${b.month}`, s);
+      }
+    }
+    return map;
+  }, [query.data]);
+
+  return (
+    <section className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-gray-800">キャパシティ予測</h2>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">期間</span>
+          {MONTHS_PRESETS.map((m) => (
+            <button
+              key={m}
+              onClick={() => setMonths(m)}
+              className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                months === m
+                  ? 'bg-blue-100 border-blue-400 text-blue-700 font-medium'
+                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {m}ヶ月
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {query.isLoading && (
+        <div className="h-32 animate-pulse bg-gray-100 rounded" />
+      )}
+
+      {query.isError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+          キャパシティ予測の取得に失敗しました。
+        </div>
+      )}
+
+      {query.data && skillRows.length === 0 && (
+        <div className="py-6 text-center text-sm text-gray-500">
+          予測対象の需要データがありません。
+        </div>
+      )}
+
+      {query.data && skillRows.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-xs">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-2 px-2 font-medium text-gray-600 sticky left-0 bg-white">
+                  スキル
+                </th>
+                {query.data.buckets.map((b) => (
+                  <th key={b.month} className="text-center py-2 px-2 font-medium text-gray-600 whitespace-nowrap">
+                    {b.month}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {skillRows.map((row) => (
+                <tr key={row.skillId} className="border-b border-gray-100 last:border-b-0">
+                  <td className="py-2 px-2 font-medium text-gray-800 sticky left-0 bg-white whitespace-nowrap">
+                    {row.skillName}
+                  </td>
+                  {query.data!.buckets.map((b) => {
+                    const cell = cellLookup.get(`${row.skillId}:${b.month}`);
+                    if (!cell) {
+                      return (
+                        <td key={b.month} className="py-2 px-2 text-center text-gray-300">
+                          —
+                        </td>
+                      );
+                    }
+                    return (
+                      <td key={b.month} className="py-1 px-1">
+                        <div
+                          title={`需要 ${cell.demandHeadcount} / 供給 ${cell.supplyHeadcountEquivalent.toFixed(1)}`}
+                          className={`border rounded px-2 py-1 text-center ${severityClasses(cell.severity)}`}
+                        >
+                          <div className="font-semibold">{formatGap(cell.gap)}</div>
+                          <div className="text-[10px] opacity-80">
+                            {cell.supplyHeadcountEquivalent.toFixed(1)}/{cell.demandHeadcount}
+                          </div>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-[11px] text-gray-500">
+            セル表記: <span className="font-medium">ギャップ (供給 / 需要)</span> &mdash; 供給 1.0 = 1 名フルタイム相当。
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
