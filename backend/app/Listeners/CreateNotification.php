@@ -4,32 +4,25 @@ declare(strict_types=1);
 
 namespace App\Listeners;
 
-use App\Domain\Allocation\Events\AllocationCreated;
-use App\Domain\Allocation\Events\AllocationRevoked;
-use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestApproved;
-use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestRejected;
-use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestSubmitted;
-use App\Domain\Availability\Events\AbsenceRegistered;
-use App\Domain\Project\Events\ProjectCanceled;
-use App\Domain\Project\Events\ProjectCompleted;
 use App\Enums\UserRole;
 use App\Models\Notification;
 use App\Models\User;
+use App\Notifications\NotificationContentBuilder;
 use Illuminate\Support\Str;
 
 /**
- * 主要なドメインイベントを in-app 通知として admin / manager の
- * 各ユーザーへファンアウトする。
+ * 主要なドメインイベントを in-app 通知として admin / manager の各ユーザーへ
+ * ファンアウトする。Email / Slack チャネルは別リスナーが処理する。
  *
- * 読了状態はユーザー単位で管理するため、各受信者につき 1 行作成する。
- * メールや Slack 等への拡張は将来ここから分岐する。
+ * コンテンツ生成は NotificationContentBuilder で一元化し、各チャネルは
+ * title/body/severity を共有する。
  */
 final class CreateNotification
 {
     public function handle(object $event): void
     {
-        $record = $this->buildRecord($event);
-        if ($record === null) {
+        $content = NotificationContentBuilder::fromEvent($event);
+        if ($content === null) {
             return;
         }
 
@@ -43,110 +36,13 @@ final class CreateNotification
             Notification::create([
                 'id' => (string) Str::uuid7(),
                 'user_id' => $user->id,
-                'type' => $record['type'],
-                'title' => $record['title'],
-                'body' => $record['body'],
-                'payload' => $record['payload'],
+                'type' => $content->type,
+                'title' => $content->title,
+                'body' => $content->body,
+                'payload' => $content->payload,
                 'read_at' => null,
                 'created_at' => $now,
             ]);
         }
-    }
-
-    /** @return array{type:string,title:string,body:string,payload:array<string,mixed>}|null */
-    private function buildRecord(object $event): ?array
-    {
-        return match (true) {
-            $event instanceof AllocationCreated => [
-                'type' => 'AllocationCreated',
-                'title' => '新しいアロケーション',
-                'body' => sprintf(
-                    'Member %s がプロジェクト %s に %d%% で割当てられました。',
-                    $this->shortId($event->memberId()->toString()),
-                    $this->shortId($event->projectId()->toString()),
-                    $event->percentage()->value(),
-                ),
-                'payload' => [
-                    'allocationId' => $event->allocationId()->toString(),
-                    'memberId' => $event->memberId()->toString(),
-                    'projectId' => $event->projectId()->toString(),
-                ],
-            ],
-            $event instanceof AllocationRevoked => [
-                'type' => 'AllocationRevoked',
-                'title' => 'アロケーションが解除されました',
-                'body' => sprintf('Allocation %s', $this->shortId($event->allocationId()->toString())),
-                'payload' => [
-                    'allocationId' => $event->allocationId()->toString(),
-                ],
-            ],
-            $event instanceof AbsenceRegistered => [
-                'type' => 'AbsenceRegistered',
-                'title' => '不在登録',
-                'body' => sprintf(
-                    'Member %s が %s 〜 %s を不在 (%s) として登録しました。',
-                    $this->shortId($event->memberId()->toString()),
-                    $event->period()->startDate()->format('Y-m-d'),
-                    $event->period()->endDate()->format('Y-m-d'),
-                    $event->type()->value,
-                ),
-                'payload' => [
-                    'absenceId' => $event->absenceId()->toString(),
-                    'memberId' => $event->memberId()->toString(),
-                ],
-            ],
-            $event instanceof ProjectCompleted => [
-                'type' => 'ProjectCompleted',
-                'title' => 'プロジェクト完了',
-                'body' => sprintf('Project %s を完了しました', $this->shortId($event->projectId()->toString())),
-                'payload' => ['projectId' => $event->projectId()->toString()],
-            ],
-            $event instanceof ProjectCanceled => [
-                'type' => 'ProjectCanceled',
-                'title' => 'プロジェクト中止',
-                'body' => sprintf('Project %s が中止されました', $this->shortId($event->projectId()->toString())),
-                'payload' => ['projectId' => $event->projectId()->toString()],
-            ],
-            $event instanceof AllocationChangeRequestSubmitted => [
-                'type' => 'AllocationChangeRequestSubmitted',
-                'title' => 'アロケーション変更申請',
-                'body' => sprintf(
-                    '%s 種別の変更申請が提出されました (ID: %s)',
-                    $event->type()->value,
-                    $this->shortId($event->requestId()->toString()),
-                ),
-                'payload' => [
-                    'requestId' => $event->requestId()->toString(),
-                    'type' => $event->type()->value,
-                    'requestedBy' => $event->requestedBy(),
-                ],
-            ],
-            $event instanceof AllocationChangeRequestApproved => [
-                'type' => 'AllocationChangeRequestApproved',
-                'title' => '変更申請が承認されました',
-                'body' => sprintf('Request %s が承認されました', $this->shortId($event->requestId()->toString())),
-                'payload' => [
-                    'requestId' => $event->requestId()->toString(),
-                    'decidedBy' => $event->decidedBy(),
-                    'resultingAllocationId' => $event->resultingAllocationId(),
-                ],
-            ],
-            $event instanceof AllocationChangeRequestRejected => [
-                'type' => 'AllocationChangeRequestRejected',
-                'title' => '変更申請が却下されました',
-                'body' => sprintf('Request %s が却下されました', $this->shortId($event->requestId()->toString())),
-                'payload' => [
-                    'requestId' => $event->requestId()->toString(),
-                    'decidedBy' => $event->decidedBy(),
-                    'note' => $event->decisionNote(),
-                ],
-            ],
-            default => null,
-        };
-    }
-
-    private function shortId(string $uuid): string
-    {
-        return substr($uuid, 0, 8);
     }
 }

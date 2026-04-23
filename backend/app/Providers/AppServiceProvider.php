@@ -19,6 +19,8 @@ use App\Domain\Project\Events\ProjectCompleted;
 use App\Domain\Project\Events\ProjectRequirementChanged;
 use App\Listeners\CreateNotification;
 use App\Listeners\RecordAuditLog;
+use App\Listeners\SendEmailNotification;
+use App\Listeners\SendSlackNotification;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -63,6 +65,8 @@ class AppServiceProvider extends ServiceProvider
         ] as $eventClass) {
             Event::listen($eventClass, [RecordAuditLog::class, 'handle']);
             Event::listen($eventClass, [CreateNotification::class, 'handle']);
+            Event::listen($eventClass, [SendEmailNotification::class, 'handle']);
+            Event::listen($eventClass, [SendSlackNotification::class, 'handle']);
         }
     }
 }
