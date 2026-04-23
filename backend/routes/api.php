@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SkillController;
 use App\Http\Controllers\Api\TimelineController;
 use App\Http\Controllers\Auth\LoginController;
@@ -81,6 +82,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/projects', [ExportController::class, 'projects']);
         Route::get('/allocations', [ExportController::class, 'allocations']);
     });
+
+    // PDF レポート (読み取り系)
+    Route::get('/reports/projects/{id}/pdf', [ReportController::class, 'projectStatusPdf']);
 
     // ===== 書込系 (admin / manager のみ) =====
 
