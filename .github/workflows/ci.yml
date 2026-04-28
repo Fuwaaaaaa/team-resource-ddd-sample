@@ -111,6 +111,32 @@ jobs:
           # Make sure the compose stack has what it needs
           touch .env
 
+      # docker-compose.yml mounts ./backend and ./frontend over the image's
+      # /var/www/html and /app, which would shadow the vendor/ and
+      # node_modules/ baked into the images. Pre-install on the host so the
+      # volume mount is complete before containers start.
+      - name: Setup PHP (for backend deps)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo, pdo_pgsql, intl, bcmath
+          coverage: none
+
+      - name: composer install (backend)
+        working-directory: backend
+        run: composer install --prefer-dist --no-interaction --no-progress --no-scripts
+
+      - name: Setup Node (for frontend deps)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci (frontend)
+        working-directory: frontend
+        run: npm ci
+
       - name: Boot stack
         run: docker compose up -d --build
 
