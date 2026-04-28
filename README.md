@@ -1,30 +1,33 @@
+**English** | [日本語](./README.ja.md)
+
 # Team Resource DDD Sample
 
-チームメンバーのスキル熟練度（1-5）とプロジェクトへの工数割り当てを関連付け、リソースの過不足を視覚化するダッシュボードのサンプル実装です。
+A sample dashboard implementation that links team members' skill proficiency levels (1-5) to project allocations and visualizes resource surpluses and deficits.
 
-バックエンドは **Laravel 13（PHP 8.3+）** によるクリーンアーキテクチャ / DDD、フロントエンドは **Next.js 14（TypeScript）** による App Router + Atomic Design で構成しています。
-
----
-
-## 目次
-
-- [アーキテクチャ概要](#アーキテクチャ概要)
-- [バックエンド設計](#バックエンド設計)
-  - [レイヤー構成](#レイヤー構成)
-  - [集約とエンティティ](#集約とエンティティ)
-  - [ドメインサービス](#ドメインサービス)
-  - [Application層とDTO](#application層とdto)
-- [フロントエンド設計](#フロントエンド設計)
-  - [Server / Client Componentsの使い分け](#server--client-componentsの使い分け)
-  - [Atomic Designの採用](#atomic-designの採用)
-  - [状態管理の分離](#状態管理の分離)
-  - [パフォーマンス最適化](#パフォーマンス最適化)
-- [ディレクトリ構成](#ディレクトリ構成)
-- [セットアップ](#セットアップ)
+The backend uses **Laravel 13 (PHP 8.3+)** with clean architecture / DDD, and the frontend uses **Next.js 14 (TypeScript)** with App Router + Atomic Design.
 
 ---
 
-## アーキテクチャ概要
+## Table of Contents
+
+- [Architecture Overview](#architecture-overview)
+- [Backend Design](#backend-design)
+  - [Layer Structure](#layer-structure)
+  - [Aggregates and Entities](#aggregates-and-entities)
+  - [Domain Services](#domain-services)
+  - [Application Layer and DTOs](#application-layer-and-dtos)
+- [Frontend Design](#frontend-design)
+  - [Server / Client Component Split](#server--client-component-split)
+  - [Atomic Design](#atomic-design)
+  - [State Management Separation](#state-management-separation)
+  - [Performance Optimization](#performance-optimization)
+- [Directory Structure](#directory-structure)
+- [Admin Operations (Next 26)](#admin-operations-next-26)
+- [Setup](#setup)
+
+---
+
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -32,69 +35,69 @@
 │                                                             │
 │  page.tsx (Server Component)                                │
 │    └─ DashboardContent (Client Component)                   │
-│         ├─ React Query × 3 hooks (並列データ取得)            │
-│         ├─ Zustand (UIフィルタ状態)                          │
+│         ├─ React Query × 3 hooks (parallel data fetching)   │
+│         ├─ Zustand (UI filter state)                        │
 │         └─ ResourceHeatmap → HeatmapCell                    │
 └────────────────────────┬────────────────────────────────────┘
                          │ REST API (JSON)
 ┌────────────────────────┴────────────────────────────────────┐
 │  Backend (Laravel / PHP)                                    │
 │                                                             │
-│  Interfaces層  →  Application層  →  Domain層                │
-│  (Controller)     (Handler+DTO)     (Entity+Service)        │
-│                        ↓                                    │
-│                   Infrastructure層                          │
-│                   (Eloquent Repository / Service実装)        │
+│  Interfaces  →  Application  →  Domain                      │
+│  (Controller)   (Handler+DTO)   (Entity+Service)            │
+│                       ↓                                     │
+│                  Infrastructure                             │
+│                  (Eloquent Repository / Service impl)       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**設計原則:**
-- Domain層はフレームワーク依存ゼロ（POPO: Plain Old PHP Object）
-- EloquentはInfrastructure層のリポジトリ内でのみ使用
-- Application層のHandlerはDTOを返却し、Eloquentモデルが外部に漏れない
-- フロントエンドはサーバー状態（React Query）とUI状態（Zustand）を明確に分離
+**Design principles:**
+- The Domain layer has zero framework dependencies (POPO: Plain Old PHP Object)
+- Eloquent is used only inside repositories in the Infrastructure layer
+- Application-layer Handlers return DTOs; Eloquent models never leak outward
+- The frontend cleanly separates server state (React Query) from UI state (Zustand)
 
 ---
 
-## バックエンド設計
+## Backend Design
 
-### レイヤー構成
+### Layer Structure
 
 ```
 backend/app/
-├── Domain/           純粋PHP。ビジネスルールの中核
-├── Application/      ユースケース。Command/Query + Handler + DTO
-├── Infrastructure/   フレームワーク依存。リポジトリ実装、サービス実装
-└── Interfaces/       HTTP Controller、FormRequest、API Resource
+├── Domain/           Pure PHP. Core business rules
+├── Application/      Use cases. Command/Query + Handler + DTO
+├── Infrastructure/   Framework-dependent. Repository/service implementations
+└── Interfaces/       HTTP Controller, FormRequest, API Resource
 ```
 
-各レイヤーの依存方向は **Domain ← Application ← Infrastructure / Interfaces** です。Domain層は他のどのレイヤーにも依存しません。
+The dependency direction is **Domain ← Application ← Infrastructure / Interfaces**. The Domain layer depends on no other layer.
 
-### 集約とエンティティ
+### Aggregates and Entities
 
-本プロジェクトには4つの集約（Aggregate）があります。
+This project has four aggregates.
 
-#### Skill集約
+#### Skill Aggregate
 
 ```
 Domain/Skill/
-├── Skill.php                  集約ルート（スキルマスタ）
-├── SkillId.php                値オブジェクト（識別子）
-├── SkillName.php              値オブジェクト（1-100文字）
-├── SkillCategory.php          値オブジェクト（7種のカテゴリ）
+├── Skill.php                  Aggregate root (skill master)
+├── SkillId.php                Value object (identifier)
+├── SkillName.php              Value object (1-100 chars)
+├── SkillCategory.php          Value object (7 categories)
 └── SkillRepositoryInterface.php
 ```
 
-`SkillCategory` は `programming_language`, `framework`, `infrastructure`, `database`, `design`, `management`, `other` の7種を定義しています。
+`SkillCategory` defines seven values: `programming_language`, `framework`, `infrastructure`, `database`, `design`, `management`, and `other`.
 
-#### Member集約
+#### Member Aggregate
 
 ```
 Domain/Member/
-├── Member.php                 集約ルート
-├── MemberSkill.php            子エンティティ（メンバーが持つスキル）
-├── SkillProficiency.php       値オブジェクト（熟練度 1-5）
-├── StandardWorkingHours.php   値オブジェクト（標準稼働時間、デフォルト8.0h）
+├── Member.php                 Aggregate root
+├── MemberSkill.php            Child entity (skill held by a member)
+├── SkillProficiency.php       Value object (proficiency 1-5)
+├── StandardWorkingHours.php   Value object (standard working hours, default 8.0h)
 ├── MemberId.php / MemberName.php / MemberSkillId.php
 ├── MemberRepositoryInterface.php
 └── Events/
@@ -102,31 +105,31 @@ Domain/Member/
     └── MemberSkillUpdated.php
 ```
 
-`Member` は複数の `MemberSkill` を保持します。各 `MemberSkill` は `SkillId`（どのスキルか）と `SkillProficiency`（1-5の熟練度）のペアです。`StandardWorkingHours` はOverload検出に使われます。
+A `Member` holds multiple `MemberSkill`s. Each `MemberSkill` is a pair of `SkillId` (which skill) and `SkillProficiency` (proficiency 1-5). `StandardWorkingHours` is used for overload detection.
 
-#### Project集約
+#### Project Aggregate
 
 ```
 Domain/Project/
-├── Project.php                集約ルート
-├── RequiredSkill.php          子エンティティ（プロジェクトが求めるスキル要件）
-├── RequiredProficiency.php    値オブジェクト（最低要求熟練度 1-5）
+├── Project.php                Aggregate root
+├── RequiredSkill.php          Child entity (skill requirement of the project)
+├── RequiredProficiency.php    Value object (minimum required proficiency 1-5)
 ├── ProjectId.php / ProjectName.php / RequiredSkillId.php
 ├── ProjectRepositoryInterface.php
 └── Events/
     └── ProjectRequirementChanged.php
 ```
 
-`Project` は複数の `RequiredSkill` を持ちます。各 `RequiredSkill` には「どのスキルが」「最低熟練度いくつで」「何人必要か（headcount）」が定義されます。
+A `Project` has multiple `RequiredSkill`s. Each `RequiredSkill` defines which skill is required, the minimum proficiency, and how many people are needed (headcount).
 
-#### Allocation集約
+#### Allocation Aggregate
 
 ```
 Domain/Allocation/
-├── ResourceAllocation.php              集約ルート
-├── AllocationPercentage.php            値オブジェクト（0-100%）
-├── AllocationPeriod.php                値オブジェクト（開始日/終了日）
-├── AllocationStatus.php                値オブジェクト（active / revoked）
+├── ResourceAllocation.php              Aggregate root
+├── AllocationPercentage.php            Value object (0-100%)
+├── AllocationPeriod.php                Value object (start date / end date)
+├── AllocationStatus.php                Value object (active / revoked)
 ├── AllocationId.php
 ├── ResourceAllocationRepositoryInterface.php
 └── Events/
@@ -134,121 +137,122 @@ Domain/Allocation/
     └── AllocationRevoked.php
 ```
 
-`ResourceAllocation` は「どのメンバーを」「どのプロジェクトに」「どのスキルロールで」「何%の工数で」「いつからいつまで」割り当てるかを表現します。集約間はIDで参照し、直接の参照は持ちません。
+`ResourceAllocation` expresses which member is allocated to which project, in which skill role, at what percentage of effort, and over what time period. Aggregates reference each other only by ID; they hold no direct references.
 
-### ドメインサービス
+### Domain Services
 
 ```
 Domain/Service/
-├── AllocationServiceInterface.php   ドメインサービスのインターフェース
-├── ResourceSurplusDeficit.php       過不足分析結果（値オブジェクト）
-├── SkillGapEntry.php                スキル別ギャップ（値オブジェクト）
-├── SkillGapAnalysis.php             複数プロジェクト横断分析結果
-├── TeamCapacitySnapshot.php         チームキャパシティのスナップショット
-├── MemberCapacityEntry.php          メンバー別キャパシティ
-├── OverloadAnalysis.php             過負荷分析結果
-├── MemberOverloadEntry.php          メンバー別過負荷情報
-└── SkillGapWarning.php              スキル不足警告
+├── AllocationServiceInterface.php   Domain service interface
+├── ResourceSurplusDeficit.php       Surplus/deficit analysis result (value object)
+├── SkillGapEntry.php                Per-skill gap (value object)
+├── SkillGapAnalysis.php             Cross-project analysis result
+├── TeamCapacitySnapshot.php         Snapshot of team capacity
+├── MemberCapacityEntry.php          Per-member capacity
+├── OverloadAnalysis.php             Overload analysis result
+├── MemberOverloadEntry.php          Per-member overload information
+└── SkillGapWarning.php              Skill shortage warning
 ```
 
-`AllocationServiceInterface` はステートレスなドメインサービスで、以下の6メソッドを定義しています:
+`AllocationServiceInterface` is a stateless domain service that defines the following six methods:
 
-| メソッド | 目的 |
+| Method | Purpose |
 |---------|------|
-| `calculateSurplusDeficit()` | プロジェクト単位でスキル別の人員過不足を算出 |
-| `buildTeamCapacitySnapshot()` | チーム全体のメンバー×スキルの空きキャパシティマトリクスを構築 |
-| `canAllocate()` | メンバーへの追加割り当てが100%上限を超えないか検証 |
-| `analyzeSkillGaps()` | 複数プロジェクト横断でスキル不足を優先度順にリスト化 |
-| `detectOverload()` | メンバーの標準稼働時間 vs 割り当て合計から過負荷を検出 |
-| `detectSkillGapWarnings()` | 割り当て済みメンバーが要求熟練度を満たさない場合に警告を生成 |
+| `calculateSurplusDeficit()` | Calculate per-skill staffing surplus/deficit at the project level |
+| `buildTeamCapacitySnapshot()` | Build a member-by-skill available-capacity matrix for the entire team |
+| `canAllocate()` | Verify that an additional allocation does not exceed the 100% cap for a member |
+| `analyzeSkillGaps()` | List skill shortages across multiple projects in priority order |
+| `detectOverload()` | Detect overload by comparing a member's standard working hours vs. total allocations |
+| `detectSkillGapWarnings()` | Generate warnings when an allocated member does not meet the required proficiency |
 
-ドメインサービスはリポジトリを直接呼びません。Application層のHandlerが必要なデータをリポジトリから取得し、引数として渡します。
+Domain services do not call repositories directly. The Application-layer Handler fetches the necessary data from repositories and passes it as arguments.
 
-実装は `Infrastructure/Service/AllocationService.php` にあります（純粋PHPロジック、Eloquent依存なし）。
+The implementation lives in `Infrastructure/Service/AllocationService.php` (pure PHP logic, no Eloquent dependency).
 
-### Application層とDTO
+### Application Layer and DTOs
 
 ```
 Application/Dashboard/
 ├── Queries/
-│   ├── GetOverloadAnalysisQuery.php        入力パラメータ
-│   ├── GetOverloadAnalysisHandler.php      ユースケース実行
+│   ├── GetOverloadAnalysisQuery.php        Input parameters
+│   ├── GetOverloadAnalysisHandler.php      Use case execution
 │   ├── GetSkillGapWarningsQuery.php
 │   └── GetSkillGapWarningsHandler.php
 └── DTOs/
-    ├── MemberOverloadDto.php               プリミティブ型のみ
+    ├── MemberOverloadDto.php               Primitive types only
     ├── OverloadAnalysisDto.php
     ├── SkillGapWarningDto.php
     └── SkillGapWarningListDto.php
 ```
 
-**DTOの役割:** Handlerはリポジトリからドメインエンティティを取得し、ドメインサービスに渡し、結果をDTOに変換して返します。DTOはプリミティブ型（`string`, `int`, `float`, `bool`）のみで構成され、ドメインオブジェクトやEloquentモデルが外部に漏れることを防ぎます。
+**Role of the DTO:** The Handler fetches domain entities from repositories, passes them to the domain service, and converts the result into a DTO before returning. DTOs are composed solely of primitive types (`string`, `int`, `float`, `bool`), preventing domain objects or Eloquent models from leaking outward.
 
 ```
 HTTP Request
-  → Controller (Interfaces層): Queryオブジェクト生成
-  → Handler (Application層): Repository → DomainService → DTO変換
-  ← DTO (プリミティブ型のみ) を返却
+  → Controller (Interfaces): builds Query object
+  → Handler (Application): Repository → DomainService → DTO conversion
+  ← returns DTO (primitive types only)
   → Controller → JSON Response
 ```
 
 ---
 
-## フロントエンド設計
+## Frontend Design
 
-### Server / Client Componentsの使い分け
+### Server / Client Component Split
 
-Next.js App Routerでは、すべてを `'use client'` にするのではなく、Server / Client Componentを適切に分離しています。
+In Next.js App Router, rather than marking everything `'use client'`, we split Server and Client Components appropriately.
 
 ```
 page.tsx (Server Component)
-│   ← 静的なHTML（h1タイトル等）をSSR。JSバンドルに含まれない
+│   ← SSRs static HTML (h1 title, etc.). Not included in the JS bundle
 │
 ├── layout.tsx (Server Component)
 │   └── Providers (Client Component)
 │       └── QueryErrorBoundary (Client Component)
 │
 └── DashboardContent (Client Component)
-    │   ← Zustand hooks / React Query hooks を使用するため Client が必須
+    │   ← Must be Client because it uses Zustand / React Query hooks
     │
     └── ResourceHeatmap (Client Component)
-        └── HeatmapCell (Server Component としても動作可能)
-            ← hooks を使わず memo のみ。親が Client なので Client として実行されるが、
-              'use client' を付けず「このファイル自体はサーバーでも使える」と明示
+        └── HeatmapCell (can also work as a Server Component)
+            ← Uses no hooks, only memo. Runs as Client because the parent is Client,
+              but we deliberately omit 'use client' to signal "this file itself
+              can also run on the server".
 ```
 
-`'use client'` を付与しているファイルは以下の4つだけです:
+Only the following four files are marked `'use client'`:
 
-| ファイル | 理由 |
+| File | Reason |
 |---------|------|
-| `providers.tsx` | QueryClientProvider（React Context） |
-| `error-boundary.tsx` | Class Component（Error Boundary） |
+| `providers.tsx` | QueryClientProvider (React Context) |
+| `error-boundary.tsx` | Class Component (Error Boundary) |
 | `dashboard-page.tsx` | Zustand hooks + useQueryClient |
 | `ResourceHeatmap.tsx` | React Query hooks + useMemo |
 
-### Atomic Designの採用
+### Atomic Design
 
 ```
 components/
 ├── atoms/
-│   └── HeatmapCell/          最小単位。1セルの熟練度表示
+│   └── HeatmapCell/          Smallest unit. Displays proficiency for one cell
 └── molecules/
-    └── ResourceHeatmap/      複数のatomを組み合わせたヒートマップ
+    └── ResourceHeatmap/      Heatmap composed of multiple atoms
 ```
 
-- **HeatmapCell（Atom）:** 熟練度1-5の色グラデーション表示 + スキルギャップ表示（赤ring + `!`マーク）
-- **ResourceHeatmap（Molecule）:** 3つのAPIデータソースをマージし、メンバー×スキルのヒートマップを描画
+- **HeatmapCell (Atom):** Color gradient for proficiency 1-5 + skill-gap indicator (red ring + `!` mark)
+- **ResourceHeatmap (Molecule):** Merges three API data sources and renders a member-by-skill heatmap
 
-### 状態管理の分離
+### State Management Separation
 
-サーバー状態とUI状態を明確に分けています。
+Server state and UI state are clearly separated.
 
-#### サーバー状態: React Query（TanStack Query）
+#### Server state: React Query (TanStack Query)
 
 ```typescript
 // frontend/src/features/dashboard/api.ts
 
-// クエリキーファクトリ（キャッシュ無効化に使用）
+// Query key factory (used for cache invalidation)
 export const dashboardKeys = {
   all: ['dashboard'] as const,
   capacity: (date: string) => [...dashboardKeys.all, 'capacity', date] as const,
@@ -257,124 +261,124 @@ export const dashboardKeys = {
 };
 ```
 
-3つのフックはデータの揮発性に応じて異なるキャッシュ戦略を持ちます:
+The three hooks use different cache strategies depending on data volatility:
 
-| フック | staleTime | gcTime | 理由 |
+| Hook | staleTime | gcTime | Reason |
 |--------|-----------|--------|------|
-| `useTeamCapacity` | 5分 | 10分 | チーム構成は比較的安定 |
-| `useOverloadAnalysis` | 2分 | 5分 | アロケーション変動に敏感 |
-| `useSkillGapWarnings` | 3分 | 10分 | 中間の揮発性 |
+| `useTeamCapacity` | 5 min | 10 min | Team composition is relatively stable |
+| `useOverloadAnalysis` | 2 min | 5 min | Sensitive to allocation changes |
+| `useSkillGapWarnings` | 3 min | 10 min | Intermediate volatility |
 
-加えて、デフォルト設定で `retry: 2`（失敗時2回リトライ）と `refetchOnReconnect: true`（ネットワーク復帰時に自動再取得）を有効にしています。
+In addition, the defaults enable `retry: 2` (retry twice on failure) and `refetchOnReconnect: true` (auto-refetch when the network reconnects).
 
-#### UI状態: Zustand
+#### UI state: Zustand
 
 ```typescript
 // frontend/src/stores/useDashboardFilterStore.ts
 
 interface DashboardFilterState {
-  referenceDate: string;            // 基準日
-  selectedProjectId: string | undefined;  // プロジェクトフィルタ
-  selectedCategories: SkillCategory[];    // スキルカテゴリフィルタ
-  showOverloadedOnly: boolean;      // 過負荷メンバーのみ表示
-  searchMemberName: string;         // メンバー名検索
+  referenceDate: string;            // Reference date
+  selectedProjectId: string | undefined;  // Project filter
+  selectedCategories: SkillCategory[];    // Skill category filter
+  showOverloadedOnly: boolean;      // Show only overloaded members
+  searchMemberName: string;         // Member-name search
 }
 ```
 
-Zustandの各フィールドは個別のセレクタ `(s) => s.fieldName` でサブスクライブし、無関係なフィールド変更時の再レンダリングを防止しています。
+Each Zustand field is subscribed to via an individual selector `(s) => s.fieldName`, preventing re-renders when unrelated fields change.
 
-### パフォーマンス最適化
+### Performance Optimization
 
-| 手法 | 適用箇所 | 効果 |
+| Technique | Where applied | Effect |
 |------|---------|------|
-| `React.memo`（カスタム比較関数） | HeatmapCell | 4フィールド比較で不要な再レンダリング防止 |
-| `React.memo` | ResourceHeatmap | コンポーネント全体のメモ化 |
-| `useMemo` × 6箇所 | ResourceHeatmap内 | overloadMap, skillGapMap, filteredSkills, skillsByCategory, rows, filteredRows |
-| Mapベース O(1) ルックアップ | overloadMap, skillGapMap | セルごとのデータ検索を定数時間に |
-| staleTime分離 | 3つのReact Queryフック | データ揮発性に応じた無駄のないキャッシュ |
-| Zustand個別セレクタ | DashboardContent | フィルタフィールドごとに最小限の再レンダリング |
+| `React.memo` (custom comparator) | HeatmapCell | Compares 4 fields to prevent unnecessary re-renders |
+| `React.memo` | ResourceHeatmap | Memoization of the entire component |
+| `useMemo` × 6 places | inside ResourceHeatmap | overloadMap, skillGapMap, filteredSkills, skillsByCategory, rows, filteredRows |
+| Map-based O(1) lookup | overloadMap, skillGapMap | Constant-time per-cell data lookup |
+| Separate staleTime | three React Query hooks | Wasteless cache tuned to data volatility |
+| Per-field Zustand selectors | DashboardContent | Minimal re-renders per filter field |
 
-### TypeScriptの厳格な運用
+### Strict TypeScript
 
-- `tsconfig.json` で `"strict": true` を有効化
-- **`any` 型はプロジェクト全体でゼロ**
-- すべてのAPI レスポンス型を `features/dashboard/types.ts` に定義
-- バックエンドのPHP DTOと1対1で対応するTypeScriptインターフェース
-- テンプレートリテラル型 `` SkillGapKey = `${string}:${string}` `` で合成キーも型安全
+- `tsconfig.json` enables `"strict": true`
+- **Zero `any` types across the entire project**
+- All API response types are defined in `features/dashboard/types.ts`
+- TypeScript interfaces correspond 1:1 to backend PHP DTOs
+- Composite keys are also type-safe via template literal types: `` SkillGapKey = `${string}:${string}` ``
 
-### エラーハンドリング
+### Error Handling
 
-- **QueryErrorBoundary:** レンダリングエラーをキャッチし「Try again」ボタンで復帰可能
-- **React Query エラー状態:** 各クエリのエラーを統合し、赤いエラーメッセージを表示
-- **Loading状態:** 3クエリすべての読み込み完了まで pulse アニメーションを表示
-- **Empty状態:** フィルタ結果が空の場合のメッセージ表示
-- **Refreshボタン:** `queryClient.invalidateQueries` で全クエリを手動再取得
+- **QueryErrorBoundary:** Catches rendering errors and provides a "Try again" button to recover
+- **React Query error states:** Aggregates errors from each query and displays a red error message
+- **Loading state:** Shows a pulse animation until all three queries finish loading
+- **Empty state:** Shows a message when filter results are empty
+- **Refresh button:** Manually re-runs all queries via `queryClient.invalidateQueries`
 
 ---
 
-## ディレクトリ構成
+## Directory Structure
 
 ```
 team-resource-ddd-sample/
 │
 ├── backend/
 │   └── app/
-│       ├── Domain/                          # ドメイン層（純粋PHP、依存ゼロ）
-│       │   ├── Skill/                       #   スキルマスタ集約
-│       │   ├── Member/                      #   メンバー集約（スキル熟練度を保持）
-│       │   ├── Project/                     #   プロジェクト集約（スキル要件を保持）
-│       │   ├── Allocation/                  #   リソース割り当て集約
-│       │   └── Service/                     #   ドメインサービス + 結果値オブジェクト
+│       ├── Domain/                          # Domain layer (pure PHP, zero deps)
+│       │   ├── Skill/                       #   Skill master aggregate
+│       │   ├── Member/                      #   Member aggregate (holds skill proficiencies)
+│       │   ├── Project/                     #   Project aggregate (holds skill requirements)
+│       │   ├── Allocation/                  #   Resource allocation aggregate
+│       │   └── Service/                     #   Domain services + result value objects
 │       │
-│       ├── Application/                     # アプリケーション層
+│       ├── Application/                     # Application layer
 │       │   └── Dashboard/
-│       │       ├── Queries/                 #   Query + Handler（CQRS）
-│       │       └── DTOs/                    #   プリミティブ型のみのDTO
+│       │       ├── Queries/                 #   Query + Handler (CQRS)
+│       │       └── DTOs/                    #   DTOs of primitive types only
 │       │
-│       └── Infrastructure/                  # インフラ層
+│       └── Infrastructure/                  # Infrastructure layer
 │           └── Service/
-│               └── AllocationService.php    #   ドメインサービス実装
+│               └── AllocationService.php    #   Domain service implementation
 │
 ├── frontend/
 │   └── src/
 │       ├── app/                             # Next.js App Router
-│       │   ├── page.tsx                     #   Server Component（静的ヘッダー）
-│       │   ├── layout.tsx                   #   Server Component（HTML構造）
-│       │   ├── dashboard-page.tsx           #   Client Component（フィルタ+ヒートマップ）
-│       │   ├── providers.tsx                #   Client Component（QueryClient+ErrorBoundary）
-│       │   ├── error-boundary.tsx           #   Client Component（エラーハンドリング）
-│       │   └── api/dashboard/               #   モックAPIルート（3エンドポイント）
+│       │   ├── page.tsx                     #   Server Component (static header)
+│       │   ├── layout.tsx                   #   Server Component (HTML structure)
+│       │   ├── dashboard-page.tsx           #   Client Component (filters + heatmap)
+│       │   ├── providers.tsx                #   Client Component (QueryClient + ErrorBoundary)
+│       │   ├── error-boundary.tsx           #   Client Component (error handling)
+│       │   └── api/dashboard/               #   Mock API routes (3 endpoints)
 │       │
 │       ├── components/                      # Atomic Design
-│       │   ├── atoms/HeatmapCell/           #   熟練度セル（色+ギャップ表示）
-│       │   └── molecules/ResourceHeatmap/   #   ヒートマップ本体
+│       │   ├── atoms/HeatmapCell/           #   Proficiency cell (color + gap display)
+│       │   └── molecules/ResourceHeatmap/   #   Heatmap body
 │       │
-│       ├── features/dashboard/              # Feature単位
-│       │   ├── types.ts                     #   TypeScript型定義（DTO対応）
-│       │   └── api.ts                       #   React Query hooks（3つ）
+│       ├── features/dashboard/              # Feature unit
+│       │   ├── types.ts                     #   TypeScript type definitions (matches DTOs)
+│       │   └── api.ts                       #   React Query hooks (three)
 │       │
 │       ├── stores/
-│       │   └── useDashboardFilterStore.ts   #   Zustand（UIフィルタ状態）
+│       │   └── useDashboardFilterStore.ts   #   Zustand (UI filter state)
 │       │
 │       └── lib/
-│           └── query-client.ts              #   QueryClient設定
+│           └── query-client.ts              #   QueryClient configuration
 │
 └── README.md
 ```
 
 ---
 
-## 管理者運用 (Next 26)
+## Admin Operations (Next 26)
 
-`admin` ロールのユーザーは `/admin/users` 画面でユーザーの追加・ロール変更・パスワード再発行を UI 上で実行できます。バックエンドのドメインイベント (`UserCreated` / `UserRoleChanged` / `UserPasswordReset`) は既存の `RecordAuditLog` リスナー経由で `audit_logs` に記録され、`/audit-logs` 画面 (admin のみ) から追跡できます。
+Users with the `admin` role can add users, change roles, and reset passwords from the `/admin/users` screen via the UI. Backend domain events (`UserCreated` / `UserRoleChanged` / `UserPasswordReset`) are recorded to `audit_logs` through the existing `RecordAuditLog` listener and can be tracked from the `/audit-logs` screen (admin only).
 
-設計上の補足:
-- ロール / 認可ミドルウェアは `App\Domain\Authorization` 配下に整理しています。`User` モデルは認証主体として扱い、ドメイン集約 (Member / Project / Allocation) と区別します。
-- ロール変更は OCC (`expectedUpdatedAt`) + DB transaction + `lockForUpdate` で並行編集を直列化します。
-- 「最後の admin」を非 admin に変更しようとしたリクエストは 422 で拒否します (システム lockout 防止)。
-- パスワードリセットは Sanctum の API トークンと、対象ユーザーの DB セッション (database session driver) を全て無効化します。自分自身をリセットした場合はレスポンス `requiresRelogin: true` で UI が `/login` へ自動遷移します。
+Design notes:
+- Role / authorization middleware is organized under `App\Domain\Authorization`. The `User` model is treated as the authentication principal and is kept distinct from domain aggregates (Member / Project / Allocation).
+- Role changes are serialized for concurrent edits via OCC (`expectedUpdatedAt`) + DB transaction + `lockForUpdate`.
+- Requests that try to change the "last admin" to a non-admin role are rejected with 422 (preventing system lockout).
+- Password reset invalidates all of the target user's Sanctum API tokens and DB sessions (database session driver). When users reset their own password, the response includes `requiresRelogin: true`, and the UI redirects to `/login` automatically.
 
-万が一、UI から admin が完全に喪失した (例: ユーザー全員が manager / viewer) 場合は DB 直接更新で復旧できます:
+In the unlikely event that all admins are lost via the UI (e.g., everyone is now manager / viewer), recovery is possible via direct DB update:
 
 ```sql
 UPDATE users SET role = 'admin' WHERE email = '<your_email>';
@@ -382,28 +386,28 @@ UPDATE users SET role = 'admin' WHERE email = '<your_email>';
 
 ---
 
-## セットアップ
+## Setup
 
-### 一発起動（Docker Compose）
+### One-shot startup (Docker Compose)
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-- `http://localhost:8080` をブラウザで開く
-- ログイン: `admin@example.com` / `password`
-- ダッシュボード / Members / Projects / Allocations の CRUD が動作
+- Open `http://localhost:8080` in your browser
+- Login: `admin@example.com` / `password`
+- The dashboard and Members / Projects / Allocations CRUD are functional
 
-初回ビルドで以下が行われます:
-1. PostgreSQL 16 起動 + ヘルスチェック
-2. backend コンテナ内で `artisan key:generate` → `artisan migrate` → `artisan db:seed`
-3. frontend コンテナで `npm ci` + `npm run dev`
-4. nginx が `:8080` → `/api`, `/sanctum`, `/login` を backend へ、それ以外を frontend へプロキシ（同一オリジンのため Sanctum SPA Cookie がそのまま使える）
+The initial build performs the following:
+1. Starts PostgreSQL 16 + health check
+2. Runs `artisan key:generate` → `artisan migrate` → `artisan db:seed` inside the backend container
+3. Runs `npm ci` + `npm run dev` inside the frontend container
+4. nginx proxies `:8080` → `/api`, `/sanctum`, `/login` to the backend, and everything else to the frontend (same-origin so the Sanctum SPA cookie works as-is)
 
-### ローカル個別起動（上記が使えない場合）
+### Local standalone startup (when the above is not available)
 
-バックエンド:
+Backend:
 ```bash
 cd backend
 cp .env.example .env
@@ -413,7 +417,7 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-フロントエンド:
+Frontend:
 ```bash
 cd frontend
 cp .env.example .env.local
@@ -421,4 +425,4 @@ npm install
 npm run dev
 ```
 
-`NEXT_PUBLIC_API_BASE_URL` を `http://localhost:8000` 相当に変更する必要があります（ただし異なるオリジンになるため Sanctum のセッション cookie を正しく扱うには追加設定が必要）。推奨は Docker Compose での同一オリジン起動です。
+You will need to change `NEXT_PUBLIC_API_BASE_URL` to something like `http://localhost:8000` (note that this becomes a different origin, so additional configuration is required to handle Sanctum session cookies correctly). The recommended setup is the same-origin Docker Compose approach.
