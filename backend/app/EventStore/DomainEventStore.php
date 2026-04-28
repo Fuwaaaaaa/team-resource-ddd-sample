@@ -7,6 +7,7 @@ namespace App\EventStore;
 use App\Infrastructure\Persistence\Eloquent\Models\DomainEventModel;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -29,6 +30,9 @@ final class DomainEventStore
 {
     /** ストリーム単一行への並行 INSERT が衝突した場合のリトライ上限 */
     private const MAX_APPEND_RETRIES = 5;
+
+    /** Backoff の base 単位 (microsecond)。実値は random_int(1, base) * 2^attempt */
+    private const BACKOFF_BASE_MICROS = 1_000;
 
     /**
      * @param  array<string, mixed>  $eventData
@@ -67,6 +71,19 @@ final class DomainEventStore
             } catch (QueryException $e) {
                 if ($this->isUniqueViolation($e) && $attempt < self::MAX_APPEND_RETRIES) {
                     $attempt++;
+
+                    Log::warning('DomainEventStore.append.retry', [
+                        'streamType' => $streamType,
+                        'streamId' => $streamId,
+                        'eventType' => $eventType,
+                        'attempt' => $attempt,
+                        'maxAttempts' => self::MAX_APPEND_RETRIES,
+                    ]);
+
+                    // Exponential backoff with jitter to ease lock pressure on
+                    // hot streams. attempt=1 → 1-1000us, attempt=5 → 16-16000us.
+                    $sleep = random_int(1, self::BACKOFF_BASE_MICROS) * (1 << ($attempt - 1));
+                    usleep($sleep);
 
                     continue;
                 }
