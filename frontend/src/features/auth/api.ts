@@ -10,7 +10,7 @@ export interface AuthUser {
   role: UserRole;
 }
 
-const authKeys = {
+export const authKeys = {
   me: ['auth', 'me'] as const,
 };
 
@@ -40,6 +40,7 @@ export function usePermissions() {
     role,
     canWrite: role === 'admin' || role === 'manager',
     canViewAuditLog: role === 'admin',
+    isAdmin: role === 'admin',
   };
 }
 
