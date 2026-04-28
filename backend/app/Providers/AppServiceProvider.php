@@ -9,6 +9,9 @@ use App\Domain\Allocation\Events\AllocationRevoked;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestApproved;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestRejected;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestSubmitted;
+use App\Domain\Authorization\Events\UserCreated;
+use App\Domain\Authorization\Events\UserPasswordReset;
+use App\Domain\Authorization\Events\UserRoleChanged;
 use App\Domain\Availability\Events\AbsenceCanceled;
 use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Member\Events\MemberCreated;
@@ -63,6 +66,12 @@ class AppServiceProvider extends ServiceProvider
             AllocationChangeRequestSubmitted::class,
             AllocationChangeRequestApproved::class,
             AllocationChangeRequestRejected::class,
+            // Authorization (User authentication identity, not a domain aggregate).
+            // Email/Slack/in-app notification listeners skip these via NotificationContentBuilder
+            // returning null — only PersistDomainEvent and RecordAuditLog react.
+            UserCreated::class,
+            UserRoleChanged::class,
+            UserPasswordReset::class,
         ] as $eventClass) {
             Event::listen($eventClass, [PersistDomainEvent::class, 'handle']);
             Event::listen($eventClass, [RecordAuditLog::class, 'handle']);

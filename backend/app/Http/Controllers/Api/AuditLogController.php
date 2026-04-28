@@ -14,7 +14,7 @@ class AuditLogController extends Controller
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'aggregateType' => 'nullable|in:allocation,member,project',
+            'aggregateType' => 'nullable|in:allocation,member,project,user',
             'aggregateId' => 'nullable|uuid',
             'eventType' => 'nullable|string|max:80',
             'perPage' => 'nullable|integer|min:1|max:200',

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useLogout, useMe, usePermissions } from '@/features/auth/api';
+import { RoleBadge } from '@/components/atoms/RoleBadge';
 import { NotificationsBell } from '@/components/molecules/NotificationsBell/NotificationsBell';
 import { useLocaleStore } from '@/lib/i18n/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -14,7 +15,7 @@ import { useThemeStore, type ThemePreference } from '@/lib/theme/store';
 interface NavItem {
   href: string;
   labelKey: TranslationKey;
-  requires?: 'canViewAuditLog' | 'canWrite';
+  requires?: 'canViewAuditLog' | 'canWrite' | 'isAdmin';
 }
 
 const nav: NavItem[] = [
@@ -25,13 +26,8 @@ const nav: NavItem[] = [
   { href: '/allocations', labelKey: 'nav.allocations' },
   { href: '/allocation-requests', labelKey: 'nav.requests', requires: 'canWrite' },
   { href: '/audit-logs', labelKey: 'nav.audit', requires: 'canViewAuditLog' },
+  { href: '/admin/users', labelKey: 'nav.admin', requires: 'isAdmin' },
 ];
-
-const ROLE_BADGE_CLASSES: Record<string, string> = {
-  admin: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
-  manager: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
-  viewer: 'bg-surface-muted text-fg-muted border-border',
-};
 
 const LOCALE_LABELS: Record<Locale, string> = {
   ja: '日本語',
@@ -59,6 +55,7 @@ export function AppHeader() {
   const visibleNav = nav.filter((n) => {
     if (n.requires === 'canViewAuditLog') return permissions.canViewAuditLog;
     if (n.requires === 'canWrite') return permissions.canWrite;
+    if (n.requires === 'isAdmin') return permissions.isAdmin;
     return true;
   });
 
@@ -135,12 +132,8 @@ export function AppHeader() {
           {me && (permissions.canWrite || permissions.canViewAuditLog) && <NotificationsBell />}
           {me && (
             <>
-              <span
-                className={`hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded border ${
-                  ROLE_BADGE_CLASSES[me.role] ?? ''
-                }`}
-              >
-                {me.role}
+              <span className="hidden sm:inline-flex">
+                <RoleBadge role={me.role} />
               </span>
               <span className="hidden md:inline text-sm text-fg-muted">
                 {me.name} <span className="text-fg-muted/60">({me.email})</span>
@@ -160,6 +153,12 @@ export function AppHeader() {
       {/* モバイル nav オーバーレイ */}
       {mobileOpen && (
         <nav className="sm:hidden border-t border-border bg-surface px-4 py-2 flex flex-col gap-1">
+          {me && (
+            <div className="px-3 py-2 mb-1 border-b border-border flex items-center gap-2">
+              <RoleBadge role={me.role} />
+              <span className="text-xs text-fg-muted">{me.name}</span>
+            </div>
+          )}
           {visibleNav.map((n) => navLink(n, () => setMobileOpen(false)))}
         </nav>
       )}

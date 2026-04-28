@@ -364,6 +364,24 @@ team-resource-ddd-sample/
 
 ---
 
+## 管理者運用 (Next 26)
+
+`admin` ロールのユーザーは `/admin/users` 画面でユーザーの追加・ロール変更・パスワード再発行を UI 上で実行できます。バックエンドのドメインイベント (`UserCreated` / `UserRoleChanged` / `UserPasswordReset`) は既存の `RecordAuditLog` リスナー経由で `audit_logs` に記録され、`/audit-logs` 画面 (admin のみ) から追跡できます。
+
+設計上の補足:
+- ロール / 認可ミドルウェアは `App\Domain\Authorization` 配下に整理しています。`User` モデルは認証主体として扱い、ドメイン集約 (Member / Project / Allocation) と区別します。
+- ロール変更は OCC (`expectedUpdatedAt`) + DB transaction + `lockForUpdate` で並行編集を直列化します。
+- 「最後の admin」を非 admin に変更しようとしたリクエストは 422 で拒否します (システム lockout 防止)。
+- パスワードリセットは Sanctum の API トークンと、対象ユーザーの DB セッション (database session driver) を全て無効化します。自分自身をリセットした場合はレスポンス `requiresRelogin: true` で UI が `/login` へ自動遷移します。
+
+万が一、UI から admin が完全に喪失した (例: ユーザー全員が manager / viewer) 場合は DB 直接更新で復旧できます:
+
+```sql
+UPDATE users SET role = 'admin' WHERE email = '<your_email>';
+```
+
+---
+
 ## セットアップ
 
 ### 一発起動（Docker Compose）

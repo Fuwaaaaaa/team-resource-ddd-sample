@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AbsenceController;
+use App\Http\Controllers\Api\Admin\UsersController as AdminUsersController;
 use App\Http\Controllers\Api\AllocationChangeRequestController;
 use App\Http\Controllers\Api\AllocationController;
 use App\Http\Controllers\Api\AuditLogController;
@@ -126,5 +127,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         // Allocation change request: 承認 / 却下 は admin のみ
         Route::post('/allocation-requests/{id}/approve', [AllocationChangeRequestController::class, 'approve']);
         Route::post('/allocation-requests/{id}/reject', [AllocationChangeRequestController::class, 'reject']);
+
+        // Admin user management (Next 26)
+        Route::prefix('admin')->group(function (): void {
+            Route::get('/users', [AdminUsersController::class, 'index']);
+            Route::post('/users', [AdminUsersController::class, 'store']);
+            Route::patch('/users/{id}/role', [AdminUsersController::class, 'updateRole'])
+                ->whereNumber('id');
+            Route::post('/users/{id}/reset-password', [AdminUsersController::class, 'resetPassword'])
+                ->whereNumber('id');
+        });
     });
 });

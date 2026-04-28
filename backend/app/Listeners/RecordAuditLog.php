@@ -9,6 +9,10 @@ use App\Domain\Allocation\Events\AllocationRevoked;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestApproved;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestRejected;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestSubmitted;
+use App\Domain\Authorization\Events\UserCreated;
+use App\Domain\Authorization\Events\UserPasswordReset;
+use App\Domain\Authorization\Events\UserRoleChanged;
+use App\Domain\Authorization\UserAggregateId;
 use App\Domain\Availability\Events\AbsenceCanceled;
 use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Member\Events\MemberCreated;
@@ -151,6 +155,35 @@ final class RecordAuditLog
                 'payload' => [
                     'decidedBy' => $event->decidedBy(),
                     'note' => $event->decisionNote(),
+                ],
+            ],
+            $event instanceof UserCreated => [
+                'event_type' => 'UserCreated',
+                'aggregate_type' => 'user',
+                'aggregate_id' => UserAggregateId::fromUserId($event->userId()),
+                'payload' => [
+                    'userId' => $event->userId(),
+                    'email' => $event->email(),
+                    'role' => $event->role()->value,
+                ],
+            ],
+            $event instanceof UserRoleChanged => [
+                'event_type' => 'UserRoleChanged',
+                'aggregate_type' => 'user',
+                'aggregate_id' => UserAggregateId::fromUserId($event->userId()),
+                'payload' => [
+                    'userId' => $event->userId(),
+                    'from' => $event->from()->value,
+                    'to' => $event->to()->value,
+                    'reason' => $event->reason(),
+                ],
+            ],
+            $event instanceof UserPasswordReset => [
+                'event_type' => 'UserPasswordReset',
+                'aggregate_type' => 'user',
+                'aggregate_id' => UserAggregateId::fromUserId($event->userId()),
+                'payload' => [
+                    'userId' => $event->userId(),
                 ],
             ],
             default => null,

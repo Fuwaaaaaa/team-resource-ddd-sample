@@ -7,7 +7,7 @@ import {
   useNotes,
   type NoteEntityType,
 } from '@/features/notes/api';
-import { useMe } from '@/features/auth/api';
+import { useMe, usePermissions } from '@/features/auth/api';
 
 interface Props {
   entityType: NoteEntityType;
@@ -23,6 +23,7 @@ export function NotesSection({ entityType, entityId }: Props) {
   const create = useCreateNote();
   const del = useDeleteNote();
   const { data: me } = useMe();
+  const { canWrite } = usePermissions();
 
   const [body, setBody] = useState('');
 
@@ -42,23 +43,25 @@ export function NotesSection({ entityType, entityId }: Props) {
         Notes ({notes.data?.length ?? 0})
       </h3>
 
-      <form onSubmit={onSubmit} className="flex gap-2 mb-3">
-        <input
-          type="text"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          maxLength={2000}
-          placeholder="運用メモ (育成目的 / 配置理由 など)"
-          className="flex-1 px-3 py-1.5 text-sm border border-border rounded bg-surface"
-        />
-        <button
-          type="submit"
-          disabled={create.isPending || !body.trim()}
-          className="px-3 py-1.5 text-sm bg-primary text-primary-fg rounded disabled:opacity-50"
-        >
-          {create.isPending ? '...' : '追加'}
-        </button>
-      </form>
+      {canWrite && (
+        <form onSubmit={onSubmit} className="flex gap-2 mb-3">
+          <input
+            type="text"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            maxLength={2000}
+            placeholder="運用メモ (育成目的 / 配置理由 など)"
+            className="flex-1 px-3 py-1.5 text-sm border border-border rounded bg-surface"
+          />
+          <button
+            type="submit"
+            disabled={create.isPending || !body.trim()}
+            className="px-3 py-1.5 text-sm bg-primary text-primary-fg rounded disabled:opacity-50"
+          >
+            {create.isPending ? '...' : '追加'}
+          </button>
+        </form>
+      )}
 
       {notes.isLoading && <p className="text-xs text-fg-muted">Loading…</p>}
       {notes.data && notes.data.length === 0 && (

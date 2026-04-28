@@ -9,6 +9,10 @@ use App\Domain\Allocation\Events\AllocationRevoked;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestApproved;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestRejected;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestSubmitted;
+use App\Domain\Authorization\Events\UserCreated;
+use App\Domain\Authorization\Events\UserPasswordReset;
+use App\Domain\Authorization\Events\UserRoleChanged;
+use App\Domain\Authorization\UserAggregateId;
 use App\Domain\Availability\Events\AbsenceCanceled;
 use App\Domain\Availability\Events\AbsenceRegistered;
 use App\Domain\Member\Events\MemberCreated;
@@ -130,6 +134,35 @@ final class EventDescriptorResolver
                 eventData: [
                     'decidedBy' => $event->decidedBy(),
                     'note' => $event->decisionNote(),
+                ],
+            ),
+            $event instanceof UserCreated => new EventDescriptor(
+                streamType: 'user',
+                streamId: UserAggregateId::fromUserId($event->userId()),
+                eventType: 'UserCreated',
+                eventData: [
+                    'userId' => $event->userId(),
+                    'email' => $event->email(),
+                    'role' => $event->role()->value,
+                ],
+            ),
+            $event instanceof UserRoleChanged => new EventDescriptor(
+                streamType: 'user',
+                streamId: UserAggregateId::fromUserId($event->userId()),
+                eventType: 'UserRoleChanged',
+                eventData: [
+                    'userId' => $event->userId(),
+                    'from' => $event->from()->value,
+                    'to' => $event->to()->value,
+                    'reason' => $event->reason(),
+                ],
+            ),
+            $event instanceof UserPasswordReset => new EventDescriptor(
+                streamType: 'user',
+                streamId: UserAggregateId::fromUserId($event->userId()),
+                eventType: 'UserPasswordReset',
+                eventData: [
+                    'userId' => $event->userId(),
                 ],
             ),
             default => null,
