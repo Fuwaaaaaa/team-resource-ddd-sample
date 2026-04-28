@@ -8,8 +8,18 @@ on:
 
 jobs:
   backend-test:
-    name: Backend (PHPUnit)
+    # Matrix runs Feature tests on BOTH sqlite (fast, in-memory) and pgsql
+    # (production-equivalent). Without the pgsql cell the project shipped 2
+    # bugs in one PR cycle that passed sqlite silently:
+    #   - DomainEventStore::append used FOR UPDATE + max() (PR #26)
+    #   - ChangeUserRoleHandler used FOR UPDATE + count() (in PR #27)
+    # PostgreSQL rejects FOR UPDATE with aggregate functions (SQLSTATE 0A000).
+    name: "Backend (PHPUnit, ${{ matrix.db }})"
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, pgsql]
 
     services:
       postgres:
@@ -61,11 +71,15 @@ jobs:
       - name: Run Unit tests
         run: vendor/bin/phpunit --testsuite=Unit
 
-      - name: Feature tests (sqlite in-memory)
+      - name: Feature tests (${{ matrix.db }})
         env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ":memory:"
-        run: vendor/bin/phpunit --testsuite=Feature || echo "no feature tests yet"
+          DB_CONNECTION: ${{ matrix.db }}
+          DB_DATABASE: ${{ matrix.db == 'sqlite' && ':memory:' || 'team_resource_test' }}
+          DB_HOST: ${{ matrix.db == 'pgsql' && 'localhost' || '' }}
+          DB_PORT: ${{ matrix.db == 'pgsql' && '5432' || '' }}
+          DB_USERNAME: ${{ matrix.db == 'pgsql' && 'app' || '' }}
+          DB_PASSWORD: ${{ matrix.db == 'pgsql' && 'secret' || '' }}
+        run: vendor/bin/phpunit --testsuite=Feature
 
   backend-lint:
     name: Backend (Pint)
@@ -80,6 +94,62 @@ jobs:
           php-version: "8.3"
       - run: composer install --prefer-dist --no-interaction --no-progress
       - run: vendor/bin/pint --test
+
+  smoke:
+    # Boots the full docker compose stack and asserts the public URL surface
+    # is reachable. Catches regressions like the Phase 7 nginx routing bug
+    # (PR #28) where /login was permanently 404 for 6 weeks because nothing
+    # checked an end-to-end browser-equivalent request through nginx.
+    name: Smoke (docker compose URL surface)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare .env
+        run: |
+          cp .env.example .env || true
+          # Make sure the compose stack has what it needs
+          touch .env
+
+      - name: Boot stack
+        run: docker compose up -d --build
+
+      - name: Wait for nginx + backend + frontend ready
+        run: |
+          for i in $(seq 1 60); do
+            login_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/login || echo "000")
+            me_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Accept: application/json" http://localhost:8080/api/me || echo "000")
+            if [ "$login_code" = "200" ] && [ "$me_code" = "401" ]; then
+              echo "stack ready (login=$login_code, api/me=$me_code)"
+              exit 0
+            fi
+            echo "attempt $i: login=$login_code api/me=$me_code, sleeping..."
+            sleep 5
+          done
+          echo "stack failed to come up within timeout"
+          docker compose logs --tail=80
+          exit 1
+
+      - name: Assert URL surface
+        run: |
+          # /login must be served by Next.js (200), NOT proxied to a non-existent
+          # Laravel GET /login route (404) — the regression that PR #28 fixed.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/login)" = "200"
+          # /api/me must respond with 401 JSON when unauthenticated, NOT 500
+          # (which would happen if the auth middleware tries to redirect to a
+          # named 'login' route).
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: application/json' http://localhost:8080/api/me)" = "401"
+          # / must redirect (307) toward /login when no XSRF cookie is set
+          # (Next.js auth middleware behavior).
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)" = "307"
+          # POST /api/login (without CSRF) returns 419 — proves the route is
+          # reachable on the backend at the canonical /api/login URL.
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Accept: application/json' http://localhost:8080/api/login)" = "419"
+          echo "URL surface OK"
+
+      - name: Dump compose logs on failure
+        if: failure()
+        run: docker compose logs --tail=200
 
   frontend-check:
     name: Frontend (lint + typecheck + build)
