@@ -67,6 +67,7 @@ final class DomainEventStore
             } catch (QueryException $e) {
                 if ($this->isUniqueViolation($e) && $attempt < self::MAX_APPEND_RETRIES) {
                     $attempt++;
+
                     continue;
                 }
                 throw $e;
