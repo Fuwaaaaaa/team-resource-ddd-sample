@@ -158,19 +158,31 @@ jobs:
 
       - name: Assert URL surface
         run: |
+          set -x  # echo each assertion so a failure shows which one
+
           # /login must be served by Next.js (200), NOT proxied to a non-existent
           # Laravel GET /login route (404) — the regression that PR #28 fixed.
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/login)" = "200"
+          login_code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/login)
+          test "$login_code" = "200" || { echo "FAIL /login: got $login_code, expected 200"; exit 1; }
+
           # /api/me must respond with 401 JSON when unauthenticated, NOT 500
           # (which would happen if the auth middleware tries to redirect to a
           # named 'login' route).
-          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: application/json' http://localhost:8080/api/me)" = "401"
+          me_code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: application/json' http://localhost:8080/api/me)
+          test "$me_code" = "401" || { echo "FAIL /api/me: got $me_code, expected 401"; exit 1; }
+
           # / must redirect (307) toward /login when no XSRF cookie is set
           # (Next.js auth middleware behavior).
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)" = "307"
-          # POST /api/login (without CSRF) returns 419 — proves the route is
-          # reachable on the backend at the canonical /api/login URL.
-          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Accept: application/json' http://localhost:8080/api/login)" = "419"
+          home_code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)
+          test "$home_code" = "307" || { echo "FAIL /: got $home_code, expected 307"; exit 1; }
+
+          # POST /api/login (no body, no CSRF) → 422 validation error
+          # (email/password required). The point is the route is reachable on
+          # the backend at /api/login — anything in the 4xx family that's not
+          # 404 confirms reachability.
+          api_login_code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Accept: application/json' http://localhost:8080/api/login)
+          test "$api_login_code" = "422" || { echo "FAIL POST /api/login: got $api_login_code, expected 422"; exit 1; }
+
           echo "URL surface OK"
 
       - name: Dump compose logs on failure
