@@ -36,9 +36,13 @@ class UsersController extends Controller
         $query = User::query()->orderByDesc('created_at');
 
         if ($search = (string) $request->query('search', '')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', $search . '%')
-                    ->orWhere('email', 'like', $search . '%');
+            // Postgres LIKE is case-sensitive; SQLite/MySQL LIKE is not.
+            // Lowercase both sides so admins searching "Alice" find "alice@…"
+            // regardless of driver.
+            $needle = mb_strtolower($search) . '%';
+            $query->where(function ($q) use ($needle) {
+                $q->whereRaw('LOWER(name) LIKE ?', [$needle])
+                    ->orWhereRaw('LOWER(email) LIKE ?', [$needle]);
             });
         }
 

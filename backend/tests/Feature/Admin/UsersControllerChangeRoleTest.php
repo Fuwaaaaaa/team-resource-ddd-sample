@@ -18,6 +18,33 @@ final class UsersControllerChangeRoleTest extends TestCase
         return $user->updated_at->format('Y-m-d H:i:s');
     }
 
+    public function test_role_change_accepts_iso8601_with_timezone_offset(): void
+    {
+        // Regression: the real frontend sends UserDto.updatedAt produced by
+        // toIso8601String() with a non-UTC offset (e.g. "...+09:00"). The
+        // OCC comparison must normalize to UTC; otherwise on pgsql every
+        // legitimate request returned 409 Conflict.
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create(['role' => 'manager']);
+
+        $isoWithOffset = $target->updated_at->copy()
+            ->setTimezone('Asia/Tokyo')
+            ->toIso8601String();
+        // sanity: this is NOT the naive "Y-m-d H:i:s" that the previous code
+        // would have produced from the string; it carries +09:00.
+        $this->assertStringContainsString('+09:00', $isoWithOffset);
+
+        $this->actingAs($admin)
+            ->patchJson("/api/admin/users/{$target->id}/role", [
+                'role' => 'viewer',
+                'reason' => 'tz-aware OCC',
+                'expectedUpdatedAt' => $isoWithOffset,
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.role', 'viewer');
+    }
+
     public function test_admin_changes_role_and_emits_event(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

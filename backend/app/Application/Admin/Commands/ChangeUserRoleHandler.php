@@ -13,6 +13,7 @@ use App\Enums\UserRole;
 use App\Infrastructure\Events\DomainEventDispatcher;
 use App\Models\User;
 use DateTimeImmutable;
+use DateTimeZone;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
@@ -54,7 +55,18 @@ final class ChangeUserRoleHandler
 
             $oldRole = $user->role;
 
-            // No-op idempotency: same role → return current user without event/update.
+            // OCC: even no-op requests must surface staleness. A client whose
+            // expectedUpdatedAt is older than the current row likely missed an
+            // intervening change → return 409 so they refetch and re-decide.
+            $expectedAtForCheck = (new DateTimeImmutable($command->expectedUpdatedAt))
+                ->setTimezone(new DateTimeZone('UTC'))
+                ->format('Y-m-d H:i:s');
+            if ($user->updated_at->utc()->format('Y-m-d H:i:s') !== $expectedAtForCheck) {
+                throw new OccConflictException();
+            }
+
+            // No-op idempotency: same role → no event, no update, but the OCC
+            // check above already validated freshness.
             if ($oldRole === $newRole) {
                 return $user;
             }
@@ -70,17 +82,10 @@ final class ChangeUserRoleHandler
                 }
             }
 
-            // OCC: only update if updated_at hasn't drifted since the client read it.
-            $expectedAt = (new DateTimeImmutable($command->expectedUpdatedAt))
-                ->format('Y-m-d H:i:s');
-            $affected = User::query()
-                ->whereKey($command->targetUserId)
-                ->where('updated_at', $expectedAt)
-                ->update(['role' => $newRole->value]);
-
-            if ($affected === 0) {
-                throw new OccConflictException();
-            }
+            // OCC was already validated above before the no-op short-circuit.
+            // The lockForUpdate on the target row serializes concurrent writers,
+            // so a plain UPDATE is sufficient here.
+            $user->update(['role' => $newRole->value]);
 
             $events[] = new UserRoleChanged(
                 userId: $user->id,

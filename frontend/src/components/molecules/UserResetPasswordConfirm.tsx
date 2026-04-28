@@ -52,12 +52,19 @@ export function UserResetPasswordConfirm({
     return () => document.removeEventListener('keydown', onKey);
   }, [user, onClose]);
 
-  // Self-reset countdown → automatic logout + redirect
+  // Self-reset countdown → automatic logout + redirect.
+  // The server has already deleted this user's session as part of the
+  // reset, so POST /api/logout will return 401. We swallow that error
+  // intentionally — the redirect to /login is what matters.
   useEffect(() => {
     if (!requiresRelogin) return;
     if (countdown <= 0) {
       void (async () => {
-        await logout.mutateAsync();
+        try {
+          await logout.mutateAsync();
+        } catch {
+          // expected: session was already invalidated server-side
+        }
         router.push('/login');
       })();
       return;
