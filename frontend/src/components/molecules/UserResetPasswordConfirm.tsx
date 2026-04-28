@@ -202,9 +202,10 @@ export function UserResetPasswordConfirm({
               </div>
             </div>
             <div
-              role="alert"
+              role="status"
               className="text-xs bg-warning/10 text-warning border border-warning/40 rounded px-3 py-2"
             >
+              <strong>{t('common.warn.prefix')}</strong>{' '}
               {t('admin.users.create.modal.passwordWarning')}
             </div>
             {requiresRelogin && (
