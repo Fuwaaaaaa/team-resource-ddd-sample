@@ -12,7 +12,7 @@ final class AuditLogIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_audit_log_aggregateType_user_filter_accepted(): void
+    public function test_audit_log_aggregate_type_user_filter_accepted(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
 

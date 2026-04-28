@@ -24,7 +24,7 @@ final class DomainEventTest extends TestCase
 {
     public function test_user_created_descriptor_has_no_password_field(): void
     {
-        $resolver = new EventDescriptorResolver();
+        $resolver = new EventDescriptorResolver;
         $descriptor = $resolver->resolve(new UserCreated(
             userId: 42,
             email: 'safe@example.com',
@@ -40,7 +40,7 @@ final class DomainEventTest extends TestCase
 
     public function test_user_role_changed_descriptor_carries_reason(): void
     {
-        $resolver = new EventDescriptorResolver();
+        $resolver = new EventDescriptorResolver;
         $descriptor = $resolver->resolve(new UserRoleChanged(
             userId: 1,
             from: UserRole::Manager,
@@ -57,7 +57,7 @@ final class DomainEventTest extends TestCase
 
     public function test_user_password_reset_descriptor_payload_has_no_password(): void
     {
-        $resolver = new EventDescriptorResolver();
+        $resolver = new EventDescriptorResolver;
         $descriptor = $resolver->resolve(new UserPasswordReset(userId: 7));
 
         $this->assertNotNull($descriptor);

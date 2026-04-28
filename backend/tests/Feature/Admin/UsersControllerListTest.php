@@ -26,7 +26,7 @@ final class UsersControllerListTest extends TestCase
             ]);
     }
 
-    public function test_pagination_respects_perPage(): void
+    public function test_pagination_respects_per_page(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         User::factory()->count(15)->create();
@@ -75,7 +75,7 @@ final class UsersControllerListTest extends TestCase
         $this->getJson('/api/admin/users')->assertUnauthorized();
     }
 
-    public function test_perPage_max_is_validated(): void
+    public function test_per_page_max_is_validated(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $this->actingAs($admin)->getJson('/api/admin/users?perPage=999')

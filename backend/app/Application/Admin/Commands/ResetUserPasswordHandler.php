@@ -52,7 +52,7 @@ final class ResetUserPasswordHandler
         $resultUser = DB::transaction(function () use ($command, $hashedPassword, $sessionsTable) {
             $user = User::query()->whereKey($command->targetUserId)->lockForUpdate()->first();
             if ($user === null) {
-                throw (new ModelNotFoundException())->setModel(User::class, [$command->targetUserId]);
+                throw (new ModelNotFoundException)->setModel(User::class, [$command->targetUserId]);
             }
 
             $user->update(['password' => $hashedPassword]);

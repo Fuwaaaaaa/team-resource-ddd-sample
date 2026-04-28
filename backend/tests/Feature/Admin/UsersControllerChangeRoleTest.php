@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Admin;
 
+use App\Application\Admin\Commands\ChangeUserRoleCommand;
+use App\Application\Admin\Commands\ChangeUserRoleHandler;
+use App\Application\Admin\Exceptions\LastAdminLockException;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -156,12 +159,12 @@ final class UsersControllerChangeRoleTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         // No other admins exist.
 
-        /** @var \App\Application\Admin\Commands\ChangeUserRoleHandler $handler */
-        $handler = app(\App\Application\Admin\Commands\ChangeUserRoleHandler::class);
+        /** @var ChangeUserRoleHandler $handler */
+        $handler = app(ChangeUserRoleHandler::class);
 
         // Pretend a different admin (id=999) is demoting the only real admin.
-        $this->expectException(\App\Application\Admin\Exceptions\LastAdminLockException::class);
-        $handler->handle(new \App\Application\Admin\Commands\ChangeUserRoleCommand(
+        $this->expectException(LastAdminLockException::class);
+        $handler->handle(new ChangeUserRoleCommand(
             targetUserId: $admin->id,
             actorUserId: 999, // different from target — bypasses self-check
             newRole: 'manager',

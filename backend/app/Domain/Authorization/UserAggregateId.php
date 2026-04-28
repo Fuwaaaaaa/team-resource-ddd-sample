@@ -21,6 +21,6 @@ final class UserAggregateId
 {
     public static function fromUserId(int $userId): string
     {
-        return (string) Str::uuid5(Str::uuid5Namespace('url'), 'user:' . $userId);
+        return (string) Str::uuid5(Str::uuid5Namespace('url'), 'user:'.$userId);
     }
 }

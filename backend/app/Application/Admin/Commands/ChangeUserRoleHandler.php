@@ -40,7 +40,7 @@ final class ChangeUserRoleHandler
     public function handle(ChangeUserRoleCommand $command): ?UserDto
     {
         if ($command->targetUserId === $command->actorUserId) {
-            throw new CannotChangeOwnRoleException();
+            throw new CannotChangeOwnRoleException;
         }
 
         $newRole = UserRole::from($command->newRole);
@@ -50,7 +50,7 @@ final class ChangeUserRoleHandler
         $resultUser = DB::transaction(function () use ($command, $newRole, &$events) {
             $user = User::query()->whereKey($command->targetUserId)->lockForUpdate()->first();
             if ($user === null) {
-                throw (new ModelNotFoundException())->setModel(User::class, [$command->targetUserId]);
+                throw (new ModelNotFoundException)->setModel(User::class, [$command->targetUserId]);
             }
 
             $oldRole = $user->role;
@@ -62,7 +62,7 @@ final class ChangeUserRoleHandler
                 ->setTimezone(new DateTimeZone('UTC'))
                 ->format('Y-m-d H:i:s');
             if ($user->updated_at->utc()->format('Y-m-d H:i:s') !== $expectedAtForCheck) {
-                throw new OccConflictException();
+                throw new OccConflictException;
             }
 
             // No-op idempotency: same role → no event, no update, but the OCC
@@ -78,7 +78,7 @@ final class ChangeUserRoleHandler
                     ->lockForUpdate()
                     ->count();
                 if ($adminCount <= 1) {
-                    throw new LastAdminLockException();
+                    throw new LastAdminLockException;
                 }
             }
 

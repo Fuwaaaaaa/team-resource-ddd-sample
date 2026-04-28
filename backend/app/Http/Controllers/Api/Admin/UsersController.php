@@ -39,7 +39,7 @@ class UsersController extends Controller
             // Postgres LIKE is case-sensitive; SQLite/MySQL LIKE is not.
             // Lowercase both sides so admins searching "Alice" find "alice@…"
             // regardless of driver.
-            $needle = mb_strtolower($search) . '%';
+            $needle = mb_strtolower($search).'%';
             $query->where(function ($q) use ($needle) {
                 $q->whereRaw('LOWER(name) LIKE ?', [$needle])
                     ->orWhereRaw('LOWER(email) LIKE ?', [$needle]);
@@ -107,6 +107,7 @@ class UsersController extends Controller
         // null DTO == no-op (idempotent same-role); return current user state for client refresh.
         if ($dto === null) {
             $current = User::query()->findOrFail($id);
+
             return response()->json(['user' => UserDto::fromModel($current)->toArray()]);
         }
 
@@ -122,7 +123,7 @@ class UsersController extends Controller
 
         // Existence check up front so we map to 404 cleanly (handler also re-checks under lock).
         if (! User::query()->whereKey($id)->exists()) {
-            throw (new ModelNotFoundException())->setModel(User::class, [$id]);
+            throw (new ModelNotFoundException)->setModel(User::class, [$id]);
         }
 
         $dto = $handler->handle(new ResetUserPasswordCommand(

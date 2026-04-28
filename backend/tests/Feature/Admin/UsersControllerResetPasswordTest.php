@@ -91,7 +91,7 @@ final class UsersControllerResetPasswordTest extends TestCase
         $this->assertSame(0, DB::table('sessions')->where('user_id', $target->id)->count());
     }
 
-    public function test_self_reset_returns_requiresRelogin_true(): void
+    public function test_self_reset_returns_requires_relogin_true(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
