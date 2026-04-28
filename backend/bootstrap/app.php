@@ -1,5 +1,9 @@
 <?php
 
+use App\Application\Admin\Exceptions\CannotChangeOwnRoleException;
+use App\Application\Admin\Exceptions\EmailTakenException;
+use App\Application\Admin\Exceptions\LastAdminLockException;
+use App\Application\Admin\Exceptions\OccConflictException;
 use App\Application\Allocation\Exceptions\AllocationCapacityExceededException;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureRole;
@@ -36,5 +40,31 @@ return Application::configure(basePath: dirname(__DIR__))
                 'message' => $e->getMessage(),
                 'error' => 'allocation_capacity_exceeded',
             ], 422);
+        });
+
+        // Admin / Authorization domain exceptions → HTTP 422 / 409
+        $exceptions->render(function (CannotChangeOwnRoleException $e, Request $request) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'cannot_change_self',
+            ], 422);
+        });
+        $exceptions->render(function (LastAdminLockException $e, Request $request) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'last_admin_lock',
+            ], 422);
+        });
+        $exceptions->render(function (EmailTakenException $e, Request $request) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'email_taken',
+            ], 422);
+        });
+        $exceptions->render(function (OccConflictException $e, Request $request) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'occ_mismatch',
+            ], 409);
         });
     })->create();
