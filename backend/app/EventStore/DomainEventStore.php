@@ -90,18 +90,33 @@ final class DomainEventStore
     }
 
     /**
-     * Postgres は SQLSTATE 23505 (unique_violation)、SQLite は 23000 + "UNIQUE constraint failed"。
-     * Laravel の QueryException は SQLSTATE を getCode() に詰める一方、
-     * 本来は driver 例外を unwrap する方が確実なため両方確認する。
+     * SQLSTATE-aware unique-violation check.
+     *
+     *   - PostgreSQL は 23505 (unique_violation) を専用に返す → そのまま retry
+     *   - SQLite は PDO が integrity 違反すべてを 23000 にまとめる
+     *     (foreign-key / NOT NULL / CHECK / unique 全部)
+     *     → 23000 だけで retry すると非 unique 違反を silently mask して
+     *        実バグを 5 回リトライさせるので、message 部分一致が必須
+     *
+     * "23000" + 任意 message で true を返す素朴な実装は HIGH severity の false-positive。
      */
     private function isUniqueViolation(QueryException $e): bool
     {
         $sqlState = (string) $e->getCode();
-        if ($sqlState === '23505' || $sqlState === '23000') {
+        $message = $e->getMessage();
+
+        // PostgreSQL: 23505 = unique_violation (固有 SQLSTATE で安全)
+        if ($sqlState === '23505') {
             return true;
         }
-        $message = $e->getMessage();
-        return str_contains($message, 'duplicate key value violates unique constraint')
-            || str_contains($message, 'UNIQUE constraint failed');
+
+        // SQLite: 23000 はクラス全般 (FK / NOT NULL / CHECK 含む) なので
+        // メッセージで具体的に "UNIQUE constraint failed" を確認する
+        if ($sqlState === '23000' && str_contains($message, 'UNIQUE constraint failed')) {
+            return true;
+        }
+
+        // 一部 driver は SQLSTATE を欠落させるためメッセージのみで判定する fallback
+        return str_contains($message, 'duplicate key value violates unique constraint');
     }
 }
