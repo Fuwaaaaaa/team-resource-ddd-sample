@@ -137,6 +137,7 @@ export const ja = {
   'common.cancel': 'キャンセル',
   'common.ok': 'OK',
   'common.error.prefix': 'エラー:',
+  'common.warn.prefix': '注意:',
 } as const;
 
 // 型安全を保つため en は ja と同じキーを必須とする
@@ -260,6 +261,7 @@ export const en: Record<TranslationKey, string> = {
   'common.cancel': 'Cancel',
   'common.ok': 'OK',
   'common.error.prefix': 'Error:',
+  'common.warn.prefix': 'Notice:',
 };
 
 export const messages: Record<Locale, Record<TranslationKey, string>> = {

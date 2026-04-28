@@ -184,7 +184,7 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
 
             <fieldset>
               <legend className="block text-xs font-medium text-fg mb-2">
-                {t('admin.users.create.modal.title')} — {t('admin.users.role.label')} *
+                {t('admin.users.role.label')} *
               </legend>
               <div className="flex flex-col gap-2">
                 {(['admin', 'manager', 'viewer'] as UserRole[]).map((r) => (
@@ -252,10 +252,10 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
               </div>
             </div>
             <div
-              role="alert"
+              role="status"
               className="text-xs bg-warning/10 text-warning border border-warning/40 rounded px-3 py-2"
             >
-              <strong>{t('common.error.prefix').replace(':', '')}</strong>{' '}
+              <strong>{t('common.warn.prefix')}</strong>{' '}
               {t('admin.users.create.modal.passwordWarning')}
             </div>
             <div className="flex justify-end pt-2 border-t border-border">
