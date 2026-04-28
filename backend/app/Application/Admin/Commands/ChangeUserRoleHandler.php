@@ -72,10 +72,19 @@ final class ChangeUserRoleHandler
             }
 
             // Last-admin lock: demoting the only admin would lock everyone out.
+            //
+            // PostgreSQL forbids `FOR UPDATE` with aggregate functions
+            // (SQLSTATE 0A000), so we cannot do `count()->lockForUpdate()`.
+            // Instead we SELECT all admin rows FOR UPDATE (no aggregate, just
+            // a row lock on the set we care about) and count the resulting
+            // collection in PHP. This locks the same rows the count was meant
+            // to gate against, so two concurrent admins demoting each other
+            // serialize: the second sees count=1 after the first commits.
             if ($oldRole === UserRole::Admin && $newRole !== UserRole::Admin) {
                 $adminCount = User::query()
                     ->where('role', UserRole::Admin->value)
                     ->lockForUpdate()
+                    ->pluck('id')
                     ->count();
                 if ($adminCount <= 1) {
                     throw new LastAdminLockException;
