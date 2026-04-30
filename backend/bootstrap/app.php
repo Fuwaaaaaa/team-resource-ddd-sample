@@ -7,6 +7,7 @@ use App\Application\Admin\Exceptions\OccConflictException;
 use App\Application\Allocation\Exceptions\AllocationCapacityExceededException;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureRole;
+use App\Infrastructure\Metrics\MetricsCounter;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -45,19 +46,26 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // Admin / Authorization domain exceptions → HTTP 422 / 409
+        // 各 denial に対し MetricsCounter を 1 ずつ進める (Prometheus 観測のため)。
         $exceptions->render(function (CannotChangeOwnRoleException $e, Request $request) {
+            app(MetricsCounter::class)->increment(MetricsCounter::ADMIN_USER_CANNOT_CHANGE_OWN_ROLE);
+
             return response()->json([
                 'message' => $e->getMessage(),
                 'error' => 'cannot_change_self',
             ], 422);
         });
         $exceptions->render(function (LastAdminLockException $e, Request $request) {
+            app(MetricsCounter::class)->increment(MetricsCounter::ADMIN_USER_LAST_ADMIN_LOCK);
+
             return response()->json([
                 'message' => $e->getMessage(),
                 'error' => 'last_admin_lock',
             ], 422);
         });
         $exceptions->render(function (EmailTakenException $e, Request $request) {
+            app(MetricsCounter::class)->increment(MetricsCounter::ADMIN_USER_EMAIL_TAKEN);
+
             return response()->json([
                 'message' => $e->getMessage(),
                 'error' => 'email_taken',
