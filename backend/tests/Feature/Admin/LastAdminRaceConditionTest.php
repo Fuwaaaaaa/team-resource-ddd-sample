@@ -9,6 +9,7 @@ use App\Application\Admin\Commands\DisableUserHandler;
 use App\Application\Admin\Exceptions\LastAdminLockException;
 use App\Models\AuditLog;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -78,7 +79,7 @@ final class LastAdminRaceConditionTest extends TestCase
             // RefreshDatabaseState::$migrated を unset することで、 後続テストが
             // \"初めての RefreshDatabase 適用\" として migrate:fresh を再実行する。
             Artisan::call('migrate:fresh', ['--force' => true]);
-            \Illuminate\Foundation\Testing\RefreshDatabaseState::$migrated = false;
+            RefreshDatabaseState::$migrated = false;
         }
         parent::tearDown();
     }
