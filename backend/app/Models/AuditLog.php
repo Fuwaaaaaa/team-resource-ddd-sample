@@ -23,6 +23,8 @@ class AuditLog extends Model
         'aggregate_type',
         'aggregate_id',
         'payload',
+        'ip_address',
+        'user_agent',
         'created_at',
     ];
 
