@@ -32,6 +32,16 @@ final class CreateUserHandler
         $role = UserRole::from($command->role);
         $generatedPassword = Str::random(16);
 
+        // 重複 email を INSERT より先に検出する。
+        // pgsql は失敗した INSERT が外側 transaction (RefreshDatabase) を 25P02 で
+        // 汚染し、 後続の SELECT が "current transaction is aborted" で全て落ちる。
+        // try/catch でも EmailTakenException 自体は返せるが、 pgsql 経路のテストが
+        // この後 query を走らせると壊れるため、 fast-path で先に弾いておく。
+        // 同 email の同時 INSERT 競合は下の catch でカバーする。
+        if (User::where('email', $command->email)->exists()) {
+            throw new EmailTakenException($command->email);
+        }
+
         try {
             $user = User::create([
                 'name' => $command->name,
