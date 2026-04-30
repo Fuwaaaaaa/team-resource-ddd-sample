@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SkillController;
 use App\Http\Controllers\Api\TimelineController;
+use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\MeController;
 use App\Http\Controllers\MetricsController;
@@ -37,6 +38,11 @@ Route::post('/login', [LoginController::class, 'store']);
 // Prometheus / OpenMetrics scrape 用 (sanctum 認証の外)。
 // Authorization: Bearer <METRICS_TOKEN> が一致したときのみ 200、 それ以外は 404。
 Route::get('/metrics', [MetricsController::class, 'index']);
+
+// 招待リンクの公開エンドポイント (sanctum 認証不要)
+// 受信者は admin が用意した user を accept するため、 まだ自分の credentials を持っていない。
+Route::get('/invite/{token}', [InviteController::class, 'show'])->whereAlphaNumeric('token');
+Route::post('/invite/{token}/accept', [InviteController::class, 'accept'])->whereAlphaNumeric('token');
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/logout', [LoginController::class, 'destroy']);

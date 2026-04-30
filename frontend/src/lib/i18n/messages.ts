@@ -98,9 +98,15 @@ export const ja = {
   'admin.users.create.modal.title': '新規ユーザー',
   'admin.users.create.modal.name': '名前',
   'admin.users.create.modal.email': 'メールアドレス',
-  'admin.users.create.modal.submit': '作成',
-  'admin.users.create.modal.submitting': '作成中…',
-  'admin.users.create.modal.successTitle': 'ユーザーを作成しました',
+  'admin.users.create.modal.submit': '作成 (招待メール送信)',
+  'admin.users.create.modal.submitting': '送信中…',
+  'admin.users.create.modal.successTitle': '招待メールを送信しました',
+  'admin.users.create.modal.inviteSentMessage':
+    '{email} に招待メールを送信しました。 受信者はメール内のリンクから自分でパスワードを設定します。',
+  'admin.users.create.modal.inviteExpiresAt': '有効期限',
+  'admin.users.create.modal.inviteUrlLabel': '招待リンク (再共有用 — メールが届かない場合)',
+  // パスワードリセットのフロー (admin が既存 user を reset するモーダル) は引き続き
+  // 16 文字生成パスワードを表示するため、 関連キーは TODO-3 の対象外として残す。
   'admin.users.create.modal.passwordLabel': '初期パスワード',
   'admin.users.create.modal.passwordWarning':
     'このパスワードは再表示されません。忘れた場合はリセット機能で再発行できます。',
@@ -227,9 +233,13 @@ export const en: Record<TranslationKey, string> = {
   'admin.users.create.modal.title': 'New user',
   'admin.users.create.modal.name': 'Name',
   'admin.users.create.modal.email': 'Email',
-  'admin.users.create.modal.submit': 'Create',
-  'admin.users.create.modal.submitting': 'Creating…',
-  'admin.users.create.modal.successTitle': 'User created',
+  'admin.users.create.modal.submit': 'Create (send invite)',
+  'admin.users.create.modal.submitting': 'Sending…',
+  'admin.users.create.modal.successTitle': 'Invite sent',
+  'admin.users.create.modal.inviteSentMessage':
+    'Invite emailed to {email}. The recipient will set their own password from the link.',
+  'admin.users.create.modal.inviteExpiresAt': 'Expires',
+  'admin.users.create.modal.inviteUrlLabel': 'Invite link (for re-sharing if email does not arrive)',
   'admin.users.create.modal.passwordLabel': 'Initial password',
   'admin.users.create.modal.passwordWarning':
     'This password will not be shown again. If lost, use the reset action to issue a new one.',

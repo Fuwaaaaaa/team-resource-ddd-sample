@@ -11,13 +11,22 @@ export interface UserCreateModalProps {
   onClose: () => void;
 }
 
+interface InviteResult {
+  email: string;
+  expiresAt: string; // ISO 8601
+  url: string;
+}
+
 /**
  * Two-stage modal:
  *   stage 1 (form): name / email / role radio
- *   stage 2 (success): displays the generated password ONCE with a copy button
+ *   stage 2 (invite-sent): confirms the email recipient + shows the invite URL
+ *                          for re-sharing if the email never arrives.
  *
- * The generated password is never re-fetchable; closing or reloading the
- * modal loses it. The warning copy makes that explicit.
+ * Note: the admin never sees a password in this flow. The recipient sets their
+ * own from the email link (see /invite/[token] page). The invite URL is shown
+ * here only as a fallback for when the SMTP path is broken (dev environments,
+ * spam folders) — in production the email is the canonical channel.
  */
 export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
   const t = useTranslation();
@@ -27,9 +36,7 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
   const [role, setRole] = useState<UserRole>('viewer');
   const [serverError, setServerError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
-  const [createdName, setCreatedName] = useState<string | null>(null);
-  const [createdRole, setCreatedRole] = useState<UserRole | null>(null);
+  const [invite, setInvite] = useState<InviteResult | null>(null);
   const [copied, setCopied] = useState(false);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,11 +48,8 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
       setRole('viewer');
       setServerError(null);
       setFieldErrors({});
-      setGeneratedPassword(null);
-      setCreatedName(null);
-      setCreatedRole(null);
+      setInvite(null);
       setCopied(false);
-      // give the dialog a tick to mount before focusing
       setTimeout(() => firstInputRef.current?.focus(), 0);
     }
   }, [open]);
@@ -68,9 +72,11 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
     setFieldErrors({});
     try {
       const result = await create.mutateAsync({ name, email, role });
-      setGeneratedPassword(result.generatedPassword);
-      setCreatedName(result.user.name);
-      setCreatedRole(result.user.role);
+      setInvite({
+        email: result.inviteSentTo,
+        expiresAt: result.inviteExpiresAt,
+        url: result.inviteUrl,
+      });
     } catch (err) {
       if (err instanceof HttpError) {
         if (err.status === 422) {
@@ -92,15 +98,17 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
   };
 
   const handleCopy = async () => {
-    if (!generatedPassword) return;
+    if (!invite) return;
     try {
-      await navigator.clipboard.writeText(generatedPassword);
+      await navigator.clipboard.writeText(invite.url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // ignore: clipboard may be unavailable in insecure contexts
     }
   };
+
+  const fmtExpires = (iso: string) => new Date(iso).toLocaleString('ja-JP');
 
   return (
     <div
@@ -117,7 +125,7 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
         {/* Header */}
         <div className="sticky top-0 bg-surface border-b border-border px-6 py-4 flex items-center justify-between">
           <h2 id="user-create-modal-title" className="text-lg font-bold">
-            {generatedPassword
+            {invite
               ? t('admin.users.create.modal.successTitle')
               : t('admin.users.create.modal.title')}
           </h2>
@@ -132,7 +140,7 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
         </div>
 
         {/* Stage 1: Form */}
-        {!generatedPassword && (
+        {!invite && (
           <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
             {serverError && (
               <div
@@ -223,22 +231,26 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
           </form>
         )}
 
-        {/* Stage 2: Success + generated password */}
-        {generatedPassword && (
+        {/* Stage 2: Invite sent */}
+        {invite && (
           <div className="px-6 py-4 space-y-4">
             <p className="text-sm text-fg">
-              ✓ {createdName} <span className="text-fg-muted">({createdRole})</span>
+              ✓ {t('admin.users.create.modal.inviteSentMessage').replace('{email}', invite.email)}
             </p>
+            <div className="text-xs text-fg-muted">
+              <strong>{t('admin.users.create.modal.inviteExpiresAt')}:</strong>{' '}
+              {fmtExpires(invite.expiresAt)}
+            </div>
             <div>
               <span className="block text-xs font-medium text-fg mb-1">
-                {t('admin.users.create.modal.passwordLabel')}
+                {t('admin.users.create.modal.inviteUrlLabel')}
               </span>
               <div className="flex items-center gap-2">
                 <code
-                  aria-label={t('admin.users.create.modal.passwordLabel')}
-                  className="flex-1 font-mono text-base bg-surface-muted text-fg px-3 py-2 rounded border border-border break-all"
+                  aria-label={t('admin.users.create.modal.inviteUrlLabel')}
+                  className="flex-1 font-mono text-[11px] bg-surface-muted text-fg px-3 py-2 rounded border border-border break-all"
                 >
-                  {generatedPassword}
+                  {invite.url}
                 </code>
                 <button
                   type="button"
@@ -250,13 +262,6 @@ export function UserCreateModal({ open, onClose }: UserCreateModalProps) {
                     : t('admin.users.create.modal.copy')}
                 </button>
               </div>
-            </div>
-            <div
-              role="status"
-              className="text-xs bg-warning/10 text-warning border border-warning/40 rounded px-3 py-2"
-            >
-              <strong>{t('common.warn.prefix')}</strong>{' '}
-              {t('admin.users.create.modal.passwordWarning')}
             </div>
             <div className="flex justify-end pt-2 border-t border-border">
               <button

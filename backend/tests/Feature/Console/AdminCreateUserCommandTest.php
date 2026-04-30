@@ -5,23 +5,31 @@ declare(strict_types=1);
 namespace Tests\Feature\Console;
 
 use App\Domain\Authorization\UserRole;
+use App\Mail\UserInviteMail;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 final class AdminCreateUserCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_creates_admin_user_and_emits_audit_event(): void
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Mail::fake();
+    }
+
+    public function test_creates_admin_user_emits_audit_event_and_sends_invite(): void
     {
         $exit = $this->artisan('admin:create-user', [
             '--role' => 'admin',
             '--email' => 'cli-admin@example.com',
             '--name' => 'CLI Admin',
         ])
-            ->expectsOutputToContain('User created.')
-            ->expectsOutputToContain('Generated password')
+            ->expectsOutputToContain('User created. Invite email sent.')
+            ->expectsOutputToContain('Invite link')
             ->run();
 
         $this->assertSame(0, $exit);
@@ -29,6 +37,9 @@ final class AdminCreateUserCommandTest extends TestCase
         $user = User::where('email', 'cli-admin@example.com')->firstOrFail();
         $this->assertSame('CLI Admin', $user->name);
         $this->assertSame(UserRole::Admin, $user->role);
+        // 招待 token が発行されている (24h 有効)
+        $this->assertNotNull($user->invite_token);
+        $this->assertNotNull($user->invite_token_expires_at);
 
         // UserCreated event is forwarded to audit_logs through the same listener
         // chain that HTTP-driven user creation uses.
@@ -36,6 +47,9 @@ final class AdminCreateUserCommandTest extends TestCase
             'event_type' => 'UserCreated',
             'aggregate_type' => 'user',
         ]);
+
+        // 招待 mail が宛先 user に送られている
+        Mail::assertSent(UserInviteMail::class, fn (UserInviteMail $m) => $m->hasTo('cli-admin@example.com'));
     }
 
     public function test_creates_manager_role(): void
@@ -50,7 +64,7 @@ final class AdminCreateUserCommandTest extends TestCase
         $this->assertSame(UserRole::Manager, User::where('email', 'cli-mgr@example.com')->firstOrFail()->role);
     }
 
-    public function test_json_output_contains_generated_password(): void
+    public function test_json_output_contains_invite_url(): void
     {
         $exit = $this->artisan('admin:create-user', [
             '--role' => 'viewer',
@@ -60,9 +74,9 @@ final class AdminCreateUserCommandTest extends TestCase
         ])->run();
 
         $this->assertSame(0, $exit);
-        // generatedPassword was generated via Str::random(16) — assert by ensuring the
-        // user exists; the password format is asserted against the JSON output below.
         $this->assertDatabaseHas('users', ['email' => 'cli-json@example.com']);
+        // user は invite_token を持つ
+        $this->assertNotNull(User::where('email', 'cli-json@example.com')->firstOrFail()->invite_token);
     }
 
     public function test_rejects_invalid_role(): void
