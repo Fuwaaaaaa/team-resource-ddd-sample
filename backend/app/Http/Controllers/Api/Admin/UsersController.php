@@ -8,6 +8,10 @@ use App\Application\Admin\Commands\ChangeUserRoleCommand;
 use App\Application\Admin\Commands\ChangeUserRoleHandler;
 use App\Application\Admin\Commands\CreateUserCommand;
 use App\Application\Admin\Commands\CreateUserHandler;
+use App\Application\Admin\Commands\DisableUserCommand;
+use App\Application\Admin\Commands\DisableUserHandler;
+use App\Application\Admin\Commands\EnableUserCommand;
+use App\Application\Admin\Commands\EnableUserHandler;
 use App\Application\Admin\Commands\ResetUserPasswordCommand;
 use App\Application\Admin\Commands\ResetUserPasswordHandler;
 use App\Application\Admin\DTOs\UserDto;
@@ -110,6 +114,44 @@ class UsersController extends Controller
 
             return response()->json(['user' => UserDto::fromModel($current)->toArray()]);
         }
+
+        return response()->json(['user' => $dto->toArray()]);
+    }
+
+    public function disable(Request $request, int $id, DisableUserHandler $handler): JsonResponse
+    {
+        $actor = $request->user();
+        if ($actor === null) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        if (! User::query()->whereKey($id)->exists()) {
+            throw (new ModelNotFoundException)->setModel(User::class, [$id]);
+        }
+
+        $dto = $handler->handle(new DisableUserCommand(
+            targetUserId: $id,
+            actorUserId: (int) $actor->id,
+        ));
+
+        return response()->json(['user' => $dto->toArray()]);
+    }
+
+    public function enable(Request $request, int $id, EnableUserHandler $handler): JsonResponse
+    {
+        $actor = $request->user();
+        if ($actor === null) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        if (! User::query()->whereKey($id)->exists()) {
+            throw (new ModelNotFoundException)->setModel(User::class, [$id]);
+        }
+
+        $dto = $handler->handle(new EnableUserCommand(
+            targetUserId: $id,
+            actorUserId: (int) $actor->id,
+        ));
 
         return response()->json(['user' => $dto->toArray()]);
     }

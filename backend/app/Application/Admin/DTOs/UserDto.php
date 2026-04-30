@@ -15,6 +15,7 @@ final class UserDto
         public readonly string $role,
         public readonly string $createdAt,
         public readonly string $updatedAt,
+        public readonly ?string $disabledAt,
     ) {}
 
     public static function fromModel(User $user): self
@@ -26,6 +27,7 @@ final class UserDto
             role: $user->role->value,
             createdAt: $user->created_at?->toIso8601String() ?? '',
             updatedAt: $user->updated_at?->toIso8601String() ?? '',
+            disabledAt: $user->disabled_at?->toIso8601String(),
         );
     }
 
@@ -39,6 +41,7 @@ final class UserDto
             'role' => $this->role,
             'createdAt' => $this->createdAt,
             'updatedAt' => $this->updatedAt,
+            'disabledAt' => $this->disabledAt,
         ];
     }
 }

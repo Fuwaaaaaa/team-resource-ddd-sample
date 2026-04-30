@@ -1,6 +1,7 @@
 <?php
 
 use App\Application\Admin\Exceptions\CannotChangeOwnRoleException;
+use App\Application\Admin\Exceptions\CannotDisableSelfException;
 use App\Application\Admin\Exceptions\EmailTakenException;
 use App\Application\Admin\Exceptions\LastAdminLockException;
 use App\Application\Admin\Exceptions\OccConflictException;
@@ -49,6 +50,12 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->json([
                 'message' => $e->getMessage(),
                 'error' => 'cannot_change_self',
+            ], 422);
+        });
+        $exceptions->render(function (CannotDisableSelfException $e, Request $request) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'error' => 'cannot_disable_self',
             ], 422);
         });
         $exceptions->render(function (LastAdminLockException $e, Request $request) {

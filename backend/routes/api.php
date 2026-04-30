@@ -136,6 +136,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
                 ->whereNumber('id');
             Route::post('/users/{id}/reset-password', [AdminUsersController::class, 'resetPassword'])
                 ->whereNumber('id');
+            Route::post('/users/{id}/disable', [AdminUsersController::class, 'disable'])
+                ->whereNumber('id');
+            Route::post('/users/{id}/enable', [AdminUsersController::class, 'enable'])
+                ->whereNumber('id');
         });
     });
 });
