@@ -40,6 +40,12 @@ services:
       SESSION_SAME_SITE: lax
       SANCTUM_STATEFUL_DOMAINS: localhost:8080,127.0.0.1:8080
       CORS_ALLOWED_ORIGINS: http://localhost:8080
+      # 招待メール (TODO-3) 用に mailpit へ。 web UI: http://localhost:8025
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_FROM_ADDRESS: noreply@example.com
+      MAIL_FROM_NAME: Team Resource Dashboard
     volumes:
       - ./backend:/var/www/html
     expose:
@@ -69,6 +75,17 @@ services:
       - "8080:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+  # Mailpit: 開発用 SMTP サーバ + Web UI で送信メールを目視確認できる。
+  # SMTP: 1025 / Web: http://localhost:8025
+  # 招待メール (TODO-3) を含む全メールを captures し、 production には決して接続しない。
+  mailpit:
+    image: axllent/mailpit:v1
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+    expose:
+      - "1025"
 
 volumes:
   postgres_data:
