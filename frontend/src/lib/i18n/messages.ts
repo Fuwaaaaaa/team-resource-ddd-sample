@@ -105,11 +105,6 @@ export const ja = {
     '{email} に招待メールを送信しました。 受信者はメール内のリンクから自分でパスワードを設定します。',
   'admin.users.create.modal.inviteExpiresAt': '有効期限',
   'admin.users.create.modal.inviteUrlLabel': '招待リンク (再共有用 — メールが届かない場合)',
-  // パスワードリセットのフロー (admin が既存 user を reset するモーダル) は引き続き
-  // 16 文字生成パスワードを表示するため、 関連キーは TODO-3 の対象外として残す。
-  'admin.users.create.modal.passwordLabel': '初期パスワード',
-  'admin.users.create.modal.passwordWarning':
-    'このパスワードは再表示されません。忘れた場合はリセット機能で再発行できます。',
   'admin.users.create.modal.copy': 'コピー',
   'admin.users.create.modal.copied': 'コピーしました',
   'admin.users.create.modal.close': '閉じる',
@@ -123,14 +118,18 @@ export const ja = {
   'admin.users.role.modal.success': 'ロールを変更しました',
   'admin.users.reset.modal.title': 'パスワードをリセットしますか?',
   'admin.users.reset.modal.warning': 'この操作で以下が起きます:',
-  'admin.users.reset.modal.warning1': '新しい初期パスワードが生成されます',
-  'admin.users.reset.modal.warning2': 'このユーザーの API トークンが全て無効化されます',
-  'admin.users.reset.modal.warning3': 'このユーザーのログイン中セッションが全てログアウトされます',
+  'admin.users.reset.modal.warning1': '24 時間有効な招待リンクをこのユーザーのメールに送信します',
+  'admin.users.reset.modal.warning2': '受信者はリンクから自分で新しいパスワードを設定します',
+  'admin.users.reset.modal.warning3': '既存のセッションと API トークンは即座に無効化されます',
   'admin.users.reset.modal.selfNotice':
-    'あなた自身のリセットの場合、あなたも自動的にログアウトされ再ログインが必要です。',
-  'admin.users.reset.modal.submit': 'リセットする',
-  'admin.users.reset.modal.submitting': 'リセット中…',
-  'admin.users.reset.relogin.notice': '{seconds} 秒後にログアウトしてログイン画面に移動します。',
+    'あなた自身のリセットの場合、あなたも自動的にログアウトされ、招待メールから再設定が必要になります。',
+  'admin.users.reset.modal.submit': '招待リンクを再送する',
+  'admin.users.reset.modal.submitting': '送信中…',
+  'admin.users.reset.relogin.notice':
+    '{seconds} 秒後にログアウトしてログイン画面に移動します。 メール内の招待リンクから新しいパスワードを設定してください。',
+  'admin.users.reset.success.title': '招待メールを送信しました',
+  'admin.users.reset.success.message':
+    '{email} に招待メールを送信しました。 受信者はメール内のリンクから 24 時間以内に新しいパスワードを設定する必要があります。',
   'admin.users.errors.cannotChangeSelf': '自分自身のロールは変更できません。',
   'admin.users.errors.lastAdminLock': '最後の admin を変更/削除できません。',
   'admin.users.errors.occMismatch': '他者が編集しました。再読み込みしてください。',
@@ -240,9 +239,6 @@ export const en: Record<TranslationKey, string> = {
     'Invite emailed to {email}. The recipient will set their own password from the link.',
   'admin.users.create.modal.inviteExpiresAt': 'Expires',
   'admin.users.create.modal.inviteUrlLabel': 'Invite link (for re-sharing if email does not arrive)',
-  'admin.users.create.modal.passwordLabel': 'Initial password',
-  'admin.users.create.modal.passwordWarning':
-    'This password will not be shown again. If lost, use the reset action to issue a new one.',
   'admin.users.create.modal.copy': 'Copy',
   'admin.users.create.modal.copied': 'Copied',
   'admin.users.create.modal.close': 'Close',
@@ -256,14 +252,18 @@ export const en: Record<TranslationKey, string> = {
   'admin.users.role.modal.success': 'Role updated',
   'admin.users.reset.modal.title': 'Reset password?',
   'admin.users.reset.modal.warning': 'This action will:',
-  'admin.users.reset.modal.warning1': 'Generate a new initial password',
-  'admin.users.reset.modal.warning2': 'Invalidate all of this user\'s API tokens',
-  'admin.users.reset.modal.warning3': 'Sign this user out from all active sessions',
+  'admin.users.reset.modal.warning1': 'Email a fresh invite link (valid 24h) to this user',
+  'admin.users.reset.modal.warning2': 'Let the recipient set their own new password from the link',
+  'admin.users.reset.modal.warning3': 'Immediately invalidate existing sessions and API tokens',
   'admin.users.reset.modal.selfNotice':
-    'If you\'re resetting your own password, you will be logged out and need to sign in again.',
-  'admin.users.reset.modal.submit': 'Reset',
-  'admin.users.reset.modal.submitting': 'Resetting…',
-  'admin.users.reset.relogin.notice': 'Logging out and redirecting to sign-in in {seconds} seconds.',
+    'If you\'re resetting your own password, you will be logged out and must set a new password via the emailed invite link.',
+  'admin.users.reset.modal.submit': 'Send password reset invite',
+  'admin.users.reset.modal.submitting': 'Sending…',
+  'admin.users.reset.relogin.notice':
+    'Logging out and redirecting to sign-in in {seconds} seconds. Set a new password via the invite link in the email.',
+  'admin.users.reset.success.title': 'Invite emailed',
+  'admin.users.reset.success.message':
+    'Invite emailed to {email}. The recipient must set a new password from the link within 24 hours.',
   'admin.users.errors.cannotChangeSelf': 'You cannot change your own role.',
   'admin.users.errors.lastAdminLock': 'Cannot demote the last remaining admin.',
   'admin.users.errors.occMismatch': 'Another user edited this. Please reload and try again.',
