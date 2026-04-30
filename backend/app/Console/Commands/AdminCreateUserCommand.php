@@ -16,16 +16,15 @@ use Illuminate\Support\Facades\Validator;
  *   php artisan admin:create-user --role=admin --email=ops@example.com --name='Ops Lead'
  *   php artisan admin:create-user --role=manager --email=mng@example.com --name='Manager A' --json
  *
- * 16 文字のランダムパスワードを生成し、 stdout に **1 度だけ** 表示する。
- * 再表示はできないため、 operator はその場で記録すること。
+ * 招待リンクが email で送られ、 受信者本人が password を設定する (TODO-3 で導入された
+ * invite フロー)。 CLI でも HTTP と同じ `CreateUserHandler` を呼ぶため、 SMTP が
+ * 設定されていれば mail が飛ぶ。 stdout には参考のため invite URL を再表示する
+ * (mail 配送が未設定の dev / 災害復旧で operator に渡せるよう)。
  *
  * 想定ユースケース:
  *   - 初回デプロイ後の最初の admin (UI 経由は admin がいないと作れない chicken-and-egg)
  *   - 全 admin を失った場合の災害復旧
  *   - staging / dev 環境でのプログラマブルなアカウント生成
- *
- * 実装は {@see CreateUserHandler} を再利用し、 ドメインイベント (UserCreated) と
- * audit_logs への記録は HTTP 経由作成と完全に同じ経路を辿る。
  */
 class AdminCreateUserCommand extends Command
 {
@@ -33,9 +32,9 @@ class AdminCreateUserCommand extends Command
         {--role= : admin / manager / viewer}
         {--email= : ユーザーメールアドレス}
         {--name= : 表示名}
-        {--json : 結果を JSON で出力 (パスワード含む)}';
+        {--json : 結果を JSON で出力 (invite URL 含む)}';
 
-    protected $description = 'CLI から admin / manager / viewer ユーザーを作成する';
+    protected $description = 'CLI から admin / manager / viewer ユーザーを作成し、招待リンクを発行する';
 
     public function handle(CreateUserHandler $handler): int
     {
@@ -80,7 +79,7 @@ class AdminCreateUserCommand extends Command
             return self::SUCCESS;
         }
 
-        $this->info('User created.');
+        $this->info('User created. Invite email sent.');
         $this->table(['Field', 'Value'], [
             ['ID', (string) $result->user->id],
             ['Name', $result->user->name],
@@ -88,10 +87,11 @@ class AdminCreateUserCommand extends Command
             ['Role', $result->user->role],
         ]);
         $this->newLine();
-        $this->warn('Generated password (shown once — record it now):');
-        $this->line('  '.$result->generatedPassword);
+        $this->warn('Invite link (also delivered to '.$result->inviteSentTo.'):');
+        $this->line('  '.$result->inviteUrl);
+        $this->line('  Expires at: '.$result->inviteExpiresAt);
         $this->newLine();
-        $this->comment('User should change this password on first login.');
+        $this->comment('Recipient must visit the link within 24 hours to set their own password.');
 
         return self::SUCCESS;
     }
