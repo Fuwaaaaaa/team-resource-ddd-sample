@@ -72,3 +72,29 @@ export function useResetUserPassword() {
     },
   });
 }
+
+export function useDisableUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number): Promise<{ user: AdminUserDto }> =>
+      await apiFetch<{ user: AdminUserDto }>(`/api/admin/users/${id}/disable`, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: adminUserKeys.all });
+    },
+  });
+}
+
+export function useEnableUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number): Promise<{ user: AdminUserDto }> =>
+      await apiFetch<{ user: AdminUserDto }>(`/api/admin/users/${id}/enable`, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: adminUserKeys.all });
+    },
+  });
+}

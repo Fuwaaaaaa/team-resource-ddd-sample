@@ -8,7 +8,7 @@ import { UserCreateModal } from '@/components/molecules/UserCreateModal';
 import { UserRoleChangeModal } from '@/components/molecules/UserRoleChangeModal';
 import { UserResetPasswordConfirm } from '@/components/molecules/UserResetPasswordConfirm';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { useAdminUsers } from '@/features/admin/users/api';
+import { useAdminUsers, useDisableUser, useEnableUser } from '@/features/admin/users/api';
 import { useMe, usePermissions } from '@/features/auth/api';
 import type { AdminUserDto } from '@/features/admin/users/types';
 
@@ -37,6 +37,8 @@ export default function AdminUsersPage() {
   const [resetTarget, setResetTarget] = useState<AdminUserDto | null>(null);
 
   const users = useAdminUsers({ search: search || undefined, perPage: 50 });
+  const disable = useDisableUser();
+  const enable = useEnableUser();
 
   // Auth gate (UI side; server also enforces 403 via role:admin middleware)
   if (me.isLoading) {
@@ -163,36 +165,75 @@ export default function AdminUsersPage() {
                   </td>
                 </tr>
               )}
-              {users.data?.data.map((u) => (
-                <tr key={u.id} className="border-t border-border hover:bg-surface-muted">
-                  <td className="px-4 py-2 text-fg whitespace-nowrap">{u.name}</td>
-                  <td className="px-4 py-2 text-fg-muted whitespace-nowrap">{u.email}</td>
-                  <td className="px-4 py-2">
-                    <RoleBadge role={u.role} />
-                  </td>
-                  <td className="px-4 py-2 text-xs text-fg-muted whitespace-nowrap" title={u.createdAt}>
-                    {formatRelative(u.createdAt, 'ja')}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditTarget(u)}
-                        className="px-3 py-1 text-xs rounded-md bg-surface-muted text-fg hover:bg-border min-h-[40px]"
-                      >
-                        {t('admin.users.actions.edit')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setResetTarget(u)}
-                        className="px-3 py-1 text-xs rounded-md bg-surface-muted text-fg hover:bg-border min-h-[40px]"
-                      >
-                        {t('admin.users.actions.reset')}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {users.data?.data.map((u) => {
+                const isSelf = u.id === me.data?.id;
+                const isDisabled = u.disabledAt !== null;
+                return (
+                  <tr
+                    key={u.id}
+                    className={`border-t border-border hover:bg-surface-muted ${isDisabled ? 'opacity-60' : ''}`}
+                  >
+                    <td className="px-4 py-2 text-fg whitespace-nowrap">
+                      {u.name}
+                      {isDisabled && (
+                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-warning/10 text-warning">
+                          disabled
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 text-fg-muted whitespace-nowrap">{u.email}</td>
+                    <td className="px-4 py-2">
+                      <RoleBadge role={u.role} />
+                    </td>
+                    <td className="px-4 py-2 text-xs text-fg-muted whitespace-nowrap" title={u.createdAt}>
+                      {formatRelative(u.createdAt, 'ja')}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditTarget(u)}
+                          className="px-3 py-1 text-xs rounded-md bg-surface-muted text-fg hover:bg-border min-h-[40px]"
+                        >
+                          {t('admin.users.actions.edit')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setResetTarget(u)}
+                          className="px-3 py-1 text-xs rounded-md bg-surface-muted text-fg hover:bg-border min-h-[40px]"
+                        >
+                          {t('admin.users.actions.reset')}
+                        </button>
+                        {isDisabled ? (
+                          <button
+                            type="button"
+                            onClick={() => enable.mutate(u.id)}
+                            disabled={enable.isPending}
+                            className="px-3 py-1 text-xs rounded-md bg-success/10 text-success hover:bg-success/20 min-h-[40px] disabled:opacity-50"
+                            title={t('admin.users.actions.enable')}
+                          >
+                            {t('admin.users.actions.enable')}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(t('admin.users.actions.disableConfirm').replace('{name}', u.name))) {
+                                disable.mutate(u.id);
+                              }
+                            }}
+                            disabled={disable.isPending || isSelf}
+                            title={isSelf ? t('admin.users.actions.disableSelfNotice') : t('admin.users.actions.disable')}
+                            className="px-3 py-1 text-xs rounded-md bg-surface-muted text-danger hover:bg-danger-bg min-h-[40px] disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {t('admin.users.actions.disable')}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
