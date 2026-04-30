@@ -8,7 +8,7 @@ use App\Application\Admin\DTOs\CreatedUserDto;
 use App\Application\Admin\DTOs\UserDto;
 use App\Application\Admin\Exceptions\EmailTakenException;
 use App\Domain\Authorization\Events\UserCreated;
-use App\Enums\UserRole;
+use App\Domain\Authorization\UserRole;
 use App\Infrastructure\Events\DomainEventDispatcher;
 use App\Models\User;
 use Illuminate\Database\QueryException;

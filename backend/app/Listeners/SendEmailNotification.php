@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners;
 
-use App\Enums\UserRole;
+use App\Domain\Authorization\UserRole;
 use App\Mail\NotificationMail;
 use App\Models\User;
 use App\Notifications\NotificationContentBuilder;

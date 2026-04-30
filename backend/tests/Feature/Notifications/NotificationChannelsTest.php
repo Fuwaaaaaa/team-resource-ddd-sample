@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Notifications;
 
-use App\Enums\UserRole;
+use App\Domain\Authorization\UserRole;
 use App\Infrastructure\Persistence\Eloquent\Models\MemberModel;
 use App\Infrastructure\Persistence\Eloquent\Models\ProjectModel;
 use App\Infrastructure\Persistence\Eloquent\Models\SkillModel;

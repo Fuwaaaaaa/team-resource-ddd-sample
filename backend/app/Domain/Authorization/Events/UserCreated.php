@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Authorization\Events;
 
-use App\Enums\UserRole;
+use App\Domain\Authorization\UserRole;
 
 /**
  * Authorization bounded context.
