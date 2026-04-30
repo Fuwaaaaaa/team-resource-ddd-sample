@@ -80,7 +80,7 @@ services:
   # SMTP: 1025 / Web: http://localhost:8025
   # 招待メール (TODO-3) を含む全メールを captures し、 production には決して接続しない。
   mailpit:
-    image: axllent/mailpit:v1
+    image: axllent/mailpit:latest
     restart: unless-stopped
     ports:
       - "8025:8025"
