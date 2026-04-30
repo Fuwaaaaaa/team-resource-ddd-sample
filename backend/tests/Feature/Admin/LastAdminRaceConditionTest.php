@@ -9,6 +9,7 @@ use App\Application\Admin\Commands\DisableUserHandler;
 use App\Application\Admin\Exceptions\LastAdminLockException;
 use App\Models\AuditLog;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -71,6 +72,13 @@ final class LastAdminRaceConditionTest extends TestCase
     {
         if ($this->app !== null) {
             $this->cleanupTestData();
+
+            // 後続の RefreshDatabase テスト (UserDisableTest 等) が race test の
+            // 直 commit データを掴まないよう、 全テーブルを wipe する。
+            // RefreshDatabaseState::$migrated を unset することで、 後続テストが
+            // \"初めての RefreshDatabase 適用\" として migrate:fresh を再実行する。
+            Artisan::call('migrate:fresh', ['--force' => true]);
+            \Illuminate\Foundation\Testing\RefreshDatabaseState::$migrated = false;
         }
         parent::tearDown();
     }
