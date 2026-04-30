@@ -22,11 +22,14 @@ class User extends Authenticatable
         'password',
         'role',
         'disabled_at',
+        'invite_token',
+        'invite_token_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'invite_token',
     ];
 
     protected function casts(): array
@@ -34,6 +37,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'disabled_at' => 'datetime',
+            'invite_token_expires_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
         ];
