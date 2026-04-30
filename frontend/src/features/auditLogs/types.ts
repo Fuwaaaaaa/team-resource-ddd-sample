@@ -4,14 +4,25 @@ export interface AuditLogUserSummary {
   email: string;
 }
 
+export type AuditLogAggregateType =
+  | 'allocation'
+  | 'member'
+  | 'project'
+  | 'user'
+  | 'absence'
+  | 'allocation_change_request';
+
 export interface AuditLogDto {
   id: string;
   user_id: number | null;
   user?: AuditLogUserSummary | null;
   event_type: string;
-  aggregate_type: 'allocation' | 'member' | 'project';
+  aggregate_type: AuditLogAggregateType;
   aggregate_id: string;
+  aggregate_label: string | null;
   payload: Record<string, unknown>;
+  ip_address: string | null;
+  user_agent: string | null;
   created_at: string;
 }
 
@@ -26,8 +37,11 @@ export interface AuditLogListResponse {
 }
 
 export interface AuditLogFilters {
-  aggregateType?: 'allocation' | 'member' | 'project';
+  aggregateType?: AuditLogAggregateType;
   aggregateId?: string;
   eventType?: string;
+  from?: string; // ISO date (YYYY-MM-DD)
+  to?: string;
+  userId?: number;
   perPage?: number;
 }
