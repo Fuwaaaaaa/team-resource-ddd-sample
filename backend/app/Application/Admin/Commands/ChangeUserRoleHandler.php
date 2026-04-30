@@ -9,7 +9,7 @@ use App\Application\Admin\Exceptions\CannotChangeOwnRoleException;
 use App\Application\Admin\Exceptions\LastAdminLockException;
 use App\Application\Admin\Exceptions\OccConflictException;
 use App\Domain\Authorization\Events\UserRoleChanged;
-use App\Enums\UserRole;
+use App\Domain\Authorization\UserRole;
 use App\Infrastructure\Events\DomainEventDispatcher;
 use App\Models\User;
 use DateTimeImmutable;

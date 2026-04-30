@@ -10,7 +10,7 @@ use App\Application\AllocationChangeRequest\Commands\SubmitAllocationChangeReque
 use App\Application\AllocationChangeRequest\Commands\SubmitAllocationChangeRequestHandler;
 use App\Application\AllocationChangeRequest\Queries\ListAllocationChangeRequestsHandler;
 use App\Application\AllocationChangeRequest\Queries\ListAllocationChangeRequestsQuery;
-use App\Enums\UserRole;
+use App\Domain\Authorization\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AllocationChangeRequest\DecideChangeRequest;
 use App\Http\Requests\AllocationChangeRequest\SubmitChangeRequest;

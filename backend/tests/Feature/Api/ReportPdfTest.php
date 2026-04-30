@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
-use App\Enums\UserRole;
+use App\Domain\Authorization\UserRole;
 use App\Infrastructure\Persistence\Eloquent\Models\AllocationModel;
 use App\Infrastructure\Persistence\Eloquent\Models\MemberModel;
 use App\Infrastructure\Persistence\Eloquent\Models\MemberSkillModel;

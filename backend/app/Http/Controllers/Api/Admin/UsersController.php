@@ -11,7 +11,7 @@ use App\Application\Admin\Commands\CreateUserHandler;
 use App\Application\Admin\Commands\ResetUserPasswordCommand;
 use App\Application\Admin\Commands\ResetUserPasswordHandler;
 use App\Application\Admin\DTOs\UserDto;
-use App\Enums\UserRole;
+use App\Domain\Authorization\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;

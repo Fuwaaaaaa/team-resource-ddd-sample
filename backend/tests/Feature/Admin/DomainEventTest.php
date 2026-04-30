@@ -7,7 +7,7 @@ namespace Tests\Feature\Admin;
 use App\Domain\Authorization\Events\UserCreated;
 use App\Domain\Authorization\Events\UserPasswordReset;
 use App\Domain\Authorization\Events\UserRoleChanged;
-use App\Enums\UserRole;
+use App\Domain\Authorization\UserRole;
 use App\EventStore\EventDescriptorResolver;
 use ReflectionClass;
 use Tests\TestCase;
