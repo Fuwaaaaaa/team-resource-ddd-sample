@@ -6,6 +6,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -17,6 +18,7 @@ final class SmokeTest extends TestCase
 
     public function test_admin_endpoints_smoke(): void
     {
+        Mail::fake();
         $admin = User::factory()->create(['role' => 'admin']);
         $other = User::factory()->create(['role' => 'admin']);
         $target = User::factory()->create(['role' => 'manager']);

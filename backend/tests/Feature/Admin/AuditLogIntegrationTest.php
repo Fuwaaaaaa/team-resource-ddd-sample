@@ -7,6 +7,7 @@ namespace Tests\Feature\Admin;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -25,6 +26,7 @@ final class AuditLogIntegrationTest extends TestCase
 
     public function test_audit_logs_appear_after_user_create_and_role_change(): void
     {
+        Mail::fake();
         $admin = User::factory()->create(['role' => 'admin']);
         User::factory()->create(['role' => 'admin']); // ensure non-last admin
 
@@ -60,6 +62,7 @@ final class AuditLogIntegrationTest extends TestCase
 
     public function test_request_metadata_captured_on_create(): void
     {
+        Mail::fake();
         $admin = User::factory()->create(['role' => 'admin']);
         User::factory()->create(['role' => 'admin']); // last-admin guard
 
