@@ -21,14 +21,16 @@ use App\Domain\Project\Events\ProjectActivated;
 use App\Domain\Project\Events\ProjectCanceled;
 use App\Domain\Project\Events\ProjectCompleted;
 use App\Domain\Project\Events\ProjectRequirementChanged;
+use App\Listeners\PersistDomainEvent;
+use App\Listeners\RecordAuditLog;
 
 /**
  * すべてのドメインイベントを {@see EventDescriptor} (streamType / streamId / eventType / eventData)
  * に変換する単一のスキーマ表。
  *
  * 利用経路:
- *   - {@see EventDescriptorResolver}（→ {@see \App\Listeners\PersistDomainEvent} 経由で domain_events ストアに append）
- *   - {@see \App\Listeners\RecordAuditLog}（audit_logs テーブルに記録。フィールド名を
+ *   - {@see EventDescriptorResolver}（→ {@see PersistDomainEvent} 経由で domain_events ストアに append）
+ *   - {@see RecordAuditLog}（audit_logs テーブルに記録。フィールド名を
  *     aggregate_type / aggregate_id / event_type / payload にマップする）
  *
  * 新しいドメインイベントを追加するときは、ここに 1 ケースを足すだけで両経路の記録が揃う。
