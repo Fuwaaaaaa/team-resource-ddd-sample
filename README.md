@@ -426,3 +426,20 @@ npm run dev
 ```
 
 You will need to change `NEXT_PUBLIC_API_BASE_URL` to something like `http://localhost:8000` (note that this becomes a different origin, so additional configuration is required to handle Sanctum session cookies correctly). The recommended setup is the same-origin Docker Compose approach.
+
+### End-to-End tests (Playwright)
+
+Critical-path browser tests live under `frontend/e2e/`. They run against the full Docker Compose stack on `http://localhost:8080`.
+
+```bash
+# Boot the stack first (in a separate terminal)
+docker compose up
+
+# Then, in frontend/, run the E2E suite
+cd frontend
+npm run e2e:install   # one-time: install the Chromium browser bundle
+npm run e2e           # run all specs
+npm run e2e:ui        # interactive Playwright UI
+```
+
+Spec files cover login (success / failure / unauthenticated redirect), RBAC (viewer cannot reach `/admin/users`, admin can), and the dashboard heatmap loading. See [`frontend/playwright.config.ts`](./frontend/playwright.config.ts). CI runs the same suite via the `E2E (Playwright)` job and uploads HTML reports on failure.
