@@ -1,0 +1,109 @@
+# Prometheus AlertManager rules for Team Resource Dashboard
+#
+# These rules read counters exposed by GET /api/metrics (see backend
+# MetricsController). Apply via Prometheus's `rule_files:` directive in
+# prometheus.yml. Example scrape config: see prometheus.yml.example
+# in this directory.
+#
+# Conventions:
+#   - severity:
+#       page    — wake someone up (auth-related security signals)
+#       warn    — review next business day (operator UX issues)
+#   - team:
+#       sec     — security team handles
+#       ops     — operations / on-call handles
+#
+# All thresholds here are starting points; tune as the user base grows.
+
+groups:
+  - name: team-resource-dashboard.admin-user
+    interval: 30s
+    rules:
+      # ── Last-admin guard hits ────────────────────────────────────────
+      # The last-admin guard is the project's safety net against bricking
+      # the system by removing or demoting the only admin. It firing
+      # repeatedly is either:
+      #   - operator confusion (UI led them to try a forbidden op), or
+      #   - a deliberate probe at the auth boundary.
+      # Either way it deserves a fast human look. Page on >= 3 hits in
+      # 5 minutes; that is far above benign single misclicks while still
+      # catching coordinated probing.
+      - alert: LastAdminLockBurst
+        expr: increase(admin_user_last_admin_lock_total[5m]) >= 3
+        for: 0m
+        labels:
+          severity: page
+          team: sec
+        annotations:
+          summary: "Last-admin guard fired {{ $value }} times in 5m"
+          description: |
+            The last-admin lock kicked in repeatedly. Possible causes:
+              - Operator UI confusion: surface the guard message earlier or
+                disable the destructive action when it would brick the system.
+              - Probe / attack: someone is iterating on admin role-change /
+                delete attempts. Inspect audit_logs for the actor.
+            See: backend/app/Application/Admin/Exceptions/LastAdminLockException.php
+          runbook: |
+            1. Open audit_logs for the last 5 minutes:
+                 SELECT * FROM audit_logs
+                  WHERE created_at >= now() - interval '5 minutes'
+                    AND aggregate_type = 'user'
+                  ORDER BY created_at DESC;
+            2. Identify the actor (user_id) — repeated entries for the same
+               user_id indicates UI confusion; varying user_ids suggests a
+               compromised admin / attack.
+            3. If actor is unknown / unexpected, force-revoke their session
+               via php artisan admin:reset-password or revoke their tokens
+               directly.
+
+      # ── Cannot-change-own-role anomaly ───────────────────────────────
+      # A handful of these per week are expected (admin clicked their own
+      # row by mistake). A burst suggests a UI regression — the row that
+      # should be disabled is no longer disabled.
+      - alert: CannotChangeOwnRoleBurst
+        expr: increase(admin_user_cannot_change_own_role_total[15m]) >= 5
+        for: 0m
+        labels:
+          severity: warn
+          team: ops
+        annotations:
+          summary: "self-role-change rejection burst ({{ $value }} in 15m)"
+          description: |
+            Admins are repeatedly trying to change their own role. The UI
+            should disable that operation; if this fires the disable check
+            in the frontend (UserRoleChangeModal) likely regressed.
+
+      # ── Email-taken brute force ──────────────────────────────────────
+      # Repeated email-taken rejects from the same admin session is fine
+      # (typo correction). Many of them in a short window across the API
+      # suggests credential-stuffing-style email enumeration through the
+      # admin create endpoint.
+      - alert: EmailTakenBurst
+        expr: increase(admin_user_email_taken_total[5m]) >= 10
+        for: 0m
+        labels:
+          severity: warn
+          team: sec
+        annotations:
+          summary: "email-taken denials >= 10 in 5m ({{ $value }})"
+          description: |
+            High volume of "email already in use" rejects on
+            POST /api/admin/users. Could be a compromised admin probing for
+            valid emails. Check audit_logs for the actor's recent activity.
+
+      # ── /api/metrics scrape down ────────────────────────────────────
+      # If Prometheus cannot scrape the app at all, none of the above
+      # alerts can fire — guard against silence.
+      - alert: AdminMetricsScrapeDown
+        expr: up{job="team-resource-dashboard"} == 0
+        for: 5m
+        labels:
+          severity: page
+          team: ops
+        annotations:
+          summary: "Cannot scrape /api/metrics for 5+ minutes"
+          description: |
+            Either the app is down, the METRICS_TOKEN is rotated and the
+            scrape config no longer matches, or there's a network split
+            between Prometheus and the app. While this fires, all the
+            admin-user alerts above are inert.

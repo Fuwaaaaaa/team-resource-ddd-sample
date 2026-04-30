@@ -445,3 +445,20 @@ npm run e2e:ui        # interactive Playwright UI
 ```
 
 Spec files cover login (success / failure / unauthenticated redirect), RBAC (viewer cannot reach `/admin/users`, admin can), and the dashboard heatmap loading. See [`frontend/playwright.config.ts`](./frontend/playwright.config.ts). CI runs the same suite via the `E2E (Playwright)` job and uploads HTML reports on failure.
+
+### Monitoring (Prometheus / Datadog)
+
+The backend exposes `GET /api/metrics` in Prometheus / OpenMetrics text format. Counters cover happy-path admin user operations (sourced from `audit_logs`) and denial events (sourced from a Cache-backed counter populated by the exception render path):
+
+```
+admin_user_created_total
+admin_user_role_changed_total
+admin_user_password_reset_total
+admin_user_email_taken_total
+admin_user_last_admin_lock_total
+admin_user_cannot_change_own_role_total
+```
+
+Authorization is via `Authorization: Bearer ${METRICS_TOKEN}`. With `METRICS_TOKEN` unset (default), the route returns 404 — no information about its existence is leaked.
+
+Ready-to-run scrape config + 4 AlertManager rules (last-admin-lock burst, role-change-self UI regression, email-taken probe, scrape-down) live under [`infra/prometheus/`](./infra/prometheus/). See [`infra/prometheus/README.md`](./infra/prometheus/README.md) for the local quickstart and Datadog alternative.
