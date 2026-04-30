@@ -33,7 +33,9 @@ export interface CreateUserInput {
 
 export interface CreatedUserResponse {
   user: AdminUserDto;
-  generatedPassword: string;
+  inviteSentTo: string;
+  inviteExpiresAt: string; // ISO 8601
+  inviteUrl: string;
 }
 
 export interface ChangeUserRoleInput {

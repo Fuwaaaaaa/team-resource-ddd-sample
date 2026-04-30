@@ -10,6 +10,7 @@ export function middleware(request: NextRequest) {
 
   if (
     pathname.startsWith('/login') ||
+    pathname.startsWith('/invite/') || // 招待リンクは未認証でアクセスする
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname === '/favicon.ico'
