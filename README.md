@@ -199,6 +199,8 @@ HTTP Request
 
 ## Frontend Design
 
+> **Design system reference:** [DESIGN.md](./DESIGN.md) is the authoritative source for the token system (colors, typography, spacing, border-radius), iconography (text-only Unicode marks), Atomic Design organization, and migration status of legacy palette classes. Keep new components consistent with what is documented there.
+
 ### Server / Client Component Split
 
 In Next.js App Router, rather than marking everything `'use client'`, we split Server and Client Components appropriately.
