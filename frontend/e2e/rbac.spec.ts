@@ -18,7 +18,8 @@ test.describe('RBAC enforcement', () => {
     await loginAs(page, 'admin');
     await page.goto('/admin/users');
 
-    // シードされた 3 ユーザーのうち少なくとも 1 件が見える
-    await expect(page.getByText(/admin@example\.com/)).toBeVisible();
+    // admin@example.com は AppHeader (ログイン中ユーザー) と user table 行の
+    // 両方に表示されるため、 table 内に絞り込んで判定する (strict mode 違反回避)。
+    await expect(page.locator('table').getByText(/admin@example\.com/).first()).toBeVisible();
   });
 });
