@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\SkillController;
 use App\Http\Controllers\Api\TimelineController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\MeController;
+use App\Http\Controllers\MetricsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,6 +33,10 @@ use Illuminate\Support\Facades\Route;
  */
 
 Route::post('/login', [LoginController::class, 'store']);
+
+// Prometheus / OpenMetrics scrape 用 (sanctum 認証の外)。
+// Authorization: Bearer <METRICS_TOKEN> が一致したときのみ 200、 それ以外は 404。
+Route::get('/metrics', [MetricsController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/logout', [LoginController::class, 'destroy']);
