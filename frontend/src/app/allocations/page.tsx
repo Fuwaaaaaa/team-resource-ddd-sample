@@ -8,7 +8,11 @@ import {
   useRevokeAllocation,
   useSimulateAllocation,
 } from '@/features/allocations/api';
-import { useAllocationSuggestions } from '@/features/allocations/suggestions';
+import {
+  useAllocationSuggestions,
+  type AllocationCandidateScoreBreakdown,
+  type AllocationSuggestionsHint,
+} from '@/features/allocations/suggestions';
 import { useMembers } from '@/features/members/api';
 import { useProjects } from '@/features/projects/api';
 import { useSkills } from '@/features/skills/api';
@@ -226,7 +230,7 @@ export default function AllocationsPage() {
           <div className="p-4 bg-white rounded-lg border-2 border-purple-200 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-purple-800">
-                Assignment candidates (top {suggestions.data?.length ?? 0})
+                Assignment candidates (top {suggestions.data?.data.length ?? 0})
               </h2>
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <label>Min proficiency:</label>
@@ -251,37 +255,67 @@ export default function AllocationsPage() {
             {suggestions.isLoading && (
               <p className="text-xs text-gray-500">Loading candidates…</p>
             )}
-            {suggestions.data && suggestions.data.length === 0 && (
-              <p className="text-xs text-gray-500">
-                該当する候補がいません。条件を緩めてみてください。
-              </p>
+            {suggestions.data && suggestions.data.data.length === 0 && (
+              <SuggestionsEmptyHint hint={suggestions.data.hint} minProficiency={minProficiency} />
             )}
             <ul className="space-y-2">
-              {suggestions.data?.map((c) => (
+              {suggestions.data?.data.map((c) => (
                 <li
                   key={c.memberId}
-                  className="flex items-center justify-between gap-3 p-3 border border-gray-200 rounded-md hover:bg-purple-50"
+                  className="p-3 border border-gray-200 rounded-md hover:bg-purple-50 space-y-2"
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-gray-900">
-                      {c.memberName}
-                      <span className="ml-2 text-xs text-gray-500 font-normal">
-                        score {c.score.toFixed(0)}
-                      </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-gray-900 flex items-center gap-2 flex-wrap">
+                        <span>{c.memberName}</span>
+                        <span className="text-xs text-gray-500 font-normal">
+                          score {c.score.toFixed(0)}
+                        </span>
+                        {c.nextWeekConflict && (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded bg-orange-100 text-orange-800"
+                            title="翌週時点で他案件の合計が 100% 以上のため、この期間に新規 allocation を載せると過負荷になります。"
+                          >
+                            ⚠ 翌週負荷 100%
+                          </span>
+                        )}
+                      </div>
+                      <ScoreBreakdownBar breakdown={c.scoreBreakdown} total={c.score} />
+                      <div className="text-xs text-gray-600 mt-1">
+                        {c.reasons.join(' · ')}
+                      </div>
+                      {c.recentAssignments.length > 0 && (
+                        <details className="mt-2">
+                          <summary className="text-[11px] text-gray-500 cursor-pointer hover:text-gray-700">
+                            直近 90 日 同スキル履歴 ({c.recentAssignments.length})
+                          </summary>
+                          <ul className="mt-1 ml-3 space-y-0.5">
+                            {c.recentAssignments.map((a) => (
+                              <li
+                                key={`${a.projectId}-${a.periodStart}`}
+                                className="text-[11px] text-gray-600"
+                              >
+                                <span className="font-medium">{a.projectName}</span>
+                                <span className="text-gray-400">
+                                  {' · '}{a.allocationPercentage}% · {a.periodStart} → {a.periodEnd}
+                                  {a.status === 'revoked' ? ' (revoked)' : ''}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
                     </div>
-                    <div className="text-xs text-gray-600 mt-0.5">
-                      {c.reasons.join(' · ')}
-                    </div>
+                    <button
+                      onClick={() => {
+                        setMemberId(c.memberId);
+                        setShowSuggestions(false);
+                      }}
+                      className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded hover:bg-purple-200 shrink-0"
+                    >
+                      Pick
+                    </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      setMemberId(c.memberId);
-                      setShowSuggestions(false);
-                    }}
-                    className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded hover:bg-purple-200"
-                  >
-                    Pick
-                  </button>
                 </li>
               ))}
             </ul>
@@ -412,4 +446,58 @@ function Stat({
       <div className={`text-xl font-bold tabular-nums ${colors[accent]}`}>{value}</div>
     </div>
   );
+}
+
+function ScoreBreakdownBar({
+  breakdown,
+  total,
+}: {
+  breakdown: AllocationCandidateScoreBreakdown;
+  total: number;
+}) {
+  const safeTotal = total > 0 ? total : 1;
+  const segments: Array<{ label: string; value: number; className: string }> = [
+    { label: '空きキャパ', value: breakdown.capacity, className: 'bg-blue-500' },
+    { label: '熟練度余裕', value: breakdown.proficiency, className: 'bg-purple-500' },
+    { label: '同案件経験', value: breakdown.experience, className: 'bg-green-500' },
+  ];
+
+  return (
+    <div className="mt-1.5">
+      <div
+        className="flex h-1.5 w-full rounded overflow-hidden bg-gray-100"
+        role="img"
+        aria-label={`Score breakdown: capacity ${breakdown.capacity}, proficiency ${breakdown.proficiency}, experience ${breakdown.experience}`}
+      >
+        {segments.map((s) =>
+          s.value > 0 ? (
+            <div
+              key={s.label}
+              className={s.className}
+              style={{ width: `${(s.value / safeTotal) * 100}%` }}
+              title={`${s.label}: ${s.value.toFixed(0)}`}
+            />
+          ) : null,
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SuggestionsEmptyHint({
+  hint,
+  minProficiency,
+}: {
+  hint: AllocationSuggestionsHint | null;
+  minProficiency: number;
+}) {
+  let message = '該当する候補がいません。条件を緩めてみてください。';
+  if (hint === 'min_proficiency_too_high') {
+    message = `最低熟練度を下げると候補が出ます。現在 ≥ ${minProficiency}。`;
+  } else if (hint === 'all_members_at_capacity') {
+    message = '該当スキル保持者は全員 periodStart 時点で 100% 稼働中です。期間をずらすか、リソース調整を検討してください。';
+  } else if (hint === 'no_members_with_skill') {
+    message = 'このスキルを持つメンバーが登録されていません。スキル登録を確認してください。';
+  }
+  return <p className="text-xs text-gray-500">{message}</p>;
 }
