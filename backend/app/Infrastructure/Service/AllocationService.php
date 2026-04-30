@@ -300,6 +300,9 @@ final class AllocationService implements AllocationServiceInterface
         int $limit = 5
     ): array {
         $candidates = [];
+        // periodStart の翌週時点で他案件の合計負荷が 100% を超えていれば
+        // その候補は残しつつも nextWeekConflict = true を立てて UI で警告する
+        $nextWeekDate = $periodStart->modify('+7 days');
 
         foreach ($members as $member) {
             $proficiency = $member->proficiencyFor($skillId);
@@ -307,15 +310,21 @@ final class AllocationService implements AllocationServiceInterface
                 continue; // 熟練度不足は候補外
             }
 
-            // period 開始日の余剰キャパ
+            // period 開始日 / 翌週時点の余剰キャパと過去同プロジェクト経験を 1 ループで集計
             $used = 0;
+            $usedNextWeek = 0;
             $pastOnProject = 0;
             foreach ($allocations as $alloc) {
                 if (! $alloc->memberId()->equals($member->id())) {
                     continue;
                 }
-                if ($alloc->isActive() && $alloc->coversDate($periodStart)) {
-                    $used += $alloc->percentage()->value();
+                if ($alloc->isActive()) {
+                    if ($alloc->coversDate($periodStart)) {
+                        $used += $alloc->percentage()->value();
+                    }
+                    if ($alloc->coversDate($nextWeekDate)) {
+                        $usedNextWeek += $alloc->percentage()->value();
+                    }
                 }
                 // revoked 含め同プロジェクト経験歴を数える
                 if ($alloc->projectId()->equals($projectId)) {
@@ -327,16 +336,21 @@ final class AllocationService implements AllocationServiceInterface
                 continue; // キャパ 0 は候補外
             }
 
-            // スコア: 余剰キャパ (0-100) + 熟練度余裕 × 10 + 経験歴 × 5
-            $proficiencyBonus = ($proficiency->level() - $minimumProficiency) * 10;
-            $experienceBonus = min($pastOnProject, 3) * 5; // 過剰経験には逓減
-            $score = (float) $available + $proficiencyBonus + $experienceBonus;
+            // スコア内訳: capacity (0-100) + proficiency 余裕 × 10 + 経験歴 × 5
+            $capacityScore = (float) $available;
+            $proficiencyScore = (float) (($proficiency->level() - $minimumProficiency) * 10);
+            $experienceScore = (float) (min($pastOnProject, 3) * 5); // 過剰経験には逓減
+            $score = $capacityScore + $proficiencyScore + $experienceScore;
+            $nextWeekConflict = $usedNextWeek >= 100;
 
             $reasons = [];
             $reasons[] = sprintf('熟練度 L%d (要求 L%d)', $proficiency->level(), $minimumProficiency);
             $reasons[] = sprintf('空きキャパ %d%%', $available);
             if ($pastOnProject > 0) {
                 $reasons[] = sprintf('同プロジェクト経験 %d 件', $pastOnProject);
+            }
+            if ($nextWeekConflict) {
+                $reasons[] = '⚠️ 翌週負荷 100% 以上';
             }
 
             $candidates[] = new AllocationCandidate(
@@ -346,6 +360,10 @@ final class AllocationService implements AllocationServiceInterface
                 availablePercentage: $available,
                 pastProjectExperienceCount: $pastOnProject,
                 score: $score,
+                capacityScore: $capacityScore,
+                proficiencyScore: $proficiencyScore,
+                experienceScore: $experienceScore,
+                nextWeekConflict: $nextWeekConflict,
                 reasons: $reasons,
             );
         }

@@ -152,4 +152,72 @@ final class AllocationServiceSuggestionsTest extends TestCase
 
         $this->assertCount(3, $result);
     }
+
+    public function test_score_breakdown_components_sum_to_total_score(): void
+    {
+        $m1 = $this->makeMember('m1');
+        $this->addSkillToMember($m1, 'php', 4); // proficiency bonus 10
+        $allocations = [
+            $this->makeAllocation('m1', 'other', 'php', 30), // capacity 70
+            $this->makeRevokedAllocation('m1', 'p1', 'php', 50), // experience 1
+        ];
+
+        $result = $this->service->suggestCandidates(
+            new SkillId('php'),
+            3,
+            new ProjectId('p1'),
+            $this->referenceDate(),
+            [$m1],
+            $allocations,
+        );
+
+        $this->assertCount(1, $result);
+        $c = $result[0];
+        $this->assertSame(70.0, $c->capacityScore());
+        $this->assertSame(10.0, $c->proficiencyScore());
+        $this->assertSame(5.0, $c->experienceScore()); // 1 * 5
+        $this->assertEqualsWithDelta($c->capacityScore() + $c->proficiencyScore() + $c->experienceScore(), $c->score(), 0.0001);
+    }
+
+    public function test_next_week_conflict_flagged_when_load_saturates_after_period_start(): void
+    {
+        $m1 = $this->makeMember('m1');
+        $this->addSkillToMember($m1, 'php', 3);
+
+        // periodStart = 2025-06-15 当日は空きあり (他案件のカバー外)、
+        // periodStart + 7 days = 2025-06-22 時点で他案件が 100% を占めるシナリオ。
+        $allocations = [
+            $this->makeAllocation('m1', 'other', 'php', 100, '2025-06-20', '2025-12-31'),
+        ];
+
+        $result = $this->service->suggestCandidates(
+            new SkillId('php'),
+            3,
+            new ProjectId('p1'),
+            $this->referenceDate(), // 2025-06-15 — periodStart 当日 100% 空き
+            [$m1],
+            $allocations,
+        );
+
+        $this->assertCount(1, $result);
+        $this->assertTrue($result[0]->hasNextWeekConflict());
+    }
+
+    public function test_next_week_conflict_false_when_next_week_has_free_capacity(): void
+    {
+        $m1 = $this->makeMember('m1');
+        $this->addSkillToMember($m1, 'php', 3);
+
+        $result = $this->service->suggestCandidates(
+            new SkillId('php'),
+            3,
+            new ProjectId('p1'),
+            $this->referenceDate(),
+            [$m1],
+            [],
+        );
+
+        $this->assertCount(1, $result);
+        $this->assertFalse($result[0]->hasNextWeekConflict());
+    }
 }
