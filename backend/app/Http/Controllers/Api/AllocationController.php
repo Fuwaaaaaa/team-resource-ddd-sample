@@ -65,7 +65,7 @@ class AllocationController extends Controller
             'limit' => 'nullable|integer|min:1|max:20',
         ]);
 
-        $candidates = $handler->handle(new SuggestAllocationCandidatesQuery(
+        $result = $handler->handle(new SuggestAllocationCandidatesQuery(
             projectId: (string) $request->query('projectId'),
             skillId: (string) $request->query('skillId'),
             minimumProficiency: (int) $request->query('minimumProficiency'),
@@ -74,7 +74,8 @@ class AllocationController extends Controller
         ));
 
         return response()->json([
-            'data' => array_map(fn ($c) => $c->toArray(), $candidates),
+            'data' => array_map(fn ($c) => $c->toArray(), $result->candidates),
+            'hint' => $result->hint,
         ]);
     }
 

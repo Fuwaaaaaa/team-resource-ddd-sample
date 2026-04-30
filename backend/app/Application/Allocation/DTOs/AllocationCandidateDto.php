@@ -8,7 +8,10 @@ use App\Domain\Service\AllocationCandidate;
 
 final class AllocationCandidateDto
 {
-    /** @param string[] $reasons */
+    /**
+     * @param  string[]  $reasons
+     * @param  RecentAssignmentDto[]  $recentAssignments
+     */
     public function __construct(
         public readonly string $memberId,
         public readonly string $memberName,
@@ -17,10 +20,18 @@ final class AllocationCandidateDto
         public readonly int $availablePercentage,
         public readonly int $pastProjectExperienceCount,
         public readonly float $score,
+        public readonly float $capacityScore,
+        public readonly float $proficiencyScore,
+        public readonly float $experienceScore,
+        public readonly bool $nextWeekConflict,
         public readonly array $reasons,
+        public readonly array $recentAssignments,
     ) {}
 
-    public static function fromDomain(AllocationCandidate $candidate, string $memberName): self
+    /**
+     * @param  RecentAssignmentDto[]  $recentAssignments
+     */
+    public static function fromDomain(AllocationCandidate $candidate, string $memberName, array $recentAssignments = []): self
     {
         return new self(
             memberId: $candidate->memberId()->toString(),
@@ -30,7 +41,12 @@ final class AllocationCandidateDto
             availablePercentage: $candidate->availablePercentage(),
             pastProjectExperienceCount: $candidate->pastProjectExperienceCount(),
             score: $candidate->score(),
+            capacityScore: $candidate->capacityScore(),
+            proficiencyScore: $candidate->proficiencyScore(),
+            experienceScore: $candidate->experienceScore(),
+            nextWeekConflict: $candidate->hasNextWeekConflict(),
             reasons: $candidate->reasons(),
+            recentAssignments: $recentAssignments,
         );
     }
 
@@ -45,7 +61,14 @@ final class AllocationCandidateDto
             'availablePercentage' => $this->availablePercentage,
             'pastProjectExperienceCount' => $this->pastProjectExperienceCount,
             'score' => $this->score,
+            'scoreBreakdown' => [
+                'capacity' => $this->capacityScore,
+                'proficiency' => $this->proficiencyScore,
+                'experience' => $this->experienceScore,
+            ],
+            'nextWeekConflict' => $this->nextWeekConflict,
             'reasons' => $this->reasons,
+            'recentAssignments' => array_map(fn (RecentAssignmentDto $a) => $a->toArray(), $this->recentAssignments),
         ];
     }
 }
