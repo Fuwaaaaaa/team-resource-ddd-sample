@@ -1,0 +1,31 @@
+# Prometheus scrape config — example. Copy to prometheus.yml and fill
+# in METRICS_TOKEN before running. See alerts.yml in this directory
+# for the matching alert rules.
+
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+rule_files:
+  - alerts.yml
+
+# alerting section is environment-specific; route to your AlertManager:
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ["alertmanager:9093"]
+
+scrape_configs:
+  - job_name: team-resource-dashboard
+    metrics_path: /api/metrics
+    scheme: http   # https in production
+    # Bearer token must match the backend's config('metrics.token')
+    # (set via env METRICS_TOKEN). Keep this file out of source control
+    # in production, or use prometheus_authorization_credentials_file:.
+    authorization:
+      type: Bearer
+      credentials: "REPLACE_WITH_METRICS_TOKEN"
+    static_configs:
+      - targets:
+          - "host.docker.internal:8080"   # docker compose dev
+          # - "team-resource.internal:80" # production
