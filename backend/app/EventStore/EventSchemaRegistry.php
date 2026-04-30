@@ -10,6 +10,8 @@ use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestApproved;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestRejected;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestSubmitted;
 use App\Domain\Authorization\Events\UserCreated;
+use App\Domain\Authorization\Events\UserDisabled;
+use App\Domain\Authorization\Events\UserEnabled;
 use App\Domain\Authorization\Events\UserPasswordReset;
 use App\Domain\Authorization\Events\UserRoleChanged;
 use App\Domain\Authorization\UserAggregateId;
@@ -173,6 +175,24 @@ final class EventSchemaRegistry
                 eventType: 'UserPasswordReset',
                 eventData: [
                     'userId' => $event->userId(),
+                ],
+            ),
+            $event instanceof UserDisabled => new EventDescriptor(
+                streamType: 'user',
+                streamId: UserAggregateId::fromUserId($event->userId()),
+                eventType: 'UserDisabled',
+                eventData: [
+                    'userId' => $event->userId(),
+                    'disabledByUserId' => $event->disabledByUserId(),
+                ],
+            ),
+            $event instanceof UserEnabled => new EventDescriptor(
+                streamType: 'user',
+                streamId: UserAggregateId::fromUserId($event->userId()),
+                eventType: 'UserEnabled',
+                eventData: [
+                    'userId' => $event->userId(),
+                    'enabledByUserId' => $event->enabledByUserId(),
                 ],
             ),
             default => null,

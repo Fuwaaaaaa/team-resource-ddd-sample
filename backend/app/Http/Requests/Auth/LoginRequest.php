@@ -39,6 +39,22 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // 認証成功後に「無効化されたアカウント」を弾く。 attempt() を素通ししたあと
+        // session を巻き戻して 422 を投げる。 attempt() は Hash::check した時点で
+        // user を session に書いているため、 必ず logout する必要がある。
+        $user = Auth::guard('web')->user();
+        if ($user !== null && $user->isDisabled()) {
+            Auth::guard('web')->logout();
+            $this->session()->invalidate();
+            $this->session()->regenerateToken();
+
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'This account has been disabled. Contact an administrator.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

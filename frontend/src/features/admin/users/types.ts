@@ -7,6 +7,7 @@ export interface AdminUserDto {
   role: UserRole;
   createdAt: string; // ISO 8601
   updatedAt: string; // ISO 8601
+  disabledAt: string | null; // ISO 8601 when disabled, null otherwise
 }
 
 export interface AdminUserListResponse {

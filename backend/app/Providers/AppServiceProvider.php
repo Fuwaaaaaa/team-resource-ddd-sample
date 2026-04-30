@@ -10,6 +10,8 @@ use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestApproved;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestRejected;
 use App\Domain\AllocationChangeRequest\Events\AllocationChangeRequestSubmitted;
 use App\Domain\Authorization\Events\UserCreated;
+use App\Domain\Authorization\Events\UserDisabled;
+use App\Domain\Authorization\Events\UserEnabled;
 use App\Domain\Authorization\Events\UserPasswordReset;
 use App\Domain\Authorization\Events\UserRoleChanged;
 use App\Domain\Availability\Events\AbsenceCanceled;
@@ -72,6 +74,8 @@ class AppServiceProvider extends ServiceProvider
             UserCreated::class,
             UserRoleChanged::class,
             UserPasswordReset::class,
+            UserDisabled::class,
+            UserEnabled::class,
         ] as $eventClass) {
             Event::listen($eventClass, [PersistDomainEvent::class, 'handle']);
             Event::listen($eventClass, [RecordAuditLog::class, 'handle']);
