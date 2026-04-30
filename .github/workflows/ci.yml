@@ -208,3 +208,91 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+
+  e2e:
+    # Playwright critical-path tests against the full docker compose stack.
+    # Mirrors the smoke job's bring-up but adds browser-driven assertions
+    # (login, RBAC, dashboard) on top of the surface-level health checks.
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare .env
+        run: |
+          cp .env.example .env || true
+          touch .env
+
+      # Pre-install host-side deps so the volume mounts don't shadow the
+      # vendor/ and node_modules/ baked into the images. (Same reason as the
+      # smoke job — see .github/workflows/ci.yml smoke.)
+      - name: Setup PHP (for backend deps)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo, pdo_pgsql, intl, bcmath
+          coverage: none
+
+      - name: composer install (backend)
+        working-directory: backend
+        run: composer install --prefer-dist --no-interaction --no-progress --no-scripts
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci (frontend)
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Boot stack
+        run: docker compose up -d --build
+
+      - name: Wait for nginx + backend + frontend ready
+        run: |
+          for i in $(seq 1 60); do
+            login_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/login || echo "000")
+            me_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Accept: application/json" http://localhost:8080/api/me || echo "000")
+            if [ "$login_code" = "200" ] && [ "$me_code" = "401" ]; then
+              echo "stack ready (login=$login_code, api/me=$me_code)"
+              exit 0
+            fi
+            echo "attempt $i: login=$login_code api/me=$me_code, sleeping..."
+            sleep 5
+          done
+          echo "stack failed to come up within timeout"
+          docker compose logs --tail=80
+          exit 1
+
+      - name: Run Playwright
+        working-directory: frontend
+        run: npm run e2e
+        env:
+          E2E_BASE_URL: http://localhost:8080
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 14
+
+      - name: Upload test artifacts (traces / videos / screenshots) on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: frontend/test-results
+          retention-days: 14
+
+      - name: Dump compose logs on failure
+        if: failure()
+        run: docker compose logs --tail=200

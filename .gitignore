@@ -44,6 +44,12 @@ frontend/.coverage/
 frontend/.swc/
 frontend/tsconfig.tsbuildinfo
 
+# Playwright (frontend/e2e)
+frontend/test-results/
+frontend/playwright-report/
+frontend/playwright/.cache/
+frontend/blob-report/
+
 # ============================================
 # IDE / OS
 # ============================================

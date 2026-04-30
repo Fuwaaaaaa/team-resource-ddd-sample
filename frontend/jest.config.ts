@@ -12,7 +12,8 @@ const customJestConfig: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+  // e2e/ は Playwright テスト。jest の testMatch は *.spec.ts を拾うので明示的に除外する。
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/e2e/'],
   coverageDirectory: '.coverage',
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
