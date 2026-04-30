@@ -8,9 +8,10 @@ test.describe('RBAC enforcement', () => {
 
     // 画面遷移は許す (middleware は XSRF Cookie のみ見る) が、
     // ページ内で <Forbidden /> が表示され、admin 操作 UI が見えない、を担保する。
-    await expect(page.getByText(/forbidden|権限|許可/i).first()).toBeVisible();
-    // admin だけが触れる "Create user" 系のボタンが存在しないことを確認
-    await expect(page.getByRole('button', { name: /Create user|ユーザー作成/i })).toHaveCount(0);
+    // ja default: "アクセス権限がありません" / en: "Access denied"
+    await expect(page.getByText(/access denied|権限|denied/i).first()).toBeVisible();
+    // admin だけが触れる "+ 新規ユーザー" / "+ Create user" ボタンが存在しないことを確認
+    await expect(page.getByRole('button', { name: /新規ユーザー|create user/i })).toHaveCount(0);
   });
 
   test('admin reaches /admin/users and can see the user table', async ({ page }) => {
