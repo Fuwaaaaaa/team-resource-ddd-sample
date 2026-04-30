@@ -19,14 +19,25 @@ final class LoginTest extends TestCase
             'password' => 'password',
         ]);
 
-        // Sanctum の EnsureFrontendRequestsAreStateful は Referer/Origin を
-        // sanctum.stateful (localhost 等) と突合して判定するため、
-        // テストでは stateful 一覧にマッチする固定値を明示する
-        $headers = ['Origin' => 'http://localhost'];
+        // Sanctum の EnsureFrontendRequestsAreStateful は Referer/Origin の host を
+        // sanctum.stateful と突合して判定する。.env.example が
+        // SANCTUM_STATEFUL_DOMAINS=localhost:8080,127.0.0.1:8080 を要求するため、
+        // bare 'localhost' ではなくポート付きで送る (production / CI smoke と一致)。
+        $headers = ['Origin' => 'http://localhost:8080'];
 
-        $this->withHeaders($headers)->get('/sanctum/csrf-cookie')->assertNoContent();
+        $csrfResponse = $this->withHeaders($headers)->get('/sanctum/csrf-cookie');
+        $csrfResponse->assertNoContent();
 
-        $response = $this->withHeaders($headers)->postJson('/api/login', [
+        // 実ブラウザでは axios が XSRF-TOKEN Cookie を読み取り X-XSRF-TOKEN
+        // ヘッダに転送する。テストでもその挙動を再現する。
+        $xsrf = collect($csrfResponse->headers->getCookies())
+            ->firstWhere(fn ($c) => $c->getName() === 'XSRF-TOKEN')
+            ?->getValue();
+
+        $response = $this->withHeaders([
+            ...$headers,
+            'X-XSRF-TOKEN' => $xsrf,
+        ])->postJson('/api/login', [
             'email' => 'admin@example.com',
             'password' => 'password',
         ]);

@@ -11,7 +11,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,10 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // statefulApi() が EnsureFrontendRequestsAreStateful::class を api group の
+        // 先頭に追加する。ここで再度 prepend すると二重登録になり、内側 pipeline が
+        // 外側終了時に Session を剥がしてしまう (RuntimeException: Session store not set)。
+        // AssignRequestId のみ prepend する。
         $middleware->statefulApi();
         $middleware->api(prepend: [
             AssignRequestId::class,
-            EnsureFrontendRequestsAreStateful::class,
         ]);
         $middleware->web(prepend: [
             AssignRequestId::class,
