@@ -46,6 +46,7 @@ export interface ChangeUserRoleInput {
 
 export interface PasswordResetResponse {
   user: AdminUserDto;
-  generatedPassword: string;
+  inviteUrl: string;
+  inviteExpiresAt: string; // ISO 8601
   requiresRelogin: boolean;
 }

@@ -14,8 +14,19 @@ export interface UserResetPasswordConfirmProps {
   onClose: () => void;
 }
 
+interface InviteResult {
+  email: string;
+  expiresAt: string; // ISO 8601
+  url: string;
+}
+
 const RELOGIN_COUNTDOWN_SECONDS = 5;
 
+/**
+ * 招待リンク再発行フロー (TODO-22) 移行後の reset-password モーダル。
+ * stage 1: 確認 → stage 2: 招待メール送信完了表示 (URL は再共有用 fallback)。
+ * 旧 16 文字 password 表示は完全に削除されている。
+ */
 export function UserResetPasswordConfirm({
   user,
   isSelf,
@@ -26,7 +37,7 @@ export function UserResetPasswordConfirm({
   const router = useRouter();
   const logout = useLogout();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [invite, setInvite] = useState<InviteResult | null>(null);
   const [requiresRelogin, setRequiresRelogin] = useState(false);
   const [countdown, setCountdown] = useState(RELOGIN_COUNTDOWN_SECONDS);
   const [copied, setCopied] = useState(false);
@@ -35,7 +46,7 @@ export function UserResetPasswordConfirm({
   useEffect(() => {
     if (user) {
       setServerError(null);
-      setGeneratedPassword(null);
+      setInvite(null);
       setRequiresRelogin(false);
       setCountdown(RELOGIN_COUNTDOWN_SECONDS);
       setCopied(false);
@@ -79,7 +90,11 @@ export function UserResetPasswordConfirm({
     setServerError(null);
     try {
       const result = await reset.mutateAsync(user.id);
-      setGeneratedPassword(result.generatedPassword);
+      setInvite({
+        email: result.user.email,
+        expiresAt: result.inviteExpiresAt,
+        url: result.inviteUrl,
+      });
       setRequiresRelogin(result.requiresRelogin);
     } catch (err) {
       if (err instanceof HttpError) {
@@ -91,15 +106,17 @@ export function UserResetPasswordConfirm({
   };
 
   const handleCopy = async () => {
-    if (!generatedPassword) return;
+    if (!invite) return;
     try {
-      await navigator.clipboard.writeText(generatedPassword);
+      await navigator.clipboard.writeText(invite.url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // ignore
+      // clipboard may be unavailable in insecure contexts
     }
   };
+
+  const fmtExpires = (iso: string) => new Date(iso).toLocaleString('ja-JP');
 
   return (
     <div
@@ -115,7 +132,9 @@ export function UserResetPasswordConfirm({
       >
         <div className="sticky top-0 bg-surface border-b border-border px-6 py-4 flex items-center justify-between">
           <h2 id="user-reset-modal-title" className="text-lg font-bold">
-            {t('admin.users.reset.modal.title')}
+            {invite
+              ? t('admin.users.reset.success.title')
+              : t('admin.users.reset.modal.title')}
           </h2>
           <button
             type="button"
@@ -128,7 +147,7 @@ export function UserResetPasswordConfirm({
         </div>
 
         {/* Stage 1: confirm */}
-        {!generatedPassword && (
+        {!invite && (
           <div className="px-6 py-4 space-y-4">
             {serverError && (
               <div
@@ -176,19 +195,26 @@ export function UserResetPasswordConfirm({
           </div>
         )}
 
-        {/* Stage 2: success + new password */}
-        {generatedPassword && (
+        {/* Stage 2: invite sent */}
+        {invite && (
           <div className="px-6 py-4 space-y-4">
+            <p className="text-sm text-fg">
+              ✓ {t('admin.users.reset.success.message').replace('{email}', invite.email)}
+            </p>
+            <div className="text-xs text-fg-muted">
+              <strong>{t('admin.users.create.modal.inviteExpiresAt')}:</strong>{' '}
+              {fmtExpires(invite.expiresAt)}
+            </div>
             <div>
               <span className="block text-xs font-medium text-fg mb-1">
-                {t('admin.users.create.modal.passwordLabel')}
+                {t('admin.users.create.modal.inviteUrlLabel')}
               </span>
               <div className="flex items-center gap-2">
                 <code
-                  aria-label={t('admin.users.create.modal.passwordLabel')}
-                  className="flex-1 font-mono text-base bg-surface-muted text-fg px-3 py-2 rounded border border-border break-all"
+                  aria-label={t('admin.users.create.modal.inviteUrlLabel')}
+                  className="flex-1 font-mono text-[11px] bg-surface-muted text-fg px-3 py-2 rounded border border-border break-all"
                 >
-                  {generatedPassword}
+                  {invite.url}
                 </code>
                 <button
                   type="button"
@@ -200,13 +226,6 @@ export function UserResetPasswordConfirm({
                     : t('admin.users.create.modal.copy')}
                 </button>
               </div>
-            </div>
-            <div
-              role="status"
-              className="text-xs bg-warning/10 text-warning border border-warning/40 rounded px-3 py-2"
-            >
-              <strong>{t('common.warn.prefix')}</strong>{' '}
-              {t('admin.users.create.modal.passwordWarning')}
             </div>
             {requiresRelogin && (
               <div
