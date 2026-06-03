@@ -6,6 +6,7 @@ namespace App\Application\Admin\Commands;
 
 use App\Application\Admin\DTOs\PasswordResetResultDto;
 use App\Application\Admin\DTOs\UserDto;
+use App\Application\Admin\Exceptions\CannotResetDisabledUserException;
 use App\Domain\Authorization\Events\UserPasswordReset;
 use App\Infrastructure\Events\DomainEventDispatcher;
 use App\Mail\UserInviteMail;
@@ -60,6 +61,15 @@ final class ResetUserPasswordHandler
             $user = User::query()->whereKey($command->targetUserId)->lockForUpdate()->first();
             if ($user === null) {
                 throw (new ModelNotFoundException)->setModel(User::class, [$command->targetUserId]);
+            }
+
+            // disabled account への reset は弾く (TODO-22 / TODO-25 由来の defense-in-depth)。
+            // reset は invite token を再発行するため、 そのまま通すと disabled user に
+            // 生きた invite link を渡してしまう (login は LoginRequest が 422 で塞ぐが、
+            // token 再発行 + password 上書きという不整合自体を防ぐ)。 lockForUpdate 済の
+            // transaction 内で判定するので、 disable との競合に対しても直列化される。
+            if ($user->isDisabled()) {
+                throw new CannotResetDisabledUserException;
             }
 
             $user->update([

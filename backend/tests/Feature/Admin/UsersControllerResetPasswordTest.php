@@ -178,6 +178,33 @@ final class UsersControllerResetPasswordTest extends TestCase
             ->assertJsonPath('requiresRelogin', true);
     }
 
+    public function test_reset_on_disabled_user_returns_422_and_reissues_nothing(): void
+    {
+        // disabled account への reset は弾く (TODO-22 / TODO-25 由来の defense-in-depth)。
+        // reset は invite token を再発行するため、 そのまま通すと disabled user に
+        // 生きた invite link を渡してしまう。 transaction 内で throw → 副作用ゼロ。
+        $admin = User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create([
+            'role' => 'viewer',
+            'password' => Hash::make('OldPasswordKnown123!'),
+            'disabled_at' => now()->subDay(),
+        ]);
+        $oldHash = $target->password;
+
+        $this->actingAs($admin)
+            ->postJson("/api/admin/users/{$target->id}/reset-password")
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'cannot_reset_disabled_user');
+
+        $target->refresh();
+        // invite token は再発行されず、 password も変わらない (transaction rollback)。
+        $this->assertNull($target->invite_token);
+        $this->assertNull($target->invite_token_expires_at);
+        $this->assertSame($oldHash, $target->password);
+
+        Mail::assertNothingSent();
+    }
+
     public function test_unknown_user_returns_404(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
