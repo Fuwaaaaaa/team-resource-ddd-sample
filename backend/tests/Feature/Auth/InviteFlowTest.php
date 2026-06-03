@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
+use App\Domain\Authorization\UserAggregateId;
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -151,6 +153,146 @@ final class InviteFlowTest extends TestCase
             'password' => 'secondPassword!1234',
             'password_confirmation' => 'secondPassword!1234',
         ])->assertStatus(404);
+    }
+
+    public function test_accept_410_when_user_is_disabled(): void
+    {
+        $token = $this->makeToken();
+        $user = User::factory()->create([
+            'email' => 'disabled-invitee@example.com',
+            'password' => Hash::make('originalPassword!123'),
+            'invite_token' => $token,
+            'invite_token_expires_at' => now()->addHours(24),
+            'disabled_at' => now()->subDay(),
+        ]);
+
+        $this->postJson("/api/invite/{$token}/accept", [
+            'password' => 'mySecure!Password123',
+            'password_confirmation' => 'mySecure!Password123',
+        ])
+            ->assertStatus(410)
+            ->assertJson(['error' => 'invite_user_disabled']);
+
+        // token は消費されず、 password も書き換わらない (disable が復活していない)。
+        $fresh = $user->fresh();
+        $this->assertNotNull($fresh->invite_token);
+        $this->assertNotNull($fresh->disabled_at);
+        $this->assertTrue(Hash::check('originalPassword!123', $fresh->password));
+
+        // 監査ログが記録されている。
+        $log = AuditLog::query()
+            ->where('event_type', 'InviteRejectedUserDisabled')
+            ->where('aggregate_id', UserAggregateId::fromUserId($user->id))
+            ->firstOrFail();
+        $this->assertSame('user', $log->aggregate_type);
+        $this->assertSame('user_disabled', $log->payload['reason']);
+        $this->assertSame($user->id, $log->payload['userId']);
+    }
+
+    public function test_accept_410_is_repeatable_for_disabled_user(): void
+    {
+        $token = $this->makeToken();
+        $user = User::factory()->create([
+            'email' => 'disabled-twice@example.com',
+            'invite_token' => $token,
+            'invite_token_expires_at' => now()->addHours(24),
+            'disabled_at' => now()->subDay(),
+        ]);
+
+        // token を消費しないので、 2 回目も 404 ではなく 410 のままになる。
+        $this->postJson("/api/invite/{$token}/accept", [
+            'password' => 'mySecure!Password123',
+            'password_confirmation' => 'mySecure!Password123',
+        ])->assertStatus(410);
+
+        $this->postJson("/api/invite/{$token}/accept", [
+            'password' => 'mySecure!Password123',
+            'password_confirmation' => 'mySecure!Password123',
+        ])->assertStatus(410);
+
+        // 拒否は毎回監査ログに残る (= disable 済 account への繰り返しアクセスのシグナル)。
+        // 2 回の 410 に対し 2 行が記録される。
+        $this->assertSame(2, AuditLog::query()
+            ->where('event_type', 'InviteRejectedUserDisabled')
+            ->where('aggregate_id', UserAggregateId::fromUserId($user->id))
+            ->count());
+    }
+
+    public function test_show_410_when_user_is_disabled(): void
+    {
+        $token = $this->makeToken();
+        User::factory()->create([
+            'email' => 'disabled-show@example.com',
+            'invite_token' => $token,
+            'invite_token_expires_at' => now()->addHours(24),
+            'disabled_at' => now()->subDay(),
+        ]);
+
+        $this->getJson("/api/invite/{$token}")
+            ->assertStatus(410)
+            ->assertJson(['error' => 'invite_user_disabled']);
+    }
+
+    public function test_show_for_disabled_user_writes_no_audit_log(): void
+    {
+        // show は副作用無しの閲覧なので、 disabled でも監査ログは残さない (accept とは非対称)。
+        $token = $this->makeToken();
+        User::factory()->create([
+            'email' => 'disabled-show-noaudit@example.com',
+            'invite_token' => $token,
+            'invite_token_expires_at' => now()->addHours(24),
+            'disabled_at' => now()->subDay(),
+        ]);
+
+        $this->getJson("/api/invite/{$token}")->assertStatus(410);
+
+        $this->assertSame(0, AuditLog::query()
+            ->where('event_type', 'InviteRejectedUserDisabled')
+            ->count());
+    }
+
+    public function test_accept_404_when_token_expired_even_if_disabled(): void
+    {
+        // findValidByToken が isDisabled より先に走るので、 期限切れ + disabled は 410 でなく 404。
+        // 404 経路なので監査ログも残らない。
+        $token = $this->makeToken();
+        User::factory()->create([
+            'email' => 'expired-and-disabled@example.com',
+            'invite_token' => $token,
+            'invite_token_expires_at' => now()->subHour(), // 期限切れ
+            'disabled_at' => now()->subDay(),
+        ]);
+
+        $this->postJson("/api/invite/{$token}/accept", [
+            'password' => 'mySecure!Password123',
+            'password_confirmation' => 'mySecure!Password123',
+        ])->assertStatus(404);
+
+        $this->assertSame(0, AuditLog::query()
+            ->where('event_type', 'InviteRejectedUserDisabled')
+            ->count());
+    }
+
+    public function test_accept_422_on_invalid_password_for_disabled_user(): void
+    {
+        // validate() が disabled ガードより先に走るので、 短い password は 410 でなく 422。
+        // バリデーション段で弾かれるため監査ログも残らない。
+        $token = $this->makeToken();
+        User::factory()->create([
+            'email' => 'disabled-shortpw@example.com',
+            'invite_token' => $token,
+            'invite_token_expires_at' => now()->addHours(24),
+            'disabled_at' => now()->subDay(),
+        ]);
+
+        $this->postJson("/api/invite/{$token}/accept", [
+            'password' => 'short',
+            'password_confirmation' => 'short',
+        ])->assertStatus(422);
+
+        $this->assertSame(0, AuditLog::query()
+            ->where('event_type', 'InviteRejectedUserDisabled')
+            ->count());
     }
 
     public function test_invite_endpoints_are_public_no_auth_required(): void
