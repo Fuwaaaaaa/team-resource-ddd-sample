@@ -2,7 +2,7 @@
 
 Next 26 (RBAC Admin Console) で defer された案件と、その後のレビューで見つかった改善ポイント。各項目は `/plan-ceo-review` または `/plan-eng-review` で計画化してから着手してください。
 
-**最終更新: 2026-04-30**
+**最終更新: 2026-06-03**
 
 | # | 内容 | 優先度 | 想定 PR |
 |---|---|---|---|
@@ -27,10 +27,11 @@ Next 26 (RBAC Admin Console) で defer された案件と、その後のレビ�
 | 19 | ~~DomainEventStore retry に backoff/jitter + retry log 追加~~ → **PR #31 で resolved (2026-04-29)**: `BACKOFF_BASE_MICROS=1000`, `random_int(1, base) * 2^(attempt-1)` の指数バックオフ + `Log::warning('DomainEventStore.append.retry', ...)` を `DomainEventStore::append` に実装 | — | done |
 | 20 | ~~`phpunit.xml` を sqlite-only から pgsql matrix に拡張~~ → **PR #30 で resolved (2026-04-30)**: CI の `.github/workflows/ci.yml` に pgsql matrix job を追加し、Next 26 期間中に発覚した「pgsql で fail / sqlite で pass」クラスを再発防止 | — | done |
 | 21 | ~~deploy 後に `/login` を GET 200 確認する smoke test~~ → **PR #30 で resolved (2026-04-30)**: docker compose URL surface smoke として CI に組み込み (PR #28 の nginx routing バグが 6 週間検知されなかった反省) | — | done |
-| 22 | ~~admin reset-password を招待リンク再発行フローに統一~~ → **resolved (2026-04-30)**: `ResetUserPasswordHandler` を `CreateUserHandler` 同様の invite token 再発行 (`bin2hex(random_bytes(32))` 64-hex / 24h TTL / `UserInviteMail` 送信) に置換。 既存 password はランダム値で上書きして即無効化、 Sanctum tokens / DB sessions は引き続き全失効。 `UserPasswordReset` event は維持し metric `admin_user_password_reset_total` の semantic を温存。 frontend モーダルは 16 文字 password 表示を invite URL + expiration 表示に置換、 self-reset 時の 5 秒カウントダウン → 自動ログアウトは維持 | — | done |
+| 22 | ~~admin reset-password を招待リンク再発行フローに統一~~ → **resolved (2026-06-03)**: `ResetUserPasswordHandler` を `CreateUserHandler` 同様の invite token 再発行 (`bin2hex(random_bytes(32))` 64-hex / 24h TTL / `UserInviteMail` 送信) に置換。 既存 password はランダム値で上書きして即無効化、 Sanctum tokens / DB sessions は引き続き全失効。 `UserPasswordReset` event は維持し metric `admin_user_password_reset_total` の semantic を温存。 frontend モーダルは 16 文字 password 表示を invite URL + expiration 表示に置換、 self-reset 時の 5 秒カウントダウン → 自動ログアウトは維持。 あわせて disabled user の reset を弾く `isDisabled` ガードを追加 (TODO-25 由来の defense-in-depth) | — | done |
 | 23 | E2E (Playwright) を主要書込シナリオに拡張: (a) admin → user 招待 → mailpit から invite URL 取得 → /invite/[token] で password 設定 → /login 成功、 (b) admin が user disable → 当該 user の login 422 確認、 (c) last-admin disable 試行 → 422 + admin guard 文言。 現状の e2e は read 系 (login / RBAC / dashboard) のみ | P3 | (将来) |
 | 24 | `LoginTest` CSRF post-mortem の docs 化。 PR #36 で発覚した 3 層バグ (Sanctum middleware の二重登録 / SANCTUM_STATEFUL_DOMAINS が `:8080` 限定 / X-XSRF-TOKEN ヘッダ転送漏れ) は同種の罠に再びハマる可能性が高い。 `docs/auth-csrf.md` (仮) に「test と本番で Origin / cookie / header をどう揃えるか」を成文化 | P4 | (将来) |
-| 25 | disable + invite の race edge case: 既に disable 済み user に対して未消化の invite token がある場合、 `POST /api/invite/{token}/accept` が成功してしまうと disable が無効化される。 現状は accept ハンドラで `disabled_at` を見ていない。 `disabled_at !== null` のとき 410 (Gone) で reject + audit_log 記録 | P3 | (将来) |
+| 26 | 公開 invite エンドポイント (`GET /api/invite/{token}`, `POST .../accept`) に throttle / レート制限を追加。 TODO-25 で disable 時に token を失効させたためフラッディング経路はほぼ消えたが、 未認証公開エンドポイントでの監査ログ書込 (`InviteRejectedUserDisabled`) が残存トークン保持者により無制限に発生しうるため、 defense-in-depth として `throttle` ミドルウェアを将来追加 | P4 | (将来) |
+| 25 | ~~disable + invite の race edge case: 既に disable 済み user に対して未消化の invite token がある場合、 `POST /api/invite/{token}/accept` が成功してしまうと disable が無効化される~~ → **resolved (2026-06-03)**: 根本原因を `DisableUserHandler` で対処 — disable 時に既存 transaction (lockForUpdate 済) 内で `invite_token` / `invite_token_expires_at` を null 化し token を即時失効 (通常経路は accept で findValidByToken=null → 404)。defense-in-depth として `InviteController` の show/accept に `isDisabled()` ガードを追加 (410 Gone、accept 時のみ `InviteRejectedUserDisabled` を audit_logs に記録、show は副作用無し)。監査書込を `AuditLog::record()` 共通 writer に集約 (DRY)。aggregate_id は uuid 列なので `UserAggregateId::fromUserId()` で int→uuid 解決 (テスト実行で 22P02 を検出し修正)。公開エンドポイントの throttle は別 TODO に降格 | — | done |
 
 ## 着手の進め方
 

@@ -22,7 +22,8 @@ use Illuminate\Support\Facades\DB;
  *   3. 既に無効化済なら no-op (idempotent — disabled_at は変更しない)
  *   4. 対象が admin ロールのとき、 \"有効な admin 残数\" を FOR UPDATE で集計し
  *      これが 1 (= 自分しかいない) なら LastAdminLockException
- *   5. disabled_at = now()、 sanctum tokens / sessions を全削除 (即時ログアウト)
+ *   5. disabled_at = now()、 未消化の invite token を失効 (TODO-25)、
+ *      sanctum tokens / sessions を全削除 (即時ログアウト)
  *   6. UserDisabled ドメインイベント発火 → audit_logs にも記録される
  */
 final class DisableUserHandler
@@ -64,7 +65,16 @@ final class DisableUserHandler
                 }
             }
 
-            $user->update(['disabled_at' => now()]);
+            // disabled_at と同時に未消化の invite token も失効させる (TODO-25)。
+            // これをやらないと、 disable 済 user が手元に残った invite link で
+            // password を再設定し token を消費できてしまう (login は LoginRequest で
+            // 塞がれるが、 token 消費 + password 設定という不整合自体を防ぐ)。
+            // token / session 削除と同じ lockForUpdate 済 transaction 内なので原子的。
+            $user->update([
+                'disabled_at' => now(),
+                'invite_token' => null,
+                'invite_token_expires_at' => null,
+            ]);
 
             // 即時ログアウト: API token + DB-backed session を全削除する。
             // 該当 user は次のリクエストで 401 / login 拒否のいずれかになる。

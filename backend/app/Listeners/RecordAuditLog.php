@@ -8,7 +8,6 @@ use App\EventStore\EventSchemaRegistry;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 /**
  * 全ドメインイベントを audit_logs に永続化する集約リスナー。
@@ -35,16 +34,14 @@ final class RecordAuditLog
             return; // unknown event type - ignore
         }
 
-        AuditLog::create([
-            'id' => (string) Str::uuid7(),
-            'user_id' => Auth::id(),
-            'event_type' => $descriptor->eventType,
-            'aggregate_type' => $descriptor->streamType,
-            'aggregate_id' => $descriptor->streamId,
-            'payload' => $descriptor->eventData,
-            'ip_address' => $this->request->ip(),
-            'user_agent' => $this->request->userAgent(),
-            'created_at' => now(),
-        ]);
+        AuditLog::record(
+            eventType: $descriptor->eventType,
+            aggregateType: $descriptor->streamType,
+            aggregateId: $descriptor->streamId,
+            payload: $descriptor->eventData,
+            ipAddress: $this->request->ip(),
+            userAgent: $this->request->userAgent(),
+            userId: Auth::id(),
+        );
     }
 }
