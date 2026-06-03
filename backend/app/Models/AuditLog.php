@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Listeners\RecordAuditLog;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,7 +44,7 @@ class AuditLog extends Model
      * 本番経路で audit_logs に 1 行書き込む唯一の writer。
      *
      * `$timestamps = false` かつ id は uuid7 を採用しているため、 id / created_at は
-     * ここで明示生成する。 ドメインイベント経路 ({@see \App\Listeners\RecordAuditLog})
+     * ここで明示生成する。 ドメインイベント経路 ({@see RecordAuditLog})
      * も、 アグリゲート状態変化を伴わない直接記録 (例: invite 拒否) も、 すべて本メソッド経由。
      * カラムマッピングを 1 箇所に集約することで、 列追加時の追従漏れを防ぐ。
      *

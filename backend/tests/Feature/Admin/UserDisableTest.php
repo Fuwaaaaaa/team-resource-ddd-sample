@@ -7,6 +7,7 @@ namespace Tests\Feature\Admin;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Auth\InviteFlowTest;
 use Tests\TestCase;
 
 final class UserDisableTest extends TestCase
@@ -295,7 +296,7 @@ final class UserDisableTest extends TestCase
      * 到達しない) 状態のトークンは、 再 disable では失効しない。 これは意図的:
      * 通常経路は最初の disable で token を失効させ、 万一の残存トークンは
      * InviteController の isDisabled ガードが 410 で塞ぐ
-     * (= resurrection 不可。 {@see \Tests\Feature\Auth\InviteFlowTest::test_accept_410_when_user_is_disabled})。
+     * (= resurrection 不可。 {@see InviteFlowTest::test_accept_410_when_user_is_disabled})。
      * 本テストはこの境界 (no-op は真の no-op) を固定し、 将来の挙動変化を検知する。
      */
     public function test_re_disabling_already_disabled_user_is_noop_and_keeps_token(): void
