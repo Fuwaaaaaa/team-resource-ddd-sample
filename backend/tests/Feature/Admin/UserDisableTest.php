@@ -228,4 +228,59 @@ final class UserDisableTest extends TestCase
             ->postJson("/api/admin/users/{$target->id}/disable")
             ->assertForbidden();
     }
+
+    /**
+     * TODO-25 根本原因: disable 時に未消化の invite token を失効させる。
+     * これをやらないと disable 済 user が残った invite link で復活できてしまう。
+     */
+    public function test_disable_revokes_pending_invite_token(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->create(['role' => 'admin']); // last-admin guard
+        $target = User::factory()->create([
+            'role' => 'manager',
+            'invite_token' => bin2hex(random_bytes(32)),
+            'invite_token_expires_at' => now()->addHours(24),
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson("/api/admin/users/{$target->id}/disable")
+            ->assertOk();
+
+        $fresh = $target->fresh();
+        $this->assertNotNull($fresh->disabled_at);
+        $this->assertNull($fresh->invite_token);
+        $this->assertNull($fresh->invite_token_expires_at);
+    }
+
+    /**
+     * TODO-25 統合: disable 後は token が失効しているので invite accept は 404 になり、
+     * (410 ではないため) 拒否監査ログも残らない。
+     */
+    public function test_disabled_user_invite_accept_returns_404(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->create(['role' => 'admin']);
+        $token = bin2hex(random_bytes(32));
+        $target = User::factory()->create([
+            'role' => 'manager',
+            'invite_token' => $token,
+            'invite_token_expires_at' => now()->addHours(24),
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson("/api/admin/users/{$target->id}/disable")
+            ->assertOk();
+
+        // 認証セッションを切ってから公開エンドポイントを叩く (invite は本人未ログイン想定)。
+        $this->postJson("/api/invite/{$token}/accept", [
+            'password' => 'mySecure!Password123',
+            'password_confirmation' => 'mySecure!Password123',
+        ])->assertStatus(404);
+
+        // 404 経路なので InviteRejectedUserDisabled は記録されない。
+        $this->assertSame(0, AuditLog::query()
+            ->where('event_type', 'InviteRejectedUserDisabled')
+            ->count());
+    }
 }
