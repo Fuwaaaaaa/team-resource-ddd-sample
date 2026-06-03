@@ -283,4 +283,45 @@ final class UserDisableTest extends TestCase
             ->where('event_type', 'InviteRejectedUserDisabled')
             ->count());
     }
+
+    /**
+     * TODO-25 冪等 no-op パスの特性化。
+     *
+     * disable は idempotent で、 既に disabled の user を再 disable しても
+     * `DisableUserHandler` の早期 return ({@see DisableUserHandler} のステップ3) で
+     * 何もしない — disabled_at も invite token も変更しない。
+     *
+     * つまり「既に disabled かつ生トークンを保持」という (現状の通常フローでは
+     * 到達しない) 状態のトークンは、 再 disable では失効しない。 これは意図的:
+     * 通常経路は最初の disable で token を失効させ、 万一の残存トークンは
+     * InviteController の isDisabled ガードが 410 で塞ぐ
+     * (= resurrection 不可。 {@see \Tests\Feature\Auth\InviteFlowTest::test_accept_410_when_user_is_disabled})。
+     * 本テストはこの境界 (no-op は真の no-op) を固定し、 将来の挙動変化を検知する。
+     */
+    public function test_re_disabling_already_disabled_user_is_noop_and_keeps_token(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->create(['role' => 'admin']); // last-admin guard
+        $disabledAt = now()->subDay();
+        $token = bin2hex(random_bytes(32));
+        $target = User::factory()->create([
+            'role' => 'manager',
+            'disabled_at' => $disabledAt,
+            'invite_token' => $token,
+            'invite_token_expires_at' => now()->addHours(24),
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson("/api/admin/users/{$target->id}/disable")
+            ->assertOk();
+
+        // 冪等 no-op: disabled_at は元のまま、 トークンも触られない。
+        $fresh = $target->fresh();
+        $this->assertSame(
+            $disabledAt->toDateTimeString(),
+            $fresh->disabled_at->toDateTimeString(),
+        );
+        $this->assertSame($token, $fresh->invite_token);
+        $this->assertNotNull($fresh->invite_token_expires_at);
+    }
 }
